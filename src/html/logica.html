@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ReefControl - Automações</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#f5f7fa;min-height:100vh}
+.header{background:#4a90e2;color:white;padding:1rem;display:flex;align-items:center;justify-content:space-between}
+.header h1{font-size:1.5rem}
+.back-btn{background:rgba(255,255,255,0.2);border:none;color:white;padding:0.5rem 1rem;border-radius:5px;cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:0.5rem}
+.container{padding:1rem;max-width:1200px;margin:0 auto}
+.automation-list{display:flex;flex-direction:column;gap:1rem}
+.automation-card{background:white;padding:1.5rem;border-radius:10px;box-shadow:0 4px 6px rgba(0,0,0,0.1)}
+.automation-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
+.automation-title{font-weight:bold;font-size:1.1rem;color:#333}
+.automation-status{padding:0.25rem 0.75rem;border-radius:15px;font-size:0.8rem;font-weight:bold}
+.status-active{background:#d4edda;color:#155724}
+.status-inactive{background:#f8d7da;color:#721c24}
+.automation-desc{color:#666;margin-bottom:1rem;line-height:1.4}
+.automation-controls{display:flex;gap:0.5rem;flex-wrap:wrap}
+.btn{padding:0.5rem 1rem;border:none;border-radius:5px;cursor:pointer;font-size:0.9rem;transition:background 0.2s}
+.btn-primary{background:#4a90e2;color:white}
+.btn-primary:hover{background:#357abd}
+.btn-secondary{background:#6c757d;color:white}
+.btn-secondary:hover{background:#545b62}
+.btn-success{background:#28a745;color:white}
+.btn-success:hover{background:#218838}
+.btn-danger{background:#dc3545;color:white}
+.btn-danger:hover{background:#c82333}
+.add-btn{position:fixed;bottom:2rem;right:2rem;width:60px;height:60px;border-radius:50%;background:#4a90e2;color:white;border:none;font-size:1.5rem;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.3);transition:background 0.2s}
+.add-btn:hover{background:#357abd}
+@media(max-width:768px){.container{padding:0.5rem}.automation-header{flex-direction:column;align-items:flex-start;gap:0.5rem}.automation-controls{width:100%}}
+</style>
+</head>
+<body>
+<div class="header">
+<h1>🧠 Automações</h1>
+<a href="home.html" class="back-btn">← Voltar</a>
+</div>
+<div class="container">
+<div class="automation-list">
+<div class="automation-card">
+<div class="automation-header">
+<div class="automation-title">Controle de Temperatura</div>
+<div class="automation-status status-active">ATIVO</div>
+</div>
+<div class="automation-desc">
+Liga aquecedor quando temp &lt; 24°C e desliga quando temp &gt; 26°C
+</div>
+<div class="automation-controls">
+<button class="btn btn-primary">Editar</button>
+<button class="btn btn-secondary">Pausar</button>
+<button class="btn btn-danger">Excluir</button>
+</div>
+</div>
+<div class="automation-card">
+<div class="automation-header">
+<div class="automation-title">Ciclo de Iluminação</div>
+<div class="automation-status status-active">ATIVO</div>
+</div>
+<div class="automation-desc">
+Liga luzes às 08:00 e desliga às 22:00. Simulação de nascer/pôr do sol.
+</div>
+<div class="automation-controls">
+<button class="btn btn-primary">Editar</button>
+<button class="btn btn-secondary">Pausar</button>
+<button class="btn btn-danger">Excluir</button>
+</div>
+</div>
+<div class="automation-card">
+<div class="automation-header">
+<div class="automation-title">Reposição de Água</div>
+<div class="automation-status status-inactive">INATIVO</div>
+</div>
+<div class="automation-desc">
+Liga bomba de reposição quando nível &lt; 70% por mais de 5 minutos.
+</div>
+<div class="automation-controls">
+<button class="btn btn-primary">Editar</button>
+<button class="btn btn-success">Ativar</button>
+<button class="btn btn-danger">Excluir</button>
+</div>
+</div>
+<div class="automation-card">
+<div class="automation-header">
+<div class="automation-title">Alerta pH Crítico</div>
+<div class="automation-status status-active">ATIVO</div>
+</div>
+<div class="automation-desc">
+Envia notificação se pH &lt; 7.0 ou pH &gt; 8.5. Alerta via MQTT.
+</div>
+<div class="automation-controls">
+<button class="btn btn-primary">Editar</button>
+<button class="btn btn-secondary">Pausar</button>
+<button class="btn btn-danger">Excluir</button>
+</div>
+</div>
+</div>
+</div>
+<button class="add-btn" onclick="addAutomation()">+</button>
+<script>
+function addAutomation(){
+alert('Funcionalidade em desenvolvimento');
+}
+if(!sessionStorage.getItem('loggedIn')){
+window.location.href='login.html';
+}
+</script>
+</body>
+</html> 

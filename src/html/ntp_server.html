@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ReefControl - Servidor NTP</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#f5f7fa;min-height:100vh}
+.header{background:#4a90e2;color:white;padding:1rem;display:flex;align-items:center;justify-content:space-between}
+.header h1{font-size:1.5rem}
+.back-btn{background:rgba(255,255,255,0.2);border:none;color:white;padding:0.5rem 1rem;border-radius:5px;cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:0.5rem}
+.container{padding:1rem;max-width:800px;margin:0 auto}
+.config-section{background:white;padding:2rem;border-radius:10px;box-shadow:0 4px 6px rgba(0,0,0,0.1);margin-bottom:2rem}
+.section-title{font-weight:bold;font-size:1.2rem;margin-bottom:1.5rem;color:#333;border-bottom:2px solid #4a90e2;padding-bottom:0.5rem}
+.form-group{margin-bottom:1.5rem}
+.form-group label{display:block;margin-bottom:0.5rem;font-weight:bold;color:#555}
+.form-group input,.form-group select{width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:5px;font-size:1rem}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.btn{padding:0.75rem 1.5rem;border:none;border-radius:5px;cursor:pointer;font-size:1rem;transition:background 0.2s;margin:0.5rem 0.5rem 0.5rem 0}
+.btn-primary{background:#4a90e2;color:white}
+.btn-primary:hover{background:#357abd}
+.btn-success{background:#28a745;color:white}
+.btn-success:hover{background:#218838}
+.btn-warning{background:#ffc107;color:#212529}
+.btn-warning:hover{background:#e0a800}
+.status-info{background:#d1ecf1;padding:1rem;border-radius:8px;margin-bottom:1rem;color:#0c5460;border:1px solid #bee5eb}
+.current-time{background:#e8f5e8;padding:2rem;border-radius:10px;text-align:center;margin-bottom:2rem;border:1px solid #c3e6cb}
+.time-display{font-size:2rem;font-weight:bold;color:#155724;margin-bottom:0.5rem}
+.date-display{font-size:1.2rem;color:#155724}
+.server-list{background:#f8f9fa;padding:1rem;border-radius:8px;margin-top:1rem}
+@media(max-width:768px){.container{padding:0.5rem}.form-row{grid-template-columns:1fr}.time-display{font-size:1.5rem}}
+</style>
+</head>
+<body>
+<div class="header">
+<h1>🕐 Configuração NTP</h1>
+<a href="config.html" class="back-btn">← Voltar</a>
+</div>
+<div class="container">
+<div class="current-time">
+<div class="time-display" id="currentTime">14:30:25</div>
+<div class="date-display" id="currentDate">Domingo, 15 de Dezembro de 2024</div>
+</div>
+<div class="config-section">
+<div class="section-title">🌐 Servidor NTP</div>
+<div class="status-info">
+✅ <strong>Status:</strong> Sincronizado | Última sincronização: há 2 minutos
+</div>
+<div class="form-group">
+<label>Servidor NTP Primário:</label>
+<input type="text" value="pool.ntp.org" placeholder="pool.ntp.org">
+</div>
+<div class="form-group">
+<label>Servidor NTP Secundário:</label>
+<input type="text" value="time.google.com" placeholder="time.google.com">
+</div>
+<div class="form-group">
+<label>Servidor NTP Terciário:</label>
+<input type="text" value="time.cloudflare.com" placeholder="time.cloudflare.com">
+</div>
+<div class="server-list">
+<h4>Servidores NTP Recomendados:</h4>
+<ul style="margin-top:0.5rem;padding-left:1.5rem">
+<li><strong>Brasil:</strong> a.ntp.br, b.ntp.br, c.ntp.br</li>
+<li><strong>Global:</strong> pool.ntp.org, time.google.com</li>
+<li><strong>Cloudflare:</strong> time.cloudflare.com</li>
+<li><strong>Microsoft:</strong> time.windows.com</li>
+</ul>
+</div>
+<button class="btn btn-primary">Salvar Servidores</button>
+<button class="btn btn-warning">Testar Conectividade</button>
+</div>
+<div class="config-section">
+<div class="section-title">🌍 Fuso Horário</div>
+<div class="form-group">
+<label>Fuso Horário:</label>
+<select>
+<option value="-5">UTC-5 (Acre - Rio Branco)</option>
+<option value="-4">UTC-4 (Amazonas - Manaus)</option>
+<option value="-3" selected>UTC-3 (Brasília - São Paulo)</option>
+<option value="-2">UTC-2 (Fernando de Noronha)</option>
+<option value="0">UTC+0 (Greenwich)</option>
+</select>
+</div>
+<div class="form-group">
+<label>Horário de Verão:</label>
+<select>
+<option value="auto">Automático</option>
+<option value="enabled">Sempre Habilitado</option>
+<option value="disabled" selected>Sempre Desabilitado</option>
+</select>
+</div>
+<button class="btn btn-primary">Salvar Fuso</button>
+</div>
+<div class="config-section">
+<div class="section-title">⚙️ Configurações Avançadas</div>
+<div class="form-row">
+<div class="form-group">
+<label>Intervalo de Sincronização (min):</label>
+<input type="number" value="60" min="1" max="1440">
+</div>
+<div class="form-group">
+<label>Timeout (seg):</label>
+<input type="number" value="10" min="1" max="60">
+</div>
+</div>
+<div class="form-group">
+<label>Sincronização na Inicialização:</label>
+<select>
+<option value="enabled" selected>Habilitado</option>
+<option value="disabled">Desabilitado</option>
+</select>
+</div>
+<div class="form-group">
+<label>Formato de Data:</label>
+<select>
+<option value="dd/mm/yyyy" selected>DD/MM/AAAA</option>
+<option value="mm/dd/yyyy">MM/DD/AAAA</option>
+<option value="yyyy-mm-dd">AAAA-MM-DD</option>
+</select>
+</div>
+<div class="form-group">
+<label>Formato de Hora:</label>
+<select>
+<option value="24h" selected>24 horas</option>
+<option value="12h">12 horas (AM/PM)</option>
+</select>
+</div>
+<button class="btn btn-primary">Salvar Configurações</button>
+<button class="btn btn-success">Sincronizar Agora</button>
+</div>
+</div>
+<script>
+function updateTime(){
+const now=new Date();
+const timeOptions={hour:'2-digit',minute:'2-digit',second:'2-digit'};
+const dateOptions={weekday:'long',year:'numeric',month:'long',day:'numeric'};
+document.getElementById('currentTime').textContent=now.toLocaleTimeString('pt-BR',timeOptions);
+document.getElementById('currentDate').textContent=now.toLocaleDateString('pt-BR',dateOptions);
+}
+updateTime();
+setInterval(updateTime,1000);
+if(!sessionStorage.getItem('loggedIn')){
+window.location.href='login.html';
+}
+</script>
+</body>
+</html> 

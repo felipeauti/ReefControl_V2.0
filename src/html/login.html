@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ReefControl - Login</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);height:100vh;display:flex;align-items:center;justify-content:center}
+.login-container{background:rgba(255,255,255,0.95);padding:2rem;border-radius:15px;box-shadow:0 10px 30px rgba(0,0,0,0.3);width:90%;max-width:350px}
+.logo{text-align:center;margin-bottom:1.5rem;color:#333}
+.logo h1{color:#4a90e2;margin-bottom:0.5rem}
+.form-group{margin-bottom:1rem}
+.form-group label{display:block;margin-bottom:0.5rem;color:#555;font-weight:bold}
+.form-group input{width:100%;padding:0.75rem;border:2px solid #ddd;border-radius:8px;font-size:1rem;transition:border-color 0.3s}
+.form-group input:focus{outline:none;border-color:#4a90e2}
+.btn{width:100%;padding:0.75rem;background:#4a90e2;color:white;border:none;border-radius:8px;font-size:1rem;cursor:pointer;transition:background 0.3s}
+.btn:hover{background:#357abd}
+.error{color:#e74c3c;text-align:center;margin-top:1rem;display:none}
+@media(max-width:480px){.login-container{padding:1.5rem;margin:1rem}}
+</style>
+</head>
+<body>
+<div class="login-container">
+<div class="logo">
+<h1>🐠 ReefControl</h1>
+<p>Sistema de Automação</p>
+</div>
+<form id="loginForm">
+<div class="form-group">
+<label for="username">Usuário:</label>
+<input type="text" id="username" name="username" required>
+</div>
+<div class="form-group">
+<label for="password">Senha:</label>
+<input type="password" id="password" name="password" required>
+</div>
+<button type="submit" class="btn">Entrar</button>
+<div class="error" id="error">Usuário ou senha incorretos!</div>
+</form>
+</div>
+<script>
+document.getElementById('loginForm').addEventListener('submit',function(e){
+e.preventDefault();
+const username=document.getElementById('username').value;
+const password=document.getElementById('password').value;
+if(username==='admin'&&password==='123456'){
+sessionStorage.setItem('loggedIn','true');
+window.location.href='home.html';
+}else{
+document.getElementById('error').style.display='block';
+setTimeout(()=>document.getElementById('error').style.display='none',3000);
+}
+});
+if(sessionStorage.getItem('loggedIn')){
+window.location.href='home.html';
+}
+</script>
+</body>
+</html> 

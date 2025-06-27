@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ReefControl - MQTT/IoT</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#f5f7fa;min-height:100vh}
+.header{background:#4a90e2;color:white;padding:1rem;display:flex;align-items:center;justify-content:space-between}
+.header h1{font-size:1.5rem}
+.back-btn{background:rgba(255,255,255,0.2);border:none;color:white;padding:0.5rem 1rem;border-radius:5px;cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:0.5rem}
+.container{padding:1rem;max-width:800px;margin:0 auto}
+.config-section{background:white;padding:2rem;border-radius:10px;box-shadow:0 4px 6px rgba(0,0,0,0.1);margin-bottom:2rem}
+.section-title{font-weight:bold;font-size:1.2rem;margin-bottom:1.5rem;color:#333;border-bottom:2px solid #4a90e2;padding-bottom:0.5rem}
+.form-group{margin-bottom:1.5rem}
+.form-group label{display:block;margin-bottom:0.5rem;font-weight:bold;color:#555}
+.form-group input,.form-group select{width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:5px;font-size:1rem}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.btn{padding:0.75rem 1.5rem;border:none;border-radius:5px;cursor:pointer;font-size:1rem;transition:background 0.2s;margin:0.5rem 0.5rem 0.5rem 0}
+.btn-primary{background:#4a90e2;color:white}
+.btn-primary:hover{background:#357abd}
+.btn-success{background:#28a745;color:white}
+.btn-success:hover{background:#218838}
+.btn-warning{background:#ffc107;color:#212529}
+.btn-warning:hover{background:#e0a800}
+.status-info{background:#d1ecf1;padding:1rem;border-radius:8px;margin-bottom:1rem;color:#0c5460;border:1px solid #bee5eb}
+.status-error{background:#f8d7da;padding:1rem;border-radius:8px;margin-bottom:1rem;color:#721c24;border:1px solid #f5c6cb}
+.topic-list{background:#f8f9fa;padding:1rem;border-radius:8px;margin-top:1rem}
+@media(max-width:768px){.container{padding:0.5rem}.form-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="header">
+<h1>📡 Configuração MQTT/IoT</h1>
+<a href="config.html" class="back-btn">← Voltar</a>
+</div>
+<div class="container">
+<div class="config-section">
+<div class="section-title">🌐 Servidor MQTT</div>
+<div class="status-error">
+❌ <strong>Status:</strong> Desconectado - Verifique as configurações
+</div>
+<div class="form-group">
+<label>Servidor MQTT:</label>
+<input type="text" placeholder="broker.hivemq.com" value="">
+</div>
+<div class="form-row">
+<div class="form-group">
+<label>Porta:</label>
+<input type="number" value="1883" min="1" max="65535">
+</div>
+<div class="form-group">
+<label>Protocolo:</label>
+<select>
+<option value="mqtt" selected>MQTT</option>
+<option value="mqtts">MQTT over SSL</option>
+<option value="ws">WebSocket</option>
+</select>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label>Usuário:</label>
+<input type="text" placeholder="usuário (opcional)">
+</div>
+<div class="form-group">
+<label>Senha:</label>
+<input type="password" placeholder="senha (opcional)">
+</div>
+</div>
+<button class="btn btn-primary">Salvar</button>
+<button class="btn btn-warning">Testar Conexão</button>
+</div>
+<div class="config-section">
+<div class="section-title">📢 Tópicos MQTT</div>
+<div class="form-group">
+<label>Prefixo dos Tópicos:</label>
+<input type="text" value="reefcontrol" placeholder="Ex: casa/aquario">
+</div>
+<div class="form-group">
+<label>ID do Dispositivo:</label>
+<input type="text" value="001" placeholder="Ex: sala_principal">
+</div>
+<div class="topic-list">
+<h4>Tópicos que serão publicados:</h4>
+<ul style="margin-top:0.5rem;padding-left:1.5rem">
+<li><code>reefcontrol/001/temperature</code> - Temperatura</li>
+<li><code>reefcontrol/001/ph</code> - pH</li>
+<li><code>reefcontrol/001/tds</code> - TDS</li>
+<li><code>reefcontrol/001/level</code> - Nível da água</li>
+<li><code>reefcontrol/001/pump/status</code> - Status da bomba</li>
+<li><code>reefcontrol/001/heater/status</code> - Status do aquecedor</li>
+</ul>
+<h4 style="margin-top:1rem">Tópicos de comando:</h4>
+<ul style="margin-top:0.5rem;padding-left:1.5rem">
+<li><code>reefcontrol/001/pump/set</code> - Controlar bomba</li>
+<li><code>reefcontrol/001/heater/set</code> - Controlar aquecedor</li>
+<li><code>reefcontrol/001/light/set</code> - Controlar iluminação</li>
+</ul>
+</div>
+<button class="btn btn-primary">Salvar Tópicos</button>
+</div>
+<div class="config-section">
+<div class="section-title">🏠 Integração Home Assistant</div>
+<div class="form-group">
+<label>Auto Discovery:</label>
+<select>
+<option value="enabled" selected>Habilitado</option>
+<option value="disabled">Desabilitado</option>
+</select>
+</div>
+<div class="form-group">
+<label>Prefixo Discovery:</label>
+<input type="text" value="homeassistant" placeholder="homeassistant">
+</div>
+<div class="status-info">
+ℹ️ Com Auto Discovery habilitado, os sensores aparecerão automaticamente no Home Assistant
+</div>
+<button class="btn btn-success">Publicar Configuração HA</button>
+</div>
+<div class="config-section">
+<div class="section-title">⚙️ Configurações Avançadas</div>
+<div class="form-row">
+<div class="form-group">
+<label>Keep Alive (seg):</label>
+<input type="number" value="60" min="15" max="300">
+</div>
+<div class="form-group">
+<label>QoS:</label>
+<select>
+<option value="0" selected>0 - At most once</option>
+<option value="1">1 - At least once</option>
+<option value="2">2 - Exactly once</option>
+</select>
+</div>
+</div>
+<div class="form-group">
+<label>Retain Messages:</label>
+<select>
+<option value="true" selected>Sim</option>
+<option value="false">Não</option>
+</select>
+</div>
+<div class="form-group">
+<label>Intervalo de Publicação (seg):</label>
+<input type="number" value="30" min="5" max="300">
+</div>
+<button class="btn btn-primary">Salvar Avançado</button>
+</div>
+</div>
+<script>
+if(!sessionStorage.getItem('loggedIn')){
+window.location.href='login.html';
+}
+</script>
+</body>
+</html> 

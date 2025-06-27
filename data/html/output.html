@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ReefControl - Saídas/Relés</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#f5f7fa;min-height:100vh}
+.header{background:#4a90e2;color:white;padding:1rem;display:flex;align-items:center;justify-content:space-between}
+.header h1{font-size:1.5rem}
+.back-btn{background:rgba(255,255,255,0.2);border:none;color:white;padding:0.5rem 1rem;border-radius:5px;cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:0.5rem}
+.container{padding:1rem;max-width:1000px;margin:0 auto}
+.output-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1rem}
+.output-card{background:white;padding:1.5rem;border-radius:10px;box-shadow:0 4px 6px rgba(0,0,0,0.1)}
+.output-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
+.output-title{font-weight:bold;font-size:1.1rem}
+.output-status{padding:0.25rem 0.75rem;border-radius:15px;font-size:0.8rem;font-weight:bold}
+.status-on{background:#d4edda;color:#155724}
+.status-off{background:#f8d7da;color:#721c24}
+.form-group{margin-bottom:1rem}
+.form-group label{display:block;margin-bottom:0.5rem;font-weight:bold;color:#555}
+.form-group input,.form-group select{width:100%;padding:0.5rem;border:1px solid #ddd;border-radius:5px;font-size:0.9rem}
+.control-buttons{display:flex;gap:0.5rem;margin-top:1rem}
+.btn{padding:0.5rem 1rem;border:none;border-radius:5px;cursor:pointer;font-size:0.9rem;transition:background 0.2s}
+.btn-success{background:#28a745;color:white}
+.btn-success:hover{background:#218838}
+.btn-danger{background:#dc3545;color:white}
+.btn-danger:hover{background:#c82333}
+.btn-primary{background:#4a90e2;color:white}
+.btn-primary:hover{background:#357abd}
+.toggle-switch{position:relative;display:inline-block;width:60px;height:34px}
+.toggle-switch input{opacity:0;width:0;height:0}
+.slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#ccc;transition:.4s;border-radius:34px}
+.slider:before{position:absolute;content:"";height:26px;width:26px;left:4px;bottom:4px;background:white;transition:.4s;border-radius:50%}
+input:checked+.slider{background:#4a90e2}
+input:checked+.slider:before{transform:translateX(26px)}
+@media(max-width:768px){.container{padding:0.5rem}.output-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="header">
+<h1>🔌 Configuração de Saídas</h1>
+<a href="config.html" class="back-btn">← Voltar</a>
+</div>
+<div class="container">
+<div class="output-grid">
+<div class="output-card">
+<div class="output-header">
+<div class="output-title">Bomba Principal</div>
+<div class="output-status status-on">LIGADA</div>
+</div>
+<div class="form-group">
+<label>Pino GPIO:</label>
+<select>
+<option value="5" selected>GPIO 5 (D1)</option>
+<option value="4">GPIO 4 (D2)</option>
+<option value="0">GPIO 0 (D3)</option>
+<option value="2">GPIO 2 (D4)</option>
+</select>
+</div>
+<div class="form-group">
+<label>Nome:</label>
+<input type="text" value="Bomba Principal">
+</div>
+<div class="form-group">
+<label>Modo:</label>
+<select>
+<option value="manual">Manual</option>
+<option value="auto" selected>Automático</option>
+<option value="schedule">Programado</option>
+</select>
+</div>
+<div class="form-group">
+<label>Controle Manual:</label>
+<label class="toggle-switch">
+<input type="checkbox" checked>
+<span class="slider"></span>
+</label>
+</div>
+<div class="control-buttons">
+<button class="btn btn-primary">Salvar</button>
+<button class="btn btn-success">Testar</button>
+</div>
+</div>
+<div class="output-card">
+<div class="output-header">
+<div class="output-title">Aquecedor</div>
+<div class="output-status status-off">DESLIGADO</div>
+</div>
+<div class="form-group">
+<label>Pino GPIO:</label>
+<select>
+<option value="5">GPIO 5 (D1)</option>
+<option value="4" selected>GPIO 4 (D2)</option>
+<option value="0">GPIO 0 (D3)</option>
+<option value="2">GPIO 2 (D4)</option>
+</select>
+</div>
+<div class="form-group">
+<label>Nome:</label>
+<input type="text" value="Aquecedor">
+</div>
+<div class="form-group">
+<label>Modo:</label>
+<select>
+<option value="manual">Manual</option>
+<option value="auto" selected>Automático</option>
+<option value="schedule">Programado</option>
+</select>
+</div>
+<div class="form-group">
+<label>Controle Manual:</label>
+<label class="toggle-switch">
+<input type="checkbox">
+<span class="slider"></span>
+</label>
+</div>
+<div class="control-buttons">
+<button class="btn btn-primary">Salvar</button>
+<button class="btn btn-success">Testar</button>
+</div>
+</div>
+<div class="output-card">
+<div class="output-header">
+<div class="output-title">Iluminação LED</div>
+<div class="output-status status-on">LIGADA</div>
+</div>
+<div class="form-group">
+<label>Pino GPIO:</label>
+<select>
+<option value="5">GPIO 5 (D1)</option>
+<option value="4">GPIO 4 (D2)</option>
+<option value="0" selected>GPIO 0 (D3)</option>
+<option value="2">GPIO 2 (D4)</option>
+</select>
+</div>
+<div class="form-group">
+<label>Nome:</label>
+<input type="text" value="Iluminação LED">
+</div>
+<div class="form-group">
+<label>Modo:</label>
+<select>
+<option value="manual">Manual</option>
+<option value="auto">Automático</option>
+<option value="schedule" selected>Programado</option>
+</select>
+</div>
+<div class="form-group">
+<label>Controle Manual:</label>
+<label class="toggle-switch">
+<input type="checkbox" checked>
+<span class="slider"></span>
+</label>
+</div>
+<div class="control-buttons">
+<button class="btn btn-primary">Salvar</button>
+<button class="btn btn-success">Testar</button>
+</div>
+</div>
+<div class="output-card">
+<div class="output-header">
+<div class="output-title">Bomba Reposição</div>
+<div class="output-status status-off">DESLIGADA</div>
+</div>
+<div class="form-group">
+<label>Pino GPIO:</label>
+<select>
+<option value="5">GPIO 5 (D1)</option>
+<option value="4">GPIO 4 (D2)</option>
+<option value="0">GPIO 0 (D3)</option>
+<option value="2" selected>GPIO 2 (D4)</option>
+</select>
+</div>
+<div class="form-group">
+<label>Nome:</label>
+<input type="text" value="Bomba Reposição">
+</div>
+<div class="form-group">
+<label>Modo:</label>
+<select>
+<option value="manual">Manual</option>
+<option value="auto" selected>Automático</option>
+<option value="schedule">Programado</option>
+</select>
+</div>
+<div class="form-group">
+<label>Controle Manual:</label>
+<label class="toggle-switch">
+<input type="checkbox">
+<span class="slider"></span>
+</label>
+</div>
+<div class="control-buttons">
+<button class="btn btn-primary">Salvar</button>
+<button class="btn btn-success">Testar</button>
+</div>
+</div>
+</div>
+</div>
+<script>
+if(!sessionStorage.getItem('loggedIn')){
+window.location.href='login.html';
+}
+</script>
+</body>
+</html> 

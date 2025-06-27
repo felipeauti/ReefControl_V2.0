@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ReefControl - Sensores</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#f5f7fa;min-height:100vh}
+.header{background:#4a90e2;color:white;padding:1rem;display:flex;align-items:center;justify-content:space-between}
+.header h1{font-size:1.5rem}
+.back-btn{background:rgba(255,255,255,0.2);border:none;color:white;padding:0.5rem 1rem;border-radius:5px;cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:0.5rem}
+.container{padding:1rem;max-width:1000px;margin:0 auto}
+.sensor-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1rem}
+.sensor-card{background:white;padding:1.5rem;border-radius:10px;box-shadow:0 4px 6px rgba(0,0,0,0.1)}
+.sensor-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
+.sensor-title{font-weight:bold;font-size:1.1rem;display:flex;align-items:center;gap:0.5rem}
+.sensor-value{font-size:1.2rem;font-weight:bold;color:#4a90e2}
+.form-group{margin-bottom:1rem}
+.form-group label{display:block;margin-bottom:0.5rem;font-weight:bold;color:#555}
+.form-group input,.form-group select{width:100%;padding:0.5rem;border:1px solid #ddd;border-radius:5px;font-size:0.9rem}
+.calibration-section{background:#f8f9fa;padding:1rem;border-radius:8px;margin-top:1rem}
+.calibration-title{font-weight:bold;margin-bottom:1rem;color:#333}
+.btn{padding:0.5rem 1rem;border:none;border-radius:5px;cursor:pointer;font-size:0.9rem;transition:background 0.2s;margin:0.25rem}
+.btn-primary{background:#4a90e2;color:white}
+.btn-primary:hover{background:#357abd}
+.btn-success{background:#28a745;color:white}
+.btn-success:hover{background:#218838}
+.btn-warning{background:#ffc107;color:#212529}
+.btn-warning:hover{background:#e0a800}
+.status-indicator{width:12px;height:12px;border-radius:50%;display:inline-block;margin-left:0.5rem}
+.online{background:#28a745}
+.offline{background:#dc3545}
+.warning{background:#ffc107}
+@media(max-width:768px){.container{padding:0.5rem}.sensor-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="header">
+<h1>📊 Configuração de Sensores</h1>
+<a href="config.html" class="back-btn">← Voltar</a>
+</div>
+<div class="container">
+<div class="sensor-grid">
+<div class="sensor-card">
+<div class="sensor-header">
+<div class="sensor-title">
+🌡️ Temperatura
+<span class="status-indicator online"></span>
+</div>
+<div class="sensor-value">24.5°C</div>
+</div>
+<div class="form-group">
+<label>Tipo de Sensor:</label>
+<select>
+<option value="ds18b20" selected>DS18B20</option>
+<option value="dht22">DHT22</option>
+<option value="bmp280">BMP280</option>
+</select>
+</div>
+<div class="form-group">
+<label>Pino:</label>
+<select>
+<option value="14" selected>GPIO 14 (D5)</option>
+<option value="12">GPIO 12 (D6)</option>
+<option value="13">GPIO 13 (D7)</option>
+</select>
+</div>
+<div class="form-group">
+<label>Correção (°C):</label>
+<input type="number" step="0.1" value="0.0">
+</div>
+<div class="calibration-section">
+<div class="calibration-title">Calibração</div>
+<p>Valor atual: <strong>24.5°C</strong></p>
+<div class="form-group">
+<label>Temperatura real:</label>
+<input type="number" step="0.1" placeholder="25.0">
+</div>
+<button class="btn btn-warning">Calibrar</button>
+</div>
+<button class="btn btn-primary">Salvar</button>
+</div>
+<div class="sensor-card">
+<div class="sensor-header">
+<div class="sensor-title">
+🧪 pH
+<span class="status-indicator online"></span>
+</div>
+<div class="sensor-value">7.8</div>
+</div>
+<div class="form-group">
+<label>Tipo de Sensor:</label>
+<select>
+<option value="analog" selected>pH Analógico</option>
+<option value="atlas">Atlas Scientific</option>
+</select>
+</div>
+<div class="form-group">
+<label>Pino:</label>
+<select>
+<option value="A0" selected>A0 (Analógico)</option>
+</select>
+</div>
+<div class="form-group">
+<label>Correção:</label>
+<input type="number" step="0.01" value="0.00">
+</div>
+<div class="calibration-section">
+<div class="calibration-title">Calibração</div>
+<p>Valor atual: <strong>7.80</strong></p>
+<div class="form-group">
+<label>pH real (solução de referência):</label>
+<input type="number" step="0.01" placeholder="7.00">
+</div>
+<button class="btn btn-warning">Calibrar pH 7.0</button>
+<button class="btn btn-warning">Calibrar pH 4.0</button>
+</div>
+<button class="btn btn-primary">Salvar</button>
+</div>
+<div class="sensor-card">
+<div class="sensor-header">
+<div class="sensor-title">
+💧 TDS/EC
+<span class="status-indicator warning"></span>
+</div>
+<div class="sensor-value">380 ppm</div>
+</div>
+<div class="form-group">
+<label>Tipo de Sensor:</label>
+<select>
+<option value="tds_meter" selected>TDS Meter</option>
+<option value="ec_probe">EC Probe</option>
+</select>
+</div>
+<div class="form-group">
+<label>Pino:</label>
+<select>
+<option value="A0" selected>A0 (Analógico)</option>
+</select>
+</div>
+<div class="form-group">
+<label>Fator de Conversão:</label>
+<input type="number" step="0.1" value="0.5">
+</div>
+<div class="calibration-section">
+<div class="calibration-title">Calibração</div>
+<p>Valor atual: <strong>380 ppm</strong></p>
+<div class="form-group">
+<label>Valor real (solução calibrada):</label>
+<input type="number" placeholder="400">
+</div>
+<button class="btn btn-warning">Calibrar</button>
+</div>
+<button class="btn btn-primary">Salvar</button>
+</div>
+<div class="sensor-card">
+<div class="sensor-header">
+<div class="sensor-title">
+📏 Nível da Água
+<span class="status-indicator online"></span>
+</div>
+<div class="sensor-value">85%</div>
+</div>
+<div class="form-group">
+<label>Tipo de Sensor:</label>
+<select>
+<option value="ultrasonic" selected>HC-SR04</option>
+<option value="float">Sensor de Boia</option>
+<option value="pressure">Sensor de Pressão</option>
+</select>
+</div>
+<div class="form-group">
+<label>Pino Trigger:</label>
+<select>
+<option value="12" selected>GPIO 12 (D6)</option>
+<option value="13">GPIO 13 (D7)</option>
+</select>
+</div>
+<div class="form-group">
+<label>Pino Echo:</label>
+<select>
+<option value="13" selected>GPIO 13 (D7)</option>
+<option value="14">GPIO 14 (D5)</option>
+</select>
+</div>
+<div class="calibration-section">
+<div class="calibration-title">Calibração</div>
+<p>Distância atual: <strong>15 cm</strong></p>
+<div class="form-group">
+<label>Altura máxima (cm):</label>
+<input type="number" value="50">
+</div>
+<div class="form-group">
+<label>Altura mínima (cm):</label>
+<input type="number" value="5">
+</div>
+<button class="btn btn-warning">Calibrar Vazio</button>
+<button class="btn btn-warning">Calibrar Cheio</button>
+</div>
+<button class="btn btn-primary">Salvar</button>
+</div>
+</div>
+</div>
+<script>
+if(!sessionStorage.getItem('loggedIn')){
+window.location.href='login.html';
+}
+</script>
+</body>
+</html> 

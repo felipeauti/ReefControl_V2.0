@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ReefControl - Display</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#f5f7fa;min-height:100vh}
+.header{background:#4a90e2;color:white;padding:1rem;display:flex;align-items:center;justify-content:space-between}
+.header h1{font-size:1.5rem}
+.back-btn{background:rgba(255,255,255,0.2);border:none;color:white;padding:0.5rem 1rem;border-radius:5px;cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:0.5rem}
+.container{padding:1rem;max-width:800px;margin:0 auto}
+.config-section{background:white;padding:2rem;border-radius:10px;box-shadow:0 4px 6px rgba(0,0,0,0.1);margin-bottom:2rem}
+.section-title{font-weight:bold;font-size:1.2rem;margin-bottom:1.5rem;color:#333;border-bottom:2px solid #4a90e2;padding-bottom:0.5rem}
+.form-group{margin-bottom:1.5rem}
+.form-group label{display:block;margin-bottom:0.5rem;font-weight:bold;color:#555}
+.form-group input,.form-group select{width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:5px;font-size:1rem}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.btn{padding:0.75rem 1.5rem;border:none;border-radius:5px;cursor:pointer;font-size:1rem;transition:background 0.2s;margin:0.5rem 0.5rem 0.5rem 0}
+.btn-primary{background:#4a90e2;color:white}
+.btn-primary:hover{background:#357abd}
+.btn-success{background:#28a745;color:white}
+.btn-success:hover{background:#218838}
+.btn-warning{background:#ffc107;color:#212529}
+.btn-warning:hover{background:#e0a800}
+.display-preview{background:#000;color:#00ff00;padding:1rem;border-radius:8px;font-family:monospace;font-size:0.9rem;line-height:1.2;margin-top:1rem;min-height:120px;border:2px solid #333}
+.display-16x2{width:100%;max-width:400px}
+.display-20x4{width:100%;max-width:500px}
+.status-info{background:#d1ecf1;padding:1rem;border-radius:8px;margin-bottom:1rem;color:#0c5460;border:1px solid #bee5eb}
+.pin-diagram{background:#f8f9fa;padding:1rem;border-radius:8px;margin-top:1rem;font-family:monospace;font-size:0.9rem}
+@media(max-width:768px){.container{padding:0.5rem}.form-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="header">
+<h1>📺 Configuração de Display</h1>
+<a href="config.html" class="back-btn">← Voltar</a>
+</div>
+<div class="container">
+<div class="config-section">
+<div class="section-title">🖥️ Tipo de Display</div>
+<div class="status-info">
+ℹ️ <strong>Status:</strong> Display LCD 16x2 detectado e funcionando
+</div>
+<div class="form-group">
+<label>Tipo de Display:</label>
+<select id="displayType">
+<option value="lcd16x2" selected>LCD 16x2 (HD44780)</option>
+<option value="lcd20x4">LCD 20x4 (HD44780)</option>
+<option value="oled128x64">OLED 128x64 (SSD1306)</option>
+<option value="oled128x32">OLED 128x32 (SSD1306)</option>
+<option value="none">Nenhum Display</option>
+</select>
+</div>
+<div class="form-group">
+<label>Interface:</label>
+<select>
+<option value="i2c" selected>I2C</option>
+<option value="parallel">Paralelo (4-bit)</option>
+<option value="spi">SPI</option>
+</select>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label>Endereço I2C:</label>
+<input type="text" value="0x27" placeholder="0x27">
+</div>
+<div class="form-group">
+<label>Pinos SDA/SCL:</label>
+<select>
+<option value="default" selected>Padrão (SDA:D2, SCL:D1)</option>
+<option value="custom">Personalizado</option>
+</select>
+</div>
+</div>
+<div class="pin-diagram">
+<strong>Conexões I2C (Wemos D1 Mini):</strong><br>
+SDA → GPIO 4 (D2)<br>
+SCL → GPIO 5 (D1)<br>
+VCC → 5V<br>
+GND → GND
+</div>
+<button class="btn btn-primary">Salvar Configuração</button>
+<button class="btn btn-warning">Testar Display</button>
+</div>
+<div class="config-section">
+<div class="section-title">📊 Conteúdo do Display</div>
+<div class="form-group">
+<label>Tela Principal:</label>
+<select>
+<option value="sensors" selected>Sensores Principais</option>
+<option value="status">Status dos Equipamentos</option>
+<option value="datetime">Data e Hora</option>
+<option value="custom">Personalizada</option>
+</select>
+</div>
+<div class="form-group">
+<label>Rotação de Telas:</label>
+<select>
+<option value="enabled" selected>Habilitada</option>
+<option value="disabled">Desabilitada</option>
+</select>
+</div>
+<div class="form-group">
+<label>Intervalo de Rotação (seg):</label>
+<input type="number" value="5" min="2" max="60">
+</div>
+<div class="display-preview display-16x2" id="displayPreview">
+Temp: 24.5°C  pH:7.8<br>
+TDS:380 Nivel:85%
+</div>
+<button class="btn btn-primary">Salvar Conteúdo</button>
+</div>
+<div class="config-section">
+<div class="section-title">🎨 Aparência</div>
+<div class="form-row">
+<div class="form-group">
+<label>Brilho (%):</label>
+<input type="range" min="10" max="100" value="80" id="brightness">
+<span id="brightnessValue">80%</span>
+</div>
+<div class="form-group">
+<label>Contraste (%):</label>
+<input type="range" min="0" max="100" value="50" id="contrast">
+<span id="contrastValue">50%</span>
+</div>
+</div>
+<div class="form-group">
+<label>Backlight:</label>
+<select>
+<option value="always" selected>Sempre Ligado</option>
+<option value="auto">Automático</option>
+<option value="scheduled">Programado</option>
+<option value="off">Sempre Desligado</option>
+</select>
+</div>
+<div class="form-group">
+<label>Timeout do Backlight (min):</label>
+<input type="number" value="10" min="1" max="60">
+</div>
+<button class="btn btn-primary">Salvar Aparência</button>
+</div>
+<div class="config-section">
+<div class="section-title">⚙️ Configurações Avançadas</div>
+<div class="form-group">
+<label>Taxa de Atualização (seg):</label>
+<input type="number" value="2" min="1" max="10">
+</div>
+<div class="form-group">
+<label>Animação de Inicialização:</label>
+<select>
+<option value="enabled" selected>Habilitada</option>
+<option value="disabled">Desabilitada</option>
+</select>
+</div>
+<div class="form-group">
+<label>Indicador de Status Wi-Fi:</label>
+<select>
+<option value="enabled" selected>Habilitado</option>
+<option value="disabled">Desabilitado</option>
+</select>
+</div>
+<div class="form-group">
+<label>Formato de Temperatura:</label>
+<select>
+<option value="celsius" selected>Celsius (°C)</option>
+<option value="fahrenheit">Fahrenheit (°F)</option>
+</select>
+</div>
+<button class="btn btn-primary">Salvar Avançado</button>
+<button class="btn btn-success">Reiniciar Display</button>
+</div>
+</div>
+<script>
+const brightnessSlider=document.getElementById('brightness');
+const brightnessValue=document.getElementById('brightnessValue');
+const contrastSlider=document.getElementById('contrast');
+const contrastValue=document.getElementById('contrastValue');
+const displayType=document.getElementById('displayType');
+const displayPreview=document.getElementById('displayPreview');
+
+brightnessSlider.addEventListener('input',()=>{
+brightnessValue.textContent=brightnessSlider.value+'%';
+});
+
+contrastSlider.addEventListener('input',()=>{
+contrastValue.textContent=contrastSlider.value+'%';
+});
+
+displayType.addEventListener('change',()=>{
+const type=displayType.value;
+if(type==='lcd20x4'){
+displayPreview.className='display-preview display-20x4';
+displayPreview.innerHTML='Temp: 24.5°C    pH: 7.8<br>TDS: 380ppm  Nivel: 85%<br>Bomba: ON   Aquec: OFF<br>15/12 14:30  WiFi: OK';
+}else if(type==='oled128x64'||type==='oled128x32'){
+displayPreview.style.background='#000';
+displayPreview.style.color='#ffffff';
+displayPreview.innerHTML='🐠 ReefControl<br>Temp: 24.5°C pH:7.8<br>TDS:380 Nivel:85%<br>Status: OK';
+}else if(type==='none'){
+displayPreview.innerHTML='Display desabilitado';
+}else{
+displayPreview.className='display-preview display-16x2';
+displayPreview.innerHTML='Temp: 24.5°C  pH:7.8<br>TDS:380 Nivel:85%';
+}
+});
+
+if(!sessionStorage.getItem('loggedIn')){
+window.location.href='login.html';
+}
+</script>
+</body>
+</html> 
