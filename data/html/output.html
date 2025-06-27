@@ -11,6 +11,11 @@ body{font-family:Arial,sans-serif;background:#f5f7fa;min-height:100vh}
 .header h1{font-size:1.5rem}
 .back-btn{background:rgba(255,255,255,0.2);border:none;color:white;padding:0.5rem 1rem;border-radius:5px;cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:0.5rem}
 .container{padding:1rem;max-width:1000px;margin:0 auto}
+.debug-controls{display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap}
+.debug-btn{padding:0.25rem 0.5rem;border:none;border-radius:3px;cursor:pointer;font-size:0.8rem}
+.debug-btn.toggle{background:#6c757d;color:white}
+.debug-btn.clear{background:#dc3545;color:white}
+.debug-btn.disable{background:#28a745;color:white}
 .output-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1rem}
 .output-card{background:white;padding:1.5rem;border-radius:10px;box-shadow:0 4px 6px rgba(0,0,0,0.1)}
 .output-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
@@ -21,21 +26,29 @@ body{font-family:Arial,sans-serif;background:#f5f7fa;min-height:100vh}
 .form-group{margin-bottom:1rem}
 .form-group label{display:block;margin-bottom:0.5rem;font-weight:bold;color:#555}
 .form-group input,.form-group select{width:100%;padding:0.5rem;border:1px solid #ddd;border-radius:5px;font-size:0.9rem}
-.control-buttons{display:flex;gap:0.5rem;margin-top:1rem}
-.btn{padding:0.5rem 1rem;border:none;border-radius:5px;cursor:pointer;font-size:0.9rem;transition:background 0.2s}
+.form-group input:focus,.form-group select:focus{outline:none;border-color:#4a90e2;box-shadow:0 0 0 2px rgba(74,144,226,0.2)}
+.control-buttons{display:flex;gap:0.5rem;margin-top:1rem;flex-wrap:wrap}
+.btn{padding:0.5rem 1rem;border:none;border-radius:5px;cursor:pointer;font-size:0.9rem;transition:background 0.2s;min-width:80px}
 .btn-success{background:#28a745;color:white}
 .btn-success:hover{background:#218838}
 .btn-danger{background:#dc3545;color:white}
 .btn-danger:hover{background:#c82333}
 .btn-primary{background:#4a90e2;color:white}
 .btn-primary:hover{background:#357abd}
+.btn-warning{background:#ffc107;color:#212529}
+.btn-warning:hover{background:#e0a800}
 .toggle-switch{position:relative;display:inline-block;width:60px;height:34px}
 .toggle-switch input{opacity:0;width:0;height:0}
 .slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#ccc;transition:.4s;border-radius:34px}
 .slider:before{position:absolute;content:"";height:26px;width:26px;left:4px;bottom:4px;background:white;transition:.4s;border-radius:50%}
 input:checked+.slider{background:#4a90e2}
 input:checked+.slider:before{transform:translateX(26px)}
-@media(max-width:768px){.container{padding:0.5rem}.output-grid{grid-template-columns:1fr}}
+.loading{text-align:center;padding:2rem;color:#666}
+.debug{background:#f8f9fa;border:1px solid #dee2e6;padding:1rem;margin:1rem 0;border-radius:5px;font-family:monospace;font-size:0.8rem;max-height:300px;overflow-y:auto}
+.debug-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;font-family:Arial,sans-serif}
+.debug-title{font-weight:bold;color:#495057}
+.success-msg{background:#d4edda;color:#155724;padding:0.75rem;border-radius:5px;margin:0.5rem 0;border:1px solid #c3e6cb}
+@media(max-width:768px){.container{padding:0.5rem}.output-grid{grid-template-columns:1fr}.control-buttons{justify-content:center}}
 </style>
 </head>
 <body>
@@ -44,165 +57,530 @@ input:checked+.slider:before{transform:translateX(26px)}
 <a href="config.html" class="back-btn">← Voltar</a>
 </div>
 <div class="container">
-<div class="output-grid">
-<div class="output-card">
-<div class="output-header">
-<div class="output-title">Bomba Principal</div>
-<div class="output-status status-on">LIGADA</div>
+<div id="loading" class="loading">
+🔄 Carregando status das saídas...
 </div>
-<div class="form-group">
-<label>Pino GPIO:</label>
-<select>
-<option value="5" selected>GPIO 5 (D1)</option>
-<option value="4">GPIO 4 (D2)</option>
-<option value="0">GPIO 0 (D3)</option>
-<option value="2">GPIO 2 (D4)</option>
-</select>
+
+<div id="saveAllContainer" class="save-all-container" style="display:none; margin-bottom: 20px;">
+  <button class="btn btn-success" onclick="saveAllConfigs()" style="width: 48%; font-size: 16px; padding: 12px; margin-right: 4%;">
+    💾 Salvar Todas as Configurações
+  </button>
+  <button class="btn btn-primary" onclick="forceRefresh()" style="width: 48%; font-size: 16px; padding: 12px;">
+    🔄 Forçar Atualização
+  </button>
 </div>
-<div class="form-group">
-<label>Nome:</label>
-<input type="text" value="Bomba Principal">
+
+<div id="outputGrid" class="output-grid" style="display:none">
+<!-- Conteúdo será carregado dinamicamente -->
 </div>
-<div class="form-group">
-<label>Modo:</label>
-<select>
-<option value="manual">Manual</option>
-<option value="auto" selected>Automático</option>
-<option value="schedule">Programado</option>
-</select>
-</div>
-<div class="form-group">
-<label>Controle Manual:</label>
-<label class="toggle-switch">
-<input type="checkbox" checked>
-<span class="slider"></span>
-</label>
-</div>
-<div class="control-buttons">
-<button class="btn btn-primary">Salvar</button>
-<button class="btn btn-success">Testar</button>
+
+<!-- Debug Console movido para o final -->
+<div id="debug" class="debug" style="display:none; margin-top: 30px;">
+<div class="debug-header">
+<span class="debug-title">🔧 DEBUG CONSOLE</span>
+<div class="debug-controls">
+<button class="debug-btn toggle" onclick="toggleDebugVisibility()">Minimizar</button>
+<button class="debug-btn clear" onclick="clearDebug()">Limpar</button>
+<button class="debug-btn disable" onclick="toggleDebugMode()">Desabilitar</button>
 </div>
 </div>
-<div class="output-card">
-<div class="output-header">
-<div class="output-title">Aquecedor</div>
-<div class="output-status status-off">DESLIGADO</div>
-</div>
-<div class="form-group">
-<label>Pino GPIO:</label>
-<select>
-<option value="5">GPIO 5 (D1)</option>
-<option value="4" selected>GPIO 4 (D2)</option>
-<option value="0">GPIO 0 (D3)</option>
-<option value="2">GPIO 2 (D4)</option>
-</select>
-</div>
-<div class="form-group">
-<label>Nome:</label>
-<input type="text" value="Aquecedor">
-</div>
-<div class="form-group">
-<label>Modo:</label>
-<select>
-<option value="manual">Manual</option>
-<option value="auto" selected>Automático</option>
-<option value="schedule">Programado</option>
-</select>
-</div>
-<div class="form-group">
-<label>Controle Manual:</label>
-<label class="toggle-switch">
-<input type="checkbox">
-<span class="slider"></span>
-</label>
-</div>
-<div class="control-buttons">
-<button class="btn btn-primary">Salvar</button>
-<button class="btn btn-success">Testar</button>
+<div id="debugContent"></div>
 </div>
 </div>
-<div class="output-card">
-<div class="output-header">
-<div class="output-title">Iluminação LED</div>
-<div class="output-status status-on">LIGADA</div>
-</div>
-<div class="form-group">
-<label>Pino GPIO:</label>
-<select>
-<option value="5">GPIO 5 (D1)</option>
-<option value="4">GPIO 4 (D2)</option>
-<option value="0" selected>GPIO 0 (D3)</option>
-<option value="2">GPIO 2 (D4)</option>
-</select>
-</div>
-<div class="form-group">
-<label>Nome:</label>
-<input type="text" value="Iluminação LED">
-</div>
-<div class="form-group">
-<label>Modo:</label>
-<select>
-<option value="manual">Manual</option>
-<option value="auto">Automático</option>
-<option value="schedule" selected>Programado</option>
-</select>
-</div>
-<div class="form-group">
-<label>Controle Manual:</label>
-<label class="toggle-switch">
-<input type="checkbox" checked>
-<span class="slider"></span>
-</label>
-</div>
-<div class="control-buttons">
-<button class="btn btn-primary">Salvar</button>
-<button class="btn btn-success">Testar</button>
-</div>
-</div>
-<div class="output-card">
-<div class="output-header">
-<div class="output-title">Bomba Reposição</div>
-<div class="output-status status-off">DESLIGADA</div>
-</div>
-<div class="form-group">
-<label>Pino GPIO:</label>
-<select>
-<option value="5">GPIO 5 (D1)</option>
-<option value="4">GPIO 4 (D2)</option>
-<option value="0">GPIO 0 (D3)</option>
-<option value="2" selected>GPIO 2 (D4)</option>
-</select>
-</div>
-<div class="form-group">
-<label>Nome:</label>
-<input type="text" value="Bomba Reposição">
-</div>
-<div class="form-group">
-<label>Modo:</label>
-<select>
-<option value="manual">Manual</option>
-<option value="auto" selected>Automático</option>
-<option value="schedule">Programado</option>
-</select>
-</div>
-<div class="form-group">
-<label>Controle Manual:</label>
-<label class="toggle-switch">
-<input type="checkbox">
-<span class="slider"></span>
-</label>
-</div>
-<div class="control-buttons">
-<button class="btn btn-primary">Salvar</button>
-<button class="btn btn-success">Testar</button>
-</div>
-</div>
-</div>
-</div>
+
 <script>
+// Verificar login
 if(!sessionStorage.getItem('loggedIn')){
-window.location.href='login.html';
+  window.location.href='login.html';
 }
+
+let outputData = {};
+let debugMode = true; // Habilitar debug
+let debugVisible = true;
+let configData = {
+  pump1: { pin: 5, name: 'Bomba Principal' },
+  heater: { pin: 4, name: 'Aquecedor' },
+  light: { pin: 14, name: 'Iluminação LED' },
+  pump2: { pin: 12, name: 'Bomba Reposição' }
+};
+
+// Controle de mudanças para logs inteligentes
+let lastOutputData = {};
+let lastConfigData = {};
+
+function debugLog(message) {
+  if (debugMode) {
+    console.log('🔧 DEBUG:', message);
+    const debugDiv = document.getElementById('debugContent');
+    const timestamp = new Date().toLocaleTimeString();
+    debugDiv.innerHTML += `<span style="color:#6c757d">${timestamp}:</span> ${message}<br>`;
+    
+    if (debugVisible) {
+      document.getElementById('debug').style.display = 'block';
+    }
+    
+    // Auto-scroll para o final
+    debugDiv.scrollTop = debugDiv.scrollHeight;
+    
+    // Limitar a 100 linhas para performance
+    const lines = debugDiv.innerHTML.split('<br>');
+    if (lines.length > 100) {
+      debugDiv.innerHTML = lines.slice(-100).join('<br>');
+    }
+  }
+}
+
+// Função para detectar mudanças nos dados
+function detectChanges(newOutputData, newConfigData) {
+  let changes = [];
+  
+  // Verificar mudanças no status das saídas
+  Object.keys(newOutputData).forEach(key => {
+    if (!lastOutputData[key] || 
+        lastOutputData[key].state !== newOutputData[key].state ||
+        lastOutputData[key].pin !== newOutputData[key].pin ||
+        lastOutputData[key].name !== newOutputData[key].name) {
+      changes.push(`${key}: ${newOutputData[key].state ? 'ON' : 'OFF'} (${newOutputData[key].name})`);
+    }
+  });
+  
+  // Verificar mudanças nas configurações
+  Object.keys(newConfigData).forEach(key => {
+    if (!lastConfigData[key] || 
+        lastConfigData[key].pin !== newConfigData[key].pin ||
+        lastConfigData[key].name !== newConfigData[key].name) {
+      changes.push(`Config ${key}: ${newConfigData[key].name} (GPIO ${newConfigData[key].pin})`);
+    }
+  });
+  
+  // Logar apenas se houver mudanças
+  if (changes.length > 0) {
+    debugLog(`🔄 Mudanças detectadas: ${changes.join(' | ')}`);
+  }
+  
+  // Atualizar dados anteriores
+  lastOutputData = JSON.parse(JSON.stringify(newOutputData));
+  lastConfigData = JSON.parse(JSON.stringify(newConfigData));
+}
+
+function toggleDebugVisibility() {
+  const debugDiv = document.getElementById('debug');
+  const toggleBtn = document.querySelector('.debug-btn.toggle');
+  
+  if (debugVisible) {
+    debugDiv.style.display = 'none';
+    toggleBtn.textContent = 'Mostrar Debug';
+    debugVisible = false;
+  } else {
+    debugDiv.style.display = 'block';
+    toggleBtn.textContent = 'Minimizar';
+    debugVisible = true;
+  }
+}
+
+function clearDebug() {
+  document.getElementById('debugContent').innerHTML = '';
+  debugLog('Debug limpo pelo usuário');
+}
+
+function toggleDebugMode() {
+  const disableBtn = document.querySelector('.debug-btn.disable');
+  
+  if (debugMode) {
+    debugMode = false;
+    disableBtn.textContent = 'Habilitar';
+    disableBtn.style.background = '#dc3545';
+    document.getElementById('debug').style.display = 'none';
+    console.log('🔧 Debug mode DESABILITADO');
+  } else {
+    debugMode = true;
+    disableBtn.textContent = 'Desabilitar';
+    disableBtn.style.background = '#28a745';
+    debugLog('Debug mode HABILITADO novamente');
+  }
+}
+
+// Função showSuccessMessage removida - mensagens agora vão para debugLog
+
+// Forçar atualização completa
+async function forceRefresh() {
+  debugLog('🔄 Forçando atualização completa...');
+
+  
+  try {
+    // Limpar cache de dados
+    outputData = {};
+    configData = {
+      pump1: { pin: 5, name: 'Bomba Principal' },
+      heater: { pin: 4, name: 'Aquecedor' },
+      light: { pin: 14, name: 'Iluminação LED' },
+      pump2: { pin: 12, name: 'Bomba Reposição' }
+    };
+    
+    // Recarregar tudo
+    await loadOutputs();
+    debugLog('✅ Atualização forçada concluída');
+
+  } catch (error) {
+    debugLog(`❌ Erro na atualização forçada: ${error.message}`);
+    alert(`Erro ao atualizar: ${error.message}`);
+  }
+}
+
+// Carregar status das saídas
+async function loadOutputs() {
+  try {
+    // 1. Carregar status atual das saídas
+    const statusResponse = await fetch('/api/outputs', {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!statusResponse.ok) {
+      throw new Error(`HTTP ${statusResponse.status}: ${statusResponse.statusText}`);
+    }
+    
+    const statusText = await statusResponse.text();
+    outputData = JSON.parse(statusText);
+    
+    // 2. Carregar configurações persistidas
+    try {
+      const configResponse = await fetch('/api/outputs/config', {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (configResponse.ok) {
+        const configText = await configResponse.text();
+        const savedConfig = JSON.parse(configText);
+        
+        // Mapear configurações salvas
+        if (savedConfig.outputs && savedConfig.outputs.length >= 4) {
+          configData = {
+            pump1: { pin: savedConfig.outputs[0].pin, name: savedConfig.outputs[0].name },
+            heater: { pin: savedConfig.outputs[1].pin, name: savedConfig.outputs[1].name },
+            light: { pin: savedConfig.outputs[2].pin, name: savedConfig.outputs[2].name },
+            pump2: { pin: savedConfig.outputs[3].pin, name: savedConfig.outputs[3].name }
+          };
+        } else {
+          throw new Error('Configurações inválidas');
+        }
+      } else {
+        throw new Error(`Config HTTP ${configResponse.status}`);
+      }
+    } catch (configError) {
+      // Fallback para configurações do status
+      debugLog(`⚠️ Usando configurações padrão: ${configError.message}`);
+      configData = {
+        pump1: { pin: outputData.pump1.pin, name: outputData.pump1.name },
+        heater: { pin: outputData.heater.pin, name: outputData.heater.name },
+        light: { pin: outputData.light.pin, name: outputData.light.name },
+        pump2: { pin: outputData.pump2.pin, name: outputData.pump2.name }
+      };
+    }
+    
+    // Detectar e logar apenas mudanças
+    detectChanges(outputData, configData);
+    
+    renderOutputs();
+    
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('saveAllContainer').style.display = 'block';
+    document.getElementById('outputGrid').style.display = 'grid';
+    
+  } catch (error) {
+    debugLog(`ERRO: ${error.message}`);
+    console.error('Erro completo:', error);
+    document.getElementById('loading').innerHTML = `❌ Erro: ${error.message}`;
+  }
+}
+
+// Renderizar interface das saídas
+function renderOutputs() {
+  const grid = document.getElementById('outputGrid');
+  
+  const outputs = [
+    { key: 'pump1', title: 'Bomba Principal', icon: '🔌' },
+    { key: 'heater', title: 'Aquecedor', icon: '🔥' },
+    { key: 'light', title: 'Iluminação LED', icon: '💡' },
+    { key: 'pump2', title: 'Bomba Reposição', icon: '🔌' }
+  ];
+  
+  // Salvar valores dos campos que estão sendo editados
+  const currentValues = {};
+  outputs.forEach(output => {
+    const nameInput = document.getElementById(`name_${output.key}`);
+    if (nameInput && document.activeElement === nameInput) {
+      currentValues[`name_${output.key}`] = nameInput.value;
+    }
+  });
+  
+  // Salvar informações de foco antes do render
+  const focusedElement = document.activeElement;
+  const focusedId = focusedElement ? focusedElement.id : null;
+  const cursorPosition = focusedElement && focusedElement.type === 'text' ? focusedElement.selectionStart : null;
+  
+  grid.innerHTML = outputs.map(output => {
+    const data = outputData[output.key];
+    if (!data) {
+      debugLog(`AVISO: Dados não encontrados para ${output.key}`);
+      return '';
+    }
+    
+    const isOn = data.state;
+    const currentPin = configData[output.key].pin;
+    // Usar valor preservado se estiver digitando, senão usar o valor dos dados
+    const currentName = currentValues[`name_${output.key}`] || configData[output.key].name;
+    
+    return `
+      <div class="output-card">
+        <div class="output-header">
+          <div class="output-title">${output.icon} ${currentName}</div>
+          <div class="output-status ${isOn ? 'status-on' : 'status-off'}">
+            ${isOn ? 'LIGADO' : 'DESLIGADO'}
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Pino GPIO:</label>
+          <select id="pin_${output.key}" onchange="updateConfig('${output.key}', 'pin', this.value)">
+            <option value="5" ${currentPin === 5 ? 'selected' : ''}>GPIO 5 (D1)</option>
+            <option value="4" ${currentPin === 4 ? 'selected' : ''}>GPIO 4 (D2)</option>
+            <option value="0" ${currentPin === 0 ? 'selected' : ''}>GPIO 0 (D3)</option>
+            <option value="2" ${currentPin === 2 ? 'selected' : ''}>GPIO 2 (D4)</option>
+            <option value="14" ${currentPin === 14 ? 'selected' : ''}>GPIO 14 (D5)</option>
+            <option value="12" ${currentPin === 12 ? 'selected' : ''}>GPIO 12 (D6)</option>
+            <option value="13" ${currentPin === 13 ? 'selected' : ''}>GPIO 13 (D7)</option>
+            <option value="15" ${currentPin === 15 ? 'selected' : ''}>GPIO 15 (D8)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Nome:</label>
+          <input type="text" id="name_${output.key}" value="${currentName}" 
+                 onchange="updateConfig('${output.key}', 'name', this.value)"
+                 placeholder="Digite o nome da saída">
+        </div>
+        <div class="form-group">
+          <label>Controle Manual:</label>
+          <label class="toggle-switch">
+            <input type="checkbox" ${isOn ? 'checked' : ''} 
+                   onchange="toggleOutput('${output.key}', this.checked)">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="control-buttons">
+          <button class="btn ${isOn ? 'btn-danger' : 'btn-success'}" 
+                  onclick="toggleOutput('${output.key}', ${!isOn})">
+            ${isOn ? 'Desligar' : 'Ligar'}
+          </button>
+          <button class="btn btn-primary" onclick="testOutput('${output.key}')">
+            Testar
+          </button>
+          <button class="btn btn-warning" onclick="saveConfig('${output.key}')">
+            Salvar
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  // Restaurar foco e posição do cursor
+  if (focusedId) {
+    setTimeout(() => {
+      const element = document.getElementById(focusedId);
+      if (element) {
+        element.focus();
+        if (cursorPosition !== null && element.type === 'text') {
+          element.setSelectionRange(cursorPosition, cursorPosition);
+        }
+      }
+    }, 10);
+  }
+}
+
+// Atualizar configuração local
+function updateConfig(relay, field, value) {
+  if (field === 'pin') {
+    value = parseInt(value);
+  }
+  configData[relay][field] = value;
+  debugLog(`Config ${relay}.${field} = ${value}`);
+  
+  // Se mudou o nome, atualizar interface imediatamente
+  if (field === 'name') {
+    renderOutputs();
+  }
+}
+
+// Salvar configuração
+async function saveConfig(relay) {
+  debugLog(`Salvando configuração de ${relay}...`);
+  
+  try {
+    // Preparar payload com todas as configurações
+    const payload = {
+      outputs: [
+        { index: 0, name: configData.pump1.name, pin: configData.pump1.pin },
+        { index: 1, name: configData.heater.name, pin: configData.heater.pin },
+        { index: 2, name: configData.light.name, pin: configData.light.pin },
+        { index: 3, name: configData.pump2.name, pin: configData.pump2.pin }
+      ]
+    };
+    
+    debugLog(`Salvando: ${JSON.stringify(payload)}`);
+    
+    const response = await fetch('/api/outputs/config', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    const result = await response.json();
+    debugLog(`✅ Configuração salva: ${response.status}`);
+    
+    debugLog(`✅ Configuração de ${configData[relay].name} salva com sucesso!`);
+    
+    // Recarregar dados e atualizar interface
+    await loadOutputs();
+    renderOutputs();
+    
+  } catch (error) {
+    debugLog(`ERRO ao salvar ${relay}: ${error.message}`);
+    alert(`Erro ao salvar configuração: ${error.message}`);
+  }
+}
+
+// Controlar saída
+async function toggleOutput(relay, state) {
+  debugLog(`Controlando ${relay}: ${state ? 'ON' : 'OFF'}`);
+  
+  try {
+    const payload = {
+      relay: relay,
+      state: state
+    };
+    
+    const response = await fetch('/api/outputs', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    const result = await response.text();
+    debugLog(`✅ ${relay} ${state ? 'ON' : 'OFF'} - OK`);
+    debugLog(`✅ ${configData[relay].name} ${state ? 'ligado' : 'desligado'}!`);
+    
+    // Atualizar interface após 500ms
+    setTimeout(loadOutputs, 500);
+    
+  } catch (error) {
+    debugLog(`ERRO ao controlar ${relay}: ${error.message}`);
+    alert(`Erro ao controlar ${relay}: ${error.message}`);
+  }
+}
+
+// Testar saída (ligar por 2 segundos)
+async function testOutput(relay) {
+  debugLog(`Testando ${relay}...`);
+  
+  try {
+    debugLog(`🔧 Testando ${configData[relay].name} por 2 segundos...`);
+    
+    // Ligar
+    await toggleOutput(relay, true);
+    
+    // Desligar após 2 segundos
+    setTimeout(async () => {
+      await toggleOutput(relay, false);
+      debugLog(`Teste de ${relay} concluído!`);
+      debugLog(`✅ Teste de ${configData[relay].name} concluído!`);
+    }, 2000);
+    
+  } catch (error) {
+    debugLog(`ERRO no teste de ${relay}: ${error.message}`);
+    alert(`Erro no teste: ${error.message}`);
+  }
+}
+
+// Salvar todas as configurações
+async function saveAllConfigs() {
+  debugLog('Salvando TODAS as configurações...');
+  
+  try {
+    const payload = {
+      outputs: [
+        { index: 0, name: configData.pump1.name, pin: configData.pump1.pin },
+        { index: 1, name: configData.heater.name, pin: configData.heater.pin },
+        { index: 2, name: configData.light.name, pin: configData.light.pin },
+        { index: 3, name: configData.pump2.name, pin: configData.pump2.pin }
+      ]
+    };
+    
+    debugLog(`Salvando todas: ${JSON.stringify(payload)}`);
+    
+    const response = await fetch('/api/outputs/config', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    const result = await response.json();
+    debugLog(`✅ TODAS as configurações salvas: ${response.status}`);
+    
+    debugLog('🎉 Todas as configurações foram salvas com sucesso!');
+    
+    // Atualizar interface
+    renderOutputs();
+    
+  } catch (error) {
+    debugLog(`ERRO ao salvar todas as configurações: ${error.message}`);
+    alert(`Erro ao salvar todas as configurações: ${error.message}`);
+  }
+}
+
+// Atualizar status a cada 5 segundos (só se não estiver digitando)
+setInterval(() => {
+  if (document.getElementById('outputGrid').style.display !== 'none') {
+    // Verificar se algum input está com foco (usuário digitando)
+    const activeElement = document.activeElement;
+    const isTyping = activeElement && activeElement.tagName === 'INPUT' && activeElement.type === 'text';
+    
+    if (!isTyping) {
+      loadOutputs();
+    }
+  }
+}, 5000);
+
+// Carregar dados iniciais
+debugLog('🚀 ReefControl - Sistema de saídas iniciado');
+debugLog('Versão: v2.0.9 - Interface Limpa Sem Mensagens');
+loadOutputs();
 </script>
 </body>
 </html> 

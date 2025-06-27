@@ -74,30 +74,48 @@ struct SensorConfig {
   int levelMax = 95;
 };
 
+struct OutputConfig {
+  char name[32];
+  int pin;
+  bool enabled;
+  bool autoMode;
+  int onTime;   // hora para ligar
+  int offTime;  // hora para desligar
+  float onTemp;  // temperatura para ligar (aquecedor)
+  float offTemp; // temperatura para desligar (aquecedor)
+  int interval;  // intervalo em minutos
+  int duration;  // duração em segundos
+};
+
 struct RelayConfig {
-  // Bomba Principal
+  // Configurações individuais das saídas
+  OutputConfig outputs[4] = {
+    {"Bomba Principal", 5, true, true, 8, 22, 0.0, 0.0, 0, 0},
+    {"Aquecedor", 4, true, true, 0, 0, 24.0, 26.0, 0, 0},
+    {"Iluminação LED", 14, true, true, 8, 20, 0.0, 0.0, 0, 0},
+    {"Bomba Reposição", 12, true, false, 0, 0, 0.0, 0.0, 60, 30}
+  };
+  
+  // Compatibilidade com código antigo
   bool pump1Enabled = true;
   bool pump1AutoMode = true;
-  int pump1OnTime = 8;  // hora
-  int pump1OffTime = 22; // hora
+  int pump1OnTime = 8;
+  int pump1OffTime = 22;
   
-  // Aquecedor
   bool heaterEnabled = true;
   bool heaterAutoMode = true;
   float heaterOnTemp = 24.0;
   float heaterOffTemp = 26.0;
   
-  // Iluminação
   bool lightEnabled = true;
   bool lightAutoMode = true;
-  int lightOnTime = 8;  // hora
-  int lightOffTime = 20; // hora
+  int lightOnTime = 8;
+  int lightOffTime = 20;
   
-  // Bomba Reposição
   bool pump2Enabled = true;
   bool pump2AutoMode = false;
-  int pump2Interval = 60; // minutos
-  int pump2Duration = 30; // segundos
+  int pump2Interval = 60;
+  int pump2Duration = 30;
 };
 
 struct DisplayConfig {
@@ -160,6 +178,12 @@ public:
   void setDeviceName(const String& name);
   void setWiFiCredentials(const String& ssid, const String& password);
   void setMqttServer(const String& server, int port, const String& user, const String& pass);
+  
+  // Configurações de saídas
+  bool setOutputConfig(int index, const String& name, int pin);
+  OutputConfig* getOutputConfig(int index);
+  String getOutputsJson();
+  bool setOutputsFromJson(const String& json);
   
   // Utilitários
   String toJson();

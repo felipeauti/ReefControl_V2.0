@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste API ReefControl</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        button { padding: 10px 20px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Teste API ReefControl</h1>
+    
+    <div>
+        <button onclick="testGetConfig()">Testar GET /api/outputs/config</button>
+        <button onclick="testGetOutputs()">Testar GET /api/outputs</button>
+        <button onclick="testSaveConfig()">Testar POST /api/outputs/config</button>
+        <button onclick="clearResults()">Limpar</button>
+    </div>
+    
+    <div id="results"></div>
+
+    <script>
+        function addResult(message, isSuccess = true) {
+            const div = document.createElement('div');
+            div.className = `test-result ${isSuccess ? 'success' : 'error'}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}:</strong> ${message}`;
+            document.getElementById('results').appendChild(div);
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function testGetConfig() {
+            try {
+                addResult('🔄 Testando GET /api/outputs/config...');
+                
+                const response = await fetch('/api/outputs/config', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                addResult(`✅ GET Config SUCCESS: ${JSON.stringify(data, null, 2)}`);
+                
+            } catch (error) {
+                addResult(`❌ GET Config ERROR: ${error.message}`, false);
+            }
+        }
+
+        async function testGetOutputs() {
+            try {
+                addResult('🔄 Testando GET /api/outputs...');
+                
+                const response = await fetch('/api/outputs', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                addResult(`✅ GET Outputs SUCCESS: ${JSON.stringify(data, null, 2)}`);
+                
+            } catch (error) {
+                addResult(`❌ GET Outputs ERROR: ${error.message}`, false);
+            }
+        }
+
+        async function testSaveConfig() {
+            try {
+                addResult('🔄 Testando POST /api/outputs/config...');
+                
+                const payload = {
+                    outputs: [
+                        { index: 0, name: "TESTE WEB 1", pin: 5 },
+                        { index: 1, name: "TESTE WEB 2", pin: 4 },
+                        { index: 2, name: "TESTE WEB 3", pin: 14 },
+                        { index: 3, name: "TESTE WEB 4", pin: 12 }
+                    ]
+                };
+                
+                const response = await fetch('/api/outputs/config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                addResult(`✅ POST Config SUCCESS: ${JSON.stringify(result)}`);
+                
+                // Testar se salvou
+                setTimeout(testGetConfig, 1000);
+                
+            } catch (error) {
+                addResult(`❌ POST Config ERROR: ${error.message}`, false);
+            }
+        }
+
+        // Teste automático ao carregar
+        window.onload = function() {
+            addResult('🚀 Página carregada - Iniciando testes automáticos...');
+            setTimeout(testGetOutputs, 500);
+            setTimeout(testGetConfig, 1000);
+        };
+    </script>
+</body>
+</html> 

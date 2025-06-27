@@ -1,8 +1,12 @@
 #include "WebServer.h"
 #include <LittleFS.h>
 #include <ESP8266HTTPUpdateServer.h>
+#include "RelayController.h"
+#include "ConfigManager.h"
 
-bool WebServerManager::begin() {
+bool WebServerManager::begin(RelayController* relayController, ConfigManager* configManager) {
+  _relayController = relayController;
+  _configManager = configManager;
   // Página inicial - redireciona para login
   _server.on("/", [this]() {
     _server.sendHeader("Location", "/login");
@@ -56,6 +60,124 @@ bool WebServerManager::begin() {
     json += "\"chip_id\":\"" + String(ESP.getChipId(), HEX) + "\",";
     json += "\"sdk_version\":\"" + String(ESP.getSdkVersion()) + "\"";
     json += "}";
+    _server.send(200, "application/json", json);
+  });
+
+  // API para controle das saídas/relés - GET (status)
+  _server.on("/api/outputs", HTTP_GET, [this]() {
+    if (!_relayController) {
+      _server.send(500, "application/json", "{\"error\":\"RelayController não inicializado\"}");
+      return;
+    }
+    
+    String json = "{";
+    
+    // Se temos ConfigManager, usar configurações persistidas
+    if (_configManager) {
+      json += "\"pump1\":{";
+      json += "\"state\":" + String(_relayController->getPump1State() ? "true" : "false") + ",";
+      json += "\"pin\":" + String(_configManager->relay.outputs[0].pin) + ",";
+      json += "\"name\":\"" + String(_configManager->relay.outputs[0].name) + "\"},";
+      
+      json += "\"heater\":{";
+      json += "\"state\":" + String(_relayController->getHeaterState() ? "true" : "false") + ",";
+      json += "\"pin\":" + String(_configManager->relay.outputs[1].pin) + ",";
+      json += "\"name\":\"" + String(_configManager->relay.outputs[1].name) + "\"},";
+      
+      json += "\"light\":{";
+      json += "\"state\":" + String(_relayController->getLightState() ? "true" : "false") + ",";
+      json += "\"pin\":" + String(_configManager->relay.outputs[2].pin) + ",";
+      json += "\"name\":\"" + String(_configManager->relay.outputs[2].name) + "\"},";
+      
+      json += "\"pump2\":{";
+      json += "\"state\":" + String(_relayController->getPump2State() ? "true" : "false") + ",";
+      json += "\"pin\":" + String(_configManager->relay.outputs[3].pin) + ",";
+      json += "\"name\":\"" + String(_configManager->relay.outputs[3].name) + "\"}";
+    } else {
+      // Fallback para valores padrão
+      json += "\"pump1\":{";
+      json += "\"state\":" + String(_relayController->getPump1State() ? "true" : "false") + ",";
+      json += "\"pin\":5,\"name\":\"Bomba Principal\"},";
+      
+      json += "\"heater\":{";
+      json += "\"state\":" + String(_relayController->getHeaterState() ? "true" : "false") + ",";
+      json += "\"pin\":4,\"name\":\"Aquecedor\"},";
+      
+      json += "\"light\":{";
+      json += "\"state\":" + String(_relayController->getLightState() ? "true" : "false") + ",";
+      json += "\"pin\":14,\"name\":\"Iluminação LED\"},";
+      
+      json += "\"pump2\":{";
+      json += "\"state\":" + String(_relayController->getPump2State() ? "true" : "false") + ",";
+      json += "\"pin\":12,\"name\":\"Bomba Reposição\"}";
+    }
+    
+    json += "}";
+    _server.send(200, "application/json", json);
+  });
+
+  // API para controle das saídas/relés - POST (controle)
+  _server.on("/api/outputs", HTTP_POST, [this]() {
+    if (!_relayController) {
+      _server.send(500, "application/json", "{\"error\":\"RelayController não inicializado\"}");
+      return;
+    }
+    
+    String body = _server.arg("plain");
+    Serial.println("📦 Comando recebido: " + body);
+    
+    // Parse simples do JSON (formato: {"relay":"pump1","state":true})
+    if (body.indexOf("pump1") > 0) {
+      bool state = body.indexOf("true") > 0;
+      _relayController->setPump1(state);
+      Serial.println("🔌 Bomba Principal: " + String(state ? "LIGADA" : "DESLIGADA"));
+    }
+    else if (body.indexOf("heater") > 0) {
+      bool state = body.indexOf("true") > 0;
+      _relayController->setHeater(state);
+      Serial.println("🔥 Aquecedor: " + String(state ? "LIGADO" : "DESLIGADO"));
+    }
+    else if (body.indexOf("light") > 0) {
+      bool state = body.indexOf("true") > 0;
+      _relayController->setLight(state);
+      Serial.println("💡 Iluminação: " + String(state ? "LIGADA" : "DESLIGADA"));
+    }
+    else if (body.indexOf("pump2") > 0) {
+      bool state = body.indexOf("true") > 0;
+      _relayController->setPump2(state);
+      Serial.println("🔌 Bomba Reposição: " + String(state ? "LIGADA" : "DESLIGADA"));
+    }
+    
+    _server.send(200, "application/json", "{\"success\":true}");
+  });
+
+  // API para salvar configurações de saídas - POST
+  _server.on("/api/outputs/config", HTTP_POST, [this]() {
+    if (!_configManager) {
+      _server.send(500, "application/json", "{\"error\":\"ConfigManager não inicializado\"}");
+      return;
+    }
+    
+    String body = _server.arg("plain");
+    Serial.println("🔧 Configuração recebida: " + body);
+    
+    if (_configManager->setOutputsFromJson(body)) {
+      Serial.println("✅ Configurações de saídas salvas com sucesso!");
+      _server.send(200, "application/json", "{\"success\":true,\"message\":\"Configurações salvas com sucesso!\"}");
+    } else {
+      Serial.println("❌ Erro ao salvar configurações de saídas");
+      _server.send(400, "application/json", "{\"error\":\"Erro ao salvar configurações\"}");
+    }
+  });
+
+  // API para obter configurações de saídas - GET
+  _server.on("/api/outputs/config", HTTP_GET, [this]() {
+    if (!_configManager) {
+      _server.send(500, "application/json", "{\"error\":\"ConfigManager não inicializado\"}");
+      return;
+    }
+    
+    String json = _configManager->getOutputsJson();
     _server.send(200, "application/json", json);
   });
 

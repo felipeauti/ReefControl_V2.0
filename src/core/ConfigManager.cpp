@@ -196,6 +196,24 @@ String ConfigManager::toJson() {
   
   // Relés
   JsonObject relayObj = doc.createNestedObject("relay");
+  
+  // Configurações de saídas
+  JsonArray outputsArray = relayObj.createNestedArray("outputs");
+  for (int i = 0; i < 4; i++) {
+    JsonObject output = outputsArray.createNestedObject();
+    output["name"] = relay.outputs[i].name;
+    output["pin"] = relay.outputs[i].pin;
+    output["enabled"] = relay.outputs[i].enabled;
+    output["autoMode"] = relay.outputs[i].autoMode;
+    output["onTime"] = relay.outputs[i].onTime;
+    output["offTime"] = relay.outputs[i].offTime;
+    output["onTemp"] = relay.outputs[i].onTemp;
+    output["offTemp"] = relay.outputs[i].offTemp;
+    output["interval"] = relay.outputs[i].interval;
+    output["duration"] = relay.outputs[i].duration;
+  }
+  
+  // Compatibilidade com código antigo
   relayObj["pump1Enabled"] = relay.pump1Enabled;
   relayObj["pump1AutoMode"] = relay.pump1AutoMode;
   relayObj["pump1OnTime"] = relay.pump1OnTime;
@@ -287,7 +305,51 @@ bool ConfigManager::fromJson(const String& json) {
     ntp.syncInterval = ntpObj["syncInterval"] | ntp.syncInterval;
   }
   
-  // ... (continuar com outros objetos)
+  // Relés
+  if (doc.containsKey("relay")) {
+    JsonObject relayObj = doc["relay"];
+    
+    // Carregar configurações de saídas
+    if (relayObj.containsKey("outputs")) {
+      JsonArray outputsArray = relayObj["outputs"];
+      int index = 0;
+      for (JsonObject output : outputsArray) {
+        if (index < 4) {
+          String name = output["name"] | relay.outputs[index].name;
+          name.toCharArray(relay.outputs[index].name, sizeof(relay.outputs[index].name));
+          
+          relay.outputs[index].pin = output["pin"] | relay.outputs[index].pin;
+          relay.outputs[index].enabled = output["enabled"] | relay.outputs[index].enabled;
+          relay.outputs[index].autoMode = output["autoMode"] | relay.outputs[index].autoMode;
+          relay.outputs[index].onTime = output["onTime"] | relay.outputs[index].onTime;
+          relay.outputs[index].offTime = output["offTime"] | relay.outputs[index].offTime;
+          relay.outputs[index].onTemp = output["onTemp"] | relay.outputs[index].onTemp;
+          relay.outputs[index].offTemp = output["offTemp"] | relay.outputs[index].offTemp;
+          relay.outputs[index].interval = output["interval"] | relay.outputs[index].interval;
+          relay.outputs[index].duration = output["duration"] | relay.outputs[index].duration;
+          index++;
+        }
+      }
+    }
+    
+    // Compatibilidade com código antigo
+    relay.pump1Enabled = relayObj["pump1Enabled"] | relay.pump1Enabled;
+    relay.pump1AutoMode = relayObj["pump1AutoMode"] | relay.pump1AutoMode;
+    relay.pump1OnTime = relayObj["pump1OnTime"] | relay.pump1OnTime;
+    relay.pump1OffTime = relayObj["pump1OffTime"] | relay.pump1OffTime;
+    relay.heaterEnabled = relayObj["heaterEnabled"] | relay.heaterEnabled;
+    relay.heaterAutoMode = relayObj["heaterAutoMode"] | relay.heaterAutoMode;
+    relay.heaterOnTemp = relayObj["heaterOnTemp"] | relay.heaterOnTemp;
+    relay.heaterOffTemp = relayObj["heaterOffTemp"] | relay.heaterOffTemp;
+    relay.lightEnabled = relayObj["lightEnabled"] | relay.lightEnabled;
+    relay.lightAutoMode = relayObj["lightAutoMode"] | relay.lightAutoMode;
+    relay.lightOnTime = relayObj["lightOnTime"] | relay.lightOnTime;
+    relay.lightOffTime = relayObj["lightOffTime"] | relay.lightOffTime;
+    relay.pump2Enabled = relayObj["pump2Enabled"] | relay.pump2Enabled;
+    relay.pump2AutoMode = relayObj["pump2AutoMode"] | relay.pump2AutoMode;
+    relay.pump2Interval = relayObj["pump2Interval"] | relay.pump2Interval;
+    relay.pump2Duration = relayObj["pump2Duration"] | relay.pump2Duration;
+  }
   
   return validateConfig();
 }
@@ -300,4 +362,87 @@ void ConfigManager::printConfig() {
   Serial.printf("  NTP: %s (%s)\n", ntp.enabled ? "Habilitado" : "Desabilitado", ntp.timezone);
   Serial.printf("  Display: %s (Tipo %d)\n", display.enabled ? "Habilitado" : "Desabilitado", display.type);
   Serial.printf("  Debug: %s\n", system.debugMode ? "Habilitado" : "Desabilitado");
+}
+
+// Métodos para configurações de saídas
+bool ConfigManager::setOutputConfig(int index, const String& name, int pin) {
+  if (index < 0 || index >= 4) {
+    return false;
+  }
+  
+  name.toCharArray(relay.outputs[index].name, sizeof(relay.outputs[index].name));
+  relay.outputs[index].pin = pin;
+  
+  Serial.printf("🔧 Saída %d configurada: %s (GPIO %d)\n", index, relay.outputs[index].name, pin);
+  return save(); // Salvar automaticamente
+}
+
+OutputConfig* ConfigManager::getOutputConfig(int index) {
+  if (index < 0 || index >= 4) {
+    return nullptr;
+  }
+  return &relay.outputs[index];
+}
+
+String ConfigManager::getOutputsJson() {
+  DynamicJsonDocument doc(1024);
+  
+  JsonArray outputsArray = doc.createNestedArray("outputs");
+  
+  for (int i = 0; i < 4; i++) {
+    JsonObject output = outputsArray.createNestedObject();
+    output["index"] = i;
+    output["name"] = relay.outputs[i].name;
+    output["pin"] = relay.outputs[i].pin;
+    output["enabled"] = relay.outputs[i].enabled;
+    output["autoMode"] = relay.outputs[i].autoMode;
+    output["onTime"] = relay.outputs[i].onTime;
+    output["offTime"] = relay.outputs[i].offTime;
+    output["onTemp"] = relay.outputs[i].onTemp;
+    output["offTemp"] = relay.outputs[i].offTemp;
+    output["interval"] = relay.outputs[i].interval;
+    output["duration"] = relay.outputs[i].duration;
+  }
+  
+  String result;
+  serializeJson(doc, result);
+  return result;
+}
+
+bool ConfigManager::setOutputsFromJson(const String& json) {
+  DynamicJsonDocument doc(1024);
+  DeserializationError error = deserializeJson(doc, json);
+  
+  if (error) {
+    Serial.printf("❌ Erro ao parsear JSON de saídas: %s\n", error.c_str());
+    return false;
+  }
+  
+  if (!doc.containsKey("outputs")) {
+    return false;
+  }
+  
+  JsonArray outputsArray = doc["outputs"];
+  
+  for (JsonObject output : outputsArray) {
+    int index = output["index"] | -1;
+    if (index >= 0 && index < 4) {
+      String name = output["name"] | relay.outputs[index].name;
+      name.toCharArray(relay.outputs[index].name, sizeof(relay.outputs[index].name));
+      
+      relay.outputs[index].pin = output["pin"] | relay.outputs[index].pin;
+      relay.outputs[index].enabled = output["enabled"] | relay.outputs[index].enabled;
+      relay.outputs[index].autoMode = output["autoMode"] | relay.outputs[index].autoMode;
+      relay.outputs[index].onTime = output["onTime"] | relay.outputs[index].onTime;
+      relay.outputs[index].offTime = output["offTime"] | relay.outputs[index].offTime;
+      relay.outputs[index].onTemp = output["onTemp"] | relay.outputs[index].onTemp;
+      relay.outputs[index].offTemp = output["offTemp"] | relay.outputs[index].offTemp;
+      relay.outputs[index].interval = output["interval"] | relay.outputs[index].interval;
+      relay.outputs[index].duration = output["duration"] | relay.outputs[index].duration;
+      
+      Serial.printf("🔧 Saída %d atualizada: %s (GPIO %d)\n", index, relay.outputs[index].name, relay.outputs[index].pin);
+    }
+  }
+  
+  return save(); // Salvar automaticamente
 } 

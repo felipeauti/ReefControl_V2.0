@@ -3,7 +3,7 @@
  * Arquitetura Modular Profissional
  * 
  * @author ReefControl Team
- * @version 2.0.0
+ * @version 2.0.7
  * @date 2025
  */
 
@@ -62,7 +62,7 @@ void setup() {
   Serial.begin(115200);
   Serial.println();
   Serial.println("========================================");
-  Serial.println("🐠 ReefControl v2.0 - Sistema Modular");
+  Serial.println("🐠 ReefControl v2.0.9 - Interface Limpa Sem Mensagens");
   Serial.println("========================================");
   
   // 1. Inicializar configurações
@@ -101,7 +101,7 @@ void setup() {
     
     // 8. Inicializar servidor web
     Serial.println("🌐 Inicializando servidor web...");
-    webServer.begin();
+    webServer.begin(&relays, &config);
     
     // 9. Inicializar agendador
     Serial.println("⏰ Inicializando agendador...");
