@@ -17,10 +17,16 @@
 #include <DallasTemperature.h>
 #include "ConfigManager.h"
 
-// Pinos dos sensores para Wemos D1 Mini
-#define ONE_WIRE_BUS D3    // GPIO0 - Sensor de temperatura DS18B20
-#define PH_TDS_PIN A0      // A0 - Sensor pH/TDS analógico
-#define LEVEL_PIN A0       // A0 - Sensor de nível (compartilhado ou separado)
+// Pinos dos sensores - compatibilidade ESP8266/ESP32
+#ifdef ESP32
+  #define ONE_WIRE_BUS 4     // GPIO4 - Sensor de temperatura DS18B20
+  #define PH_TDS_PIN 36      // GPIO36 (ADC1_CH0) - Sensor pH/TDS analógico
+  #define LEVEL_PIN 39       // GPIO39 (ADC1_CH3) - Sensor de nível
+#else
+  #define ONE_WIRE_BUS D3    // GPIO0 - Sensor de temperatura DS18B20
+  #define PH_TDS_PIN A0      // A0 - Sensor pH/TDS analógico
+  #define LEVEL_PIN A0       // A0 - Sensor de nível (compartilhado ou separado)
+#endif
 
 // Estrutura para dados dos sensores
 struct SensorData {

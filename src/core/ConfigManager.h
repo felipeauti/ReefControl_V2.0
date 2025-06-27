@@ -13,7 +13,13 @@
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
-#include <LittleFS.h>
+
+// Compatibilidade ESP8266/ESP32
+#ifdef ESP32
+  #include <SPIFFS.h>
+#else
+  #include <LittleFS.h>
+#endif
 
 // Estruturas de configuração
 struct WiFiConfig {
@@ -133,7 +139,7 @@ struct DisplayConfig {
 
 struct SystemConfig {
   char deviceName[32] = "ReefControl";
-  char version[16] = "2.0.0";
+  char version[16] = "2.0.12";
   bool debugMode = true;
   bool ledIndicator = true;
   int watchdogTimeout = 30; // segundos

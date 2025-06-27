@@ -5,15 +5,31 @@
 
 #include "ConfigManager.h"
 
+// Compatibilidade ESP8266/ESP32
+#ifdef ESP32
+  #include <SPIFFS.h>
+  #define FileSystemClass SPIFFS
+#else
+  #include <LittleFS.h>
+  #define FileSystemClass LittleFS
+#endif
+
 const char* ConfigManager::CONFIG_FILE = "/config.json";
 
 bool ConfigManager::begin() {
-  if (!LittleFS.begin()) {
-    Serial.println("❌ Erro ao inicializar LittleFS");
-    return false;
-  }
-  
-  Serial.println("✅ LittleFS inicializado");
+  #ifdef ESP32
+    if (!FileSystemClass.begin(true)) {
+      Serial.println("❌ Erro ao inicializar SPIFFS");
+      return false;
+    }
+    Serial.println("✅ SPIFFS inicializado");
+  #else
+    if (!FileSystemClass.begin()) {
+      Serial.println("❌ Erro ao inicializar LittleFS");
+      return false;
+    }
+    Serial.println("✅ LittleFS inicializado");
+  #endif
   
   // Tentar carregar configurações existentes
   if (!loadFromFile()) {
@@ -41,11 +57,11 @@ void ConfigManager::reset() {
 }
 
 bool ConfigManager::loadFromFile() {
-  if (!LittleFS.exists(CONFIG_FILE)) {
+  if (!FileSystemClass.exists(CONFIG_FILE)) {
     return false;
   }
   
-  File file = LittleFS.open(CONFIG_FILE, "r");
+  File file = FileSystemClass.open(CONFIG_FILE, "r");
   if (!file) {
     Serial.println("❌ Erro ao abrir arquivo de configuração");
     return false;
@@ -58,7 +74,7 @@ bool ConfigManager::loadFromFile() {
 }
 
 bool ConfigManager::saveToFile() {
-  File file = LittleFS.open(CONFIG_FILE, "w");
+  File file = FileSystemClass.open(CONFIG_FILE, "w");
   if (!file) {
     Serial.println("❌ Erro ao criar arquivo de configuração");
     return false;
@@ -186,7 +202,12 @@ void ConfigManager::setMqttServer(const String& server, int port, const String& 
 }
 
 String ConfigManager::toJson() {
-  DynamicJsonDocument doc(2048);
+  // Buffer otimizado para evitar stack overflow
+  #ifdef ESP32
+    DynamicJsonDocument doc(3072);  // Reduzido para 3KB
+  #else
+    DynamicJsonDocument doc(2048);
+  #endif
   
   // WiFi
   JsonObject wifiObj = doc.createNestedObject("wifi");
@@ -305,7 +326,12 @@ String ConfigManager::toJson() {
 }
 
 bool ConfigManager::fromJson(const String& json) {
-  DynamicJsonDocument doc(2048);
+  // Buffer otimizado para evitar stack overflow
+  #ifdef ESP32
+    DynamicJsonDocument doc(3072);  // Reduzido para 3KB
+  #else
+    DynamicJsonDocument doc(2048);
+  #endif
   DeserializationError error = deserializeJson(doc, json);
   
   if (error) {
@@ -430,7 +456,12 @@ OutputConfig* ConfigManager::getOutputConfig(int index) {
 }
 
 String ConfigManager::getOutputsJson() {
-  DynamicJsonDocument doc(1024);
+  // Buffer otimizado para ESP32 Pro
+  #ifdef ESP32
+    DynamicJsonDocument doc(1536);  // Reduzido para 1.5KB
+  #else
+    DynamicJsonDocument doc(1024);
+  #endif
   
   JsonArray outputsArray = doc.createNestedArray("outputs");
   
@@ -455,7 +486,12 @@ String ConfigManager::getOutputsJson() {
 }
 
 bool ConfigManager::setOutputsFromJson(const String& json) {
-  DynamicJsonDocument doc(1024);
+  // Buffer otimizado para ESP32 Pro
+  #ifdef ESP32
+    DynamicJsonDocument doc(1536);  // Reduzido para 1.5KB
+  #else
+    DynamicJsonDocument doc(1024);
+  #endif
   DeserializationError error = deserializeJson(doc, json);
   
   if (error) {

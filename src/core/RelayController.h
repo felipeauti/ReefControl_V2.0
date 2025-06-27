@@ -4,11 +4,18 @@
 #include <Arduino.h>
 #include "ConfigManager.h"
 
-// Pinos para Wemos D1 Mini
-#define RELAY1_PIN D1  // GPIO5 - Bomba Principal
-#define RELAY2_PIN D2  // GPIO4 - Aquecedor  
-#define RELAY3_PIN D5  // GPIO14 - Iluminação
-#define RELAY4_PIN D6  // GPIO12 - Bomba Reposição
+// Pinos dos relés - compatibilidade ESP8266/ESP32
+#ifdef ESP32
+  #define RELAY1_PIN 5   // GPIO5 - Bomba Principal
+  #define RELAY2_PIN 18  // GPIO18 - Aquecedor
+  #define RELAY3_PIN 19  // GPIO19 - Iluminação
+  #define RELAY4_PIN 21  // GPIO21 - Bomba Reposição
+#else
+  #define RELAY1_PIN D1  // GPIO5 - Bomba Principal
+  #define RELAY2_PIN D2  // GPIO4 - Aquecedor  
+  #define RELAY3_PIN D5  // GPIO14 - Iluminação
+  #define RELAY4_PIN D6  // GPIO12 - Bomba Reposição
+#endif
 
 class RelayController {
 private:

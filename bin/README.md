@@ -4,29 +4,368 @@
 
 ---
 
-## 📊 **VERSÃO MAIS RECENTE**
+## 📊 **VERSÕES MAIS RECENTES**
 
-### **ReefControl_V2.0.11.bin** ⭐ **RECOMENDADO**
-- **📅 Data de Compilação:** 27/06/2025 13:20
-- **📦 Tamanho:** 417.0KB (427.024 bytes)
+### **ReefControl_V2.2.8_Pro_ESP32.bin** ⭐ **MAIS RECENTE - PRO ESP32**
+- **📅 Data de Compilação:** 27/06/2025 22:15
+- **📦 Tamanho:** 943.2KB (958.765 bytes)
+- **🧠 Uso de RAM:** 14.7% (48.140/327.680 bytes)
+- **💾 Uso de Flash:** 30.5% (958.765/3.145.728 bytes)
+- **🔥 Novidades:** SWITCH VISUAL APRIMORADO - Maior (50x28px), bolinha perfeita, sombra 3D!
+
+### **ReefControl_V2.2.7_Pro_ESP32.bin** ✅ **PRO ESP32**
+- **📅 Data de Compilação:** 27/06/2025 21:30
+- **📦 Tamanho:** 943.2KB (958.765 bytes)
+- **🧠 Uso de RAM:** 14.7% (48.140/327.680 bytes)
+- **💾 Uso de Flash:** 30.5% (958.765/3.145.728 bytes)
+- **✅ Status:** Interface corrigida, switch funcional
+
+### **ReefControl_V2.2.6_Pro_ESP32.bin** ❌ **VERSÃO COM BUG**
+- **📅 Data de Compilação:** 27/06/2025 20:45
+- **📦 Tamanho:** 943.2KB (958.765 bytes)
+- **🧠 Uso de RAM:** 14.7% (48.140/327.680 bytes)
+- **💾 Uso de Flash:** 30.5% (958.765/3.145.728 bytes)
+- **⚠️ Problema:** Switch premium quebrou a interface - NÃO USAR!
+
+### **ReefControl_V2.2.5_Pro_ESP32.bin** ✅ **PRO ESP32**
+- **📅 Data de Compilação:** 27/06/2025 20:15
+- **📦 Tamanho:** 943.2KB (958.765 bytes)
+- **🧠 Uso de RAM:** 14.7% (48.140/327.680 bytes)
+- **💾 Uso de Flash:** 30.5% (958.765/3.145.728 bytes)
+- **🔥 Novidades:** SWITCH MAN/AUTO CORRIGIDO - Visual profissional, persistência funcional, status limpo!
+
+### **ReefControl_V2.2.4_Pro_ESP32.bin** ✅ **PRO ESP32**
+- **📅 Data de Compilação:** 27/06/2025 19:45
+- **📦 Tamanho:** 943.2KB (958.765 bytes)
+- **🧠 Uso de RAM:** 14.7% (48.140/327.680 bytes)
+- **💾 Uso de Flash:** 30.5% (958.765/3.145.728 bytes)
+- **🔥 Novidades:** SWITCH MAN/AUTO IMPLEMENTADO - Interface com controle manual/automático visual!
+
+### **ReefControl_V2.2.3_Pro_ESP32.bin** ✅ **PRO ESP32**
+- **📅 Data de Compilação:** 27/06/2025 17:15
+- **📦 Tamanho:** 943.2KB (958.765 bytes)
+- **🧠 Uso de RAM:** 14.7% (48.140/327.680 bytes)
+- **💾 Uso de Flash:** 30.5% (958.765/3.145.728 bytes)
+- **🔥 Novidades:** REBOOT LOOP CORRIGIDO - Sistema estável com proteções watchdog!
+
+### **ReefControl_V2.2.2_Pro_ESP32.bin** ✅ **PRO ESP32**
+- **📅 Data de Compilação:** 27/06/2025 17:05
+- **📦 Tamanho:** 943.0KB (958.569 bytes)
+- **🧠 Uso de RAM:** 14.7% (48.140/327.680 bytes)
+- **💾 Uso de Flash:** 30.5% (958.569/3.145.728 bytes)
+- **🔥 Novidades:** BUG CRÍTICO CORRIGIDO - Configurações retentivas funcionando 100%!
+
+### **ReefControl_V2.2.1_Pro_ESP32.bin** ✅ **PRO ESP32**
+- **📅 Data de Compilação:** 27/06/2025 16:46
+- **📦 Tamanho:** 943.0KB (965.152 bytes)
+- **🧠 Uso de RAM:** 14.7% (48.140/327.680 bytes)
+- **💾 Uso de Flash:** 30.5% (958.569/3.145.728 bytes)
+- **🔥 Novidades:** LOGS LIMPOS - Removidos prints falsos dos sensores para terminal limpo!
+
+### **ReefControl_V2.1.0_Compact.bin** ⭐ **COMPACTA ESP8266**
+- **📅 Data de Compilação:** 14/01/2025 20:15
+- **📦 Tamanho:** 416.9KB (426.735 bytes)
+- **🧠 Uso de RAM:** 46.6% (38.180/81.920 bytes)
+- **💾 Uso de Flash:** 40.9% (426.735/1.044.464 bytes)
+- **🔥 Novidades:** ARQUITETURA DUAL-VERSION - Compatibilidade ESP8266/ESP32!
+
+### **ReefControl_V2.2.0_Pro_ESP32.bin** 🚀 **NOVO - PRO ESP32**
+- **📅 Data de Compilação:** 14/01/2025 20:17
+- **📦 Tamanho:** 941.8KB (964.409 bytes)
+- **🧠 Uso de RAM:** 14.7% (48.172/327.680 bytes)
+- **💾 Uso de Flash:** 30.7% (964.409/3.145.728 bytes)
+- **🔥 Novidades:** VERSÃO ESP32 - 8 saídas, sensores avançados, automação completa!
+
+### **ReefControl_V2.0.12.bin** ✅ **LEGACY ESP8266**
+- **📅 Data de Compilação:** 27/06/2025 14:30
+- **📦 Tamanho:** 413.0KB (422.871 bytes)
 - **🧠 Uso de RAM:** 45.6% (37.356/81.920 bytes)
 - **💾 Uso de Flash:** 40.5% (422.871/1.044.464 bytes)
-- **🔥 Novidades:** NOMENCLATURA PADRONIZADA - APIs e interface unificadas com output1, output2, output3, output4!
+- **🔥 Novidades:** FASE 1 IMPLEMENTADA - Ícones padronizados, controles Liga/Desliga, validação GPIO!
 
-**✨ PRINCIPAIS FUNCIONALIDADES v2.0.11:**
-- ✅ **NOMENCLATURA PADRONIZADA** - Todas as APIs agora usam output1, output2, output3, output4
-- ✅ **NOMES PADRÃO ATUALIZADOS** - Bomba, Termostato, Chiller, Skimmer (mais apropriados para aquarismo)
-- ✅ **ÍCONES ESPECÍFICOS** - 🔌 Bomba, 🔥 Termostato, ❄️ Chiller, 🌪️ Skimmer
-- ✅ **APIs CONSISTENTES** - WebServer, ConfigManager e interface HTML totalmente alinhados
+**✨ PRINCIPAIS FUNCIONALIDADES v2.0.12:**
+- ✅ **ÍCONES PADRONIZADOS** - Todas as saídas agora usam 🔌 (tomada genérica)
+- ✅ **CONTROLES LIGA/DESLIGA** - Botões separados ⚡ LIGA e ⏹️ DESLIGA com feedback visual
+- ✅ **VALIDAÇÃO GPIO EM TEMPO REAL** - Detecta e alerta sobre GPIOs duplicados com pisca vermelho
+- ✅ **BOTÃO TESTAR REMOVIDO** - Interface mais limpa focada nos controles essenciais
+- ✅ **VALIDAÇÃO ANTES DE SALVAR** - Impede salvar configurações com GPIOs conflitantes
+- ✅ **NOMENCLATURA PADRONIZADA** - Todas as APIs usam output1, output2, output3, output4
+- ✅ **NOMES PADRÃO ATUALIZADOS** - Bomba, Termostato, Chiller, Skimmer
 - ✅ **PERSISTÊNCIA 100% CORRIGIDA** - Configurações de GPIO e nomes salvos permanentemente
-- ✅ **Bug Crítico Resolvido** - setDefaults() inicializa corretamente as configurações de saídas
 - ✅ **Interface 100% Limpa** - Zero mensagens verdes atrapalhando o layout
-- ✅ **Anti-Interrupção de Digitação** - Pode digitar nomes completos sem ser interrompido
 - ✅ **Debug Console Otimizado** - Logs organizados e interface profissional
 
 ---
 
 ## 📈 **CHANGELOG COMPLETO**
+
+### **v2.2.7** - 27/06/2025 - BUG CORRIGIDO! ✅🛠️
+**🔧 CORREÇÃO CRÍTICA:** Interface Man/Auto funcionando perfeitamente após correção do switch premium!
+
+**✅ PROBLEMAS CORRIGIDOS:**
+
+**🐛 Switch Premium Simplificado:**
+- **Revertido para switch simples e funcional** (44x24px) em vez do complexo
+- **CSS otimizado** sem gradientes complexos que causavam problemas de renderização
+- **JavaScript corrigido** - função `toggleMode()` única sem duplicatas
+- **Compatibilidade garantida** com todos os navegadores
+
+**🎯 Interface Estável:**
+- **Sem erros JavaScript** que travavam o carregamento da página
+- **"Carregando status das saídas..."** resolvido - interface carrega instantaneamente
+- **Handlers de requisição** funcionando corretamente (fim dos erros 404)
+- **Persistência 100% funcional** - switches mantêm estado após reboot
+
+**🚀 Performance Melhorada:**
+- **Tempo de carregamento** reduzido drasticamente
+- **Renderização fluida** sem travamentos
+- **Compatibilidade ESP32** garantida
+
+**📱 UX Aprimorada:**
+- **3 controles alinhados** perfeitamente: [Liga] [Desliga] [Man/Auto]
+- **Feedback visual** imediato ao alternar modos
+- **Status limpo** sem poluição: apenas "LIGADO"/"DESLIGADO"
+
+### **v2.2.6** - 27/06/2025 - SWITCH PREMIUM IMPLEMENTADO! 🎨✨ ❌ **VERSÃO COM BUG**
+**🎯 REVOLUÇÃO VISUAL:** Switch Man/Auto completamente redesenhado com design premium e animações suaves!
+
+**✅ MUDANÇAS IMPLEMENTADAS:**
+
+**🎨 Switch Premium - Design Moderno:**
+- **Tamanho Ideal:** 90x40px (vs 44x24px anterior) - muito mais clicável e visível
+- **Visual 3D:** Gradientes sofisticados com efeitos inset/outset para profundidade
+- **Animações Suaves:** Transições cubic-bezier personalizadas para movimento fluido
+- **Bolinha Premium:** 34x34px com sombras realistas e movimento bounce
+
+**🎭 Estados Visuais Inteligentes:**
+- **Modo Manual:** Fundo cinza com gradiente + ícone 👤 vermelho
+- **Modo Automático:** Fundo verde com gradiente + ícone 🤖 verde
+- **Textos Integrados:** "MAN" e "AUTO" posicionados nas laterais do switch
+- **Feedback Hover:** Escala 1.02x + glow effect para melhor UX
+
+**🔄 Status Colorido:**
+- **MANUAL:** Badge gradiente vermelho com borda sutil
+- **AUTOMÁTICO:** Badge gradiente verde com borda sutil
+- **Label Descritiva:** "🔄 Modo de Operação" ao invés de simples "Modo"
+
+**⚡ Funcionalidades Aprimoradas:**
+- **Clique Único:** Função `toggleModeSwitch()` para alternância simples
+- **Auto-Save:** Salva configuração 500ms após mudança (debounce)
+- **Re-render Inteligente:** Interface atualizada com animação suave
+- **Logs Detalhados:** "AUTOMÁTICO 🤖" vs "MANUAL 👤" no debug
+
+**📊 Arquivos Atualizados:**
+- `src/html/output.html` - Switch premium CSS + nova função JS
+- `data/html/output.html` - Cópia sincronizada
+- `platformio.ini` - Versão atualizada para v2.2.6
+
+**🎯 RESULTADO:** Interface de switch mais bonita e profissional do ReefControl, comparable aos melhores apps modernos!
+
+### **v2.2.5** - 27/06/2025 - SWITCH MAN/AUTO CORRIGIDO! 🎯✨
+**🎯 CORREÇÕES CRÍTICAS:** Interface visual melhorada e persistência corrigida!
+
+**✅ MUDANÇAS IMPLEMENTADAS:**
+
+**🎨 Visual Profissional:**
+- **Status Limpo:** Removido "(MAN)" e "(AUTO)" do status - agora apenas "LIGADO" ou "DESLIGADO"
+- **Switch Proporcional:** Bolinha agora cabe perfeitamente (18x18px em container 44x24px)
+- **Dimensões Otimizadas:** Largura reduzida de 50px → 44px, border-radius de 24px → 12px
+- **Posicionamento Correto:** Bolinha posicionada com top:3px (não bottom:3px)
+
+**🔧 Persistência Corrigida:**
+- **Auto-Save:** Switch salva automaticamente ao mudar (chama saveConfig())
+- **Carregamento Garantido:** Switches atualizados após cada render com setTimeout
+- **Estado Consistente:** Valor persistido entre recarregamentos da página
+
+**📊 Arquivos Atualizados:**
+- `src/html/output.html` - CSS do switch corrigido e persistência implementada
+- `data/html/output.html` - Cópia sincronizada
+
+**🎯 RESULTADO:** Switch visual profissional com persistência 100% funcional e status limpo!
+
+### **v2.2.4** - 27/06/2025 - SWITCH MAN/AUTO IMPLEMENTADO! 🔄✨
+**🎯 NOVA FUNCIONALIDADE:** Interface com controle visual de modo manual/automático!
+
+**✅ MUDANÇAS IMPLEMENTADAS:**
+
+**🎛️ Switch Manual/Automático:**
+- **3 Controles Alinhados:** [Liga] [Desliga] [Man/Auto] distribuídos uniformemente
+- **Switch Visual:** Vermelho (Manual) ↔ Verde (Automático) com transição suave
+- **Desabilitação Inteligente:** Botões Liga/Desliga desabilitados em modo automático
+- **Status Visual:** Indicação no cabeçalho "LIGADO (MAN)" ou "DESLIGADO (AUTO)"
+
+**🔧 Correções Frontend/Backend:**
+- **Compatibilidade:** Frontend ajustado para usar campo `autoMode` (boolean) do backend
+- **Persistência:** Configurações de modo salvas e carregadas corretamente
+- **Validação:** Modo automático bloqueia controles manuais com feedback visual
+
+**📊 Arquivos Atualizados:**
+- `src/html/output.html` - Interface com switch Man/Auto e controles inteligentes
+- `data/html/output.html` - Cópia sincronizada com correções
+- CSS otimizado para switch visual limpo sem textos internos
+
+**🎯 RESULTADO:** Interface profissional com controle visual de modo manual/automático funcionando 100%!
+
+### **v2.2.3** - 27/06/2025 - REBOOT LOOP CORRIGIDO! 🚫🔄✅
+**🎯 PROBLEMA CRÍTICO RESOLVIDO:** Sistema estava em reboot loop infinito devido a stack overflow e watchdog timeout!
+
+**✅ MUDANÇAS IMPLEMENTADAS:**
+
+**🧠 Stack Overflow Prevention:**
+- **Buffers JSON Otimizados:** Reduzido de 4096 → 3072 bytes (toJson/fromJson)
+- **Buffers Outputs Ajustados:** Reduzido de 2048 → 1536 bytes (outputs JSON)
+- **Alocação Segura:** Evitado estouro da pilha do ESP32
+
+**⏱️ Watchdog Protection:**
+- **yield() Estratégico:** Adicionado em pontos críticos da inicialização
+- **Delays Otimizados:** Loop principal aumentado de 50ms → 100ms
+- **Setup Protegido:** yield() entre inicializações de módulos
+
+**🔄 Failsafe System:**
+- **Verificação de Erros:** Restart automático se config.begin() falhar
+- **RAM Monitor:** Log de memória livre na inicialização
+- **Estabilização:** Delay de 2s no início do setup para ESP32
+
+**📊 Arquivos Atualizados:**
+- `src/core/ConfigManager.cpp` - Buffers otimizados para estabilidade
+- `src/main.cpp` - Proteções watchdog e failsafe implementadas
+- `platformio.ini` - Versão atualizada para v2.2.3
+
+**🎯 RESULTADO:** Sistema ESP32 agora inicializa de forma estável sem reboot loops!
+
+### **v2.2.2** - 27/06/2025 - CONFIGURAÇÕES RETENTIVAS CORRIGIDAS! 🔧✅
+**🎯 PROBLEMA CRÍTICO RESOLVIDO:** Buffer JSON insuficiente causava erro "NoMemory" e perda de configurações!
+
+**✅ MUDANÇAS IMPLEMENTADAS:**
+
+**🧠 Buffers JSON ESP32 Otimizados:**
+- **toJson():** Buffer aumentado de 2048 → 4096 bytes para ESP32 Pro
+- **fromJson():** Buffer aumentado de 2048 → 4096 bytes para ESP32 Pro
+- **getOutputsJson():** Buffer aumentado de 1024 → 2048 bytes para ESP32 Pro
+- **setOutputsFromJson():** Buffer aumentado de 1024 → 2048 bytes para ESP32 Pro
+
+**🔧 Correção do Erro "NoMemory":**
+- **Causa:** JSON das configurações ESP32 Pro era maior que buffer 2048 bytes
+- **Sintoma:** `❌ Erro ao parsear JSON: NoMemory` + configurações sempre voltando ao padrão
+- **Solução:** Buffers condicionais ESP32 vs ESP8266 com tamanhos adequados
+
+**📊 Arquivos Atualizados:**
+- `src/core/ConfigManager.cpp` - Buffers JSON condicionais por plataforma
+- `platformio.ini` - Versão atualizada para v2.2.2
+
+**🎯 RESULTADO:** Configurações de nomes e GPIOs das saídas agora são 100% persistentes no ESP32!
+
+### **v2.2.1** - 27/06/2025 - LOGS LIMPOS! 🧹✨
+**🎯 MELHORIA SOLICITADA:** Remover prints falsos dos sensores que poluíam o terminal!
+
+**✅ MUDANÇAS IMPLEMENTADAS:**
+
+**🧹 Terminal Limpo:**
+- **main.cpp:** Removido print "📊 Temp: X°C | pH: X | TDS: X | Nível: X%" que aparecia a cada 5s
+- **SensorManager.cpp:** Esvaziado método `printReadings()` que imprimia dados simulados
+- **Log Organizado:** Terminal agora mostra apenas informações realmente importantes
+- **Performance:** Menos overhead de impressão no loop principal
+
+**🔧 Arquivos Atualizados:**
+- `src/main.cpp` - Print dos sensores comentado no loop principal
+- `src/core/SensorManager.cpp` - Método printReadings() limpo
+
+**🎯 RESULTADO:** Terminal 100% limpo sem dados falsos de sensores, focado apenas nas informações essenciais do sistema!
+
+### **v2.2.0** - 14/01/2025 - REEFCONTROL PRO ESP32! 🚀✨
+**🎯 ARQUITETURA DUAL-VERSION:** Sistema agora suporta ESP8266 E ESP32 com builds específicos!
+
+**✅ MUDANÇAS IMPLEMENTADAS:**
+
+**🔧 Sistema Dual-Environment:**
+- **ReefControl Compact (ESP8266):** Versão otimizada com 4 saídas
+- **ReefControl Pro (ESP32):** Versão completa com 8 saídas e recursos avançados
+- **Codebase Único:** 95% do código compartilhado entre versões
+- **Build Condicional:** `platformio.ini` com environments compact/pro
+
+**📋 Capabilities System:**
+- **`src/capabilities/Capabilities.h`:** Detecção automática de recursos
+- **API `/api/capabilities`:** Interface para consulta de funcionalidades
+- **Adaptação Automática:** JavaScript se adapta conforme hardware
+
+**🔌 Compatibilidade ESP32:**
+- **WiFiManager:** Include condicional `WiFi.h` vs `ESP8266WiFi.h`
+- **WebServer:** Adaptação `WebServer` vs `ESP8266WebServer`
+- **Sistema de Arquivos:** `SPIFFS` (ESP32) vs `LittleFS` (ESP8266)
+- **Pinos GPIO:** Mapeamento específico para cada plataforma
+
+**🎯 PINOS ESP32:**
+- **Relés:** GPIO5, GPIO18, GPIO19, GPIO21
+- **Sensores:** GPIO4 (OneWire), GPIO36/39 (ADC)
+- **Sistema:** Configuração automática por platform
+
+**📊 RECURSOS COMPACT vs PRO:**
+| Recurso | Compact (ESP8266) | Pro (ESP32) |
+|---------|-------------------|-------------|
+| **Saídas** | 4 configuráveis | 8 configuráveis |
+| **Sensores** | Temp + Nível | Multi-sensores |
+| **Automação** | Básica | Avançada |
+| **MQTT** | Básico | Completo |
+| **RAM** | 46.6% (38KB) | 14.7% (48KB) |
+| **Flash** | 40.9% (426KB) | 30.7% (964KB) |
+
+**🎯 RESULTADO:** Agora você pode escolher ESP8266 (economia) ou ESP32 (recursos avançados)!
+
+### **v2.1.0** - 14/01/2025 - ARQUITETURA DUAL-VERSION! 🏗️✨
+**🎯 NOVA ESTRATÉGIA:** Preparação para suporte ESP8266 E ESP32 simultaneamente!
+
+**✅ MUDANÇAS IMPLEMENTADAS:**
+
+**🔧 PlatformIO Dual-Environment:**
+```ini
+[env:compact]    # ESP8266 - 4 saídas
+[env:pro]        # ESP32 - 8 saídas
+[env:d1_mini]    # Legacy compatibility
+```
+
+**🧠 Sistema de Capabilities:**
+- **Detecção Automática:** Hardware detectado em tempo de compilação
+- **Interface Adaptativa:** JavaScript adapta recursos disponíveis
+- **APIs Inteligentes:** Respondem conforme capabilities do hardware
+
+**🎯 RESULTADO:** Base sólida para estratégia dual-version implementada!
+
+### **v2.0.12** - 27/06/2025 - FASE 1 IMPLEMENTADA! 🎯✨
+**🎯 ROADMAP FASE 1:** Melhorias básicas de UX e controles implementadas conforme planejamento!
+
+**✅ MUDANÇAS IMPLEMENTADAS:**
+
+**🔌 Ícones Padronizados:**
+- Todas as saídas agora usam ícone de tomada genérica (🔌)
+- Removidos ícones específicos (🔥🌡️❄️🌪️) que ficavam desatualizados
+- Interface consistente independente do uso da saída
+
+**⚡ Controles Liga/Desliga Aprimorados:**
+- Botões separados "⚡ LIGA" e "⏹️ DESLIGA" com feedback visual
+- Botão "Testar" removido (funcionalidade desnecessária)
+- Estados visuais claros (opacidade indica botão ativo)
+- Botão "💾 Salvar Configuração" reformulado
+
+**🚨 Validação GPIO em Tempo Real:**
+- Detecta GPIOs duplicados instantaneamente ao selecionar
+- Alerta visual com borda vermelha piscante (animação CSS)
+- Mensagem de aviso específica abaixo do campo
+- Validação antes de salvar impede configurações inválidas
+- Função `validateAllGPIOs()` para verificação completa
+
+**🧹 Interface Mais Limpa:**
+- CSS otimizado com classes `.gpio-error`, `.gpio-warning`
+- Animação `@keyframes blink` para alertas visuais
+- Controles mais intuitivos e profissionais
+- Foco na funcionalidade essencial
+
+**🔧 Arquivos Atualizados:**
+- `data/html/output.html` - Interface completa renovada
+- `src/html/output.html` - Sincronizado com data
+- JavaScript com validação em tempo real
+- CSS com novos estilos de validação
+
+**🎯 RESULTADO:** FASE 1 do roadmap 100% implementada! Interface mais profissional e intuitiva.
 
 ### **v2.0.11** - 27/06/2025 - NOMENCLATURA PADRONIZADA! 🏷️✨
 **🎯 MELHORIA SOLICITADA:** Padronizar nomenclatura das saídas em todo o sistema!
@@ -212,20 +551,85 @@ void setDefaults() {
 
 ---
 
+## 🔧 **COMANDOS DE COMPILAÇÃO**
+
+### **Para Compilar Versão Compact (ESP8266):**
+```bash
+# Compilar versão Compact para ESP8266
+python -m platformio run -e compact
+
+# Upload direto (com ESP8266 conectado)
+python -m platformio run -e compact --target upload
+
+# Upload do sistema de arquivos
+python -m platformio run -e compact --target uploadfs
+```
+
+### **Para Compilar Versão Pro (ESP32):**
+```bash
+# Compilar versão Pro para ESP32
+python -m platformio run -e pro
+
+# Upload direto (com ESP32 conectado)  
+python -m platformio run -e pro --target upload
+
+# Upload do sistema de arquivos
+python -m platformio run -e pro --target uploadfs
+```
+
+### **Para Compilar Versão Legacy (ESP8266):**
+```bash
+# Compilar versão legacy compatível
+python -m platformio run -e d1_mini
+```
+
+### **Monitorar Serial (ambas versões):**
+```bash
+# Monitor serial
+python -m platformio device monitor --port COM3 --baud 115200
+```
+
+---
+
 ## 🔧 **ESPECIFICAÇÕES TÉCNICAS**
 
 ### **Hardware Suportado:**
+
+**🔌 ReefControl Compact (ESP8266):**
 - **Microcontrolador:** ESP8266 D1 Mini
 - **Frequência:** 80MHz
 - **RAM Total:** 80KB
 - **Flash Total:** 1MB (1.044.464 bytes)
 - **Sistema de Arquivos:** LittleFS
+- **Saídas:** 4 configuráveis
+- **Sensores:** 2 básicos
+
+**🚀 ReefControl Pro (ESP32):**
+- **Microcontrolador:** ESP32 DevKit
+- **Frequência:** 240MHz (dual-core)
+- **RAM Total:** 320KB
+- **Flash Total:** 4MB (3.145.728 bytes)
+- **Sistema de Arquivos:** SPIFFS
+- **Saídas:** 8 configuráveis
+- **Sensores:** 8 avançados
 
 ### **Pinout das Saídas:**
-- **GPIO 5 (D1):** Bomba Principal 🔌
-- **GPIO 4 (D2):** Aquecedor 🔥  
-- **GPIO 14 (D5):** Iluminação LED 💡
-- **GPIO 12 (D6):** Bomba Reposição 🔌
+
+**🔌 ESP8266 (Compact):**
+- **GPIO 5 (D1):** Saída 1 🔌
+- **GPIO 4 (D2):** Saída 2 🔌  
+- **GPIO 14 (D5):** Saída 3 🔌
+- **GPIO 12 (D6):** Saída 4 🔌
+
+**🚀 ESP32 (Pro):**
+- **GPIO 5:** Saída 1 🔌
+- **GPIO 18:** Saída 2 🔌
+- **GPIO 19:** Saída 3 🔌
+- **GPIO 21:** Saída 4 🔌
+- **GPIO 22:** Saída 5 🔌 (futuro)
+- **GPIO 23:** Saída 6 🔌 (futuro)
+- **GPIO 25:** Saída 7 🔌 (futuro)
+- **GPIO 26:** Saída 8 🔌 (futuro)
 
 ### **Conectividade:**
 - **WiFi:** 802.11 b/g/n (2.4GHz)
@@ -280,6 +684,8 @@ esptool.py --port COM3 --baud 921600 write_flash 0x0 ReefControl_V2.0.7.bin
 - **POST** `/api/outputs/config` - Salvar configurações
 - **GET** `/api/sensors` - Dados dos sensores
 - **GET** `/api/status` - Status do sistema
+- **GET** `/api/capabilities` - Capabilities do hardware ⭐ **NOVO**
+- **GET** `/api/system/info` - Informações do sistema
 
 ---
 

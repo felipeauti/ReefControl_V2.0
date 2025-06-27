@@ -269,8 +269,7 @@ String SensorManager::toJson() const {
 }
 
 void SensorManager::printReadings() const {
-  Serial.printf("📊 Sensores: Temp=%.1f°C pH=%.1f TDS=%d Nível=%d%%\n", 
-                _data.temperature, _data.ph, _data.tds, _data.waterLevel);
+  // Print removido para não poluir o terminal
 }
 
 void SensorManager::printDiagnostics() const {

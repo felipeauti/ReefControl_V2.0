@@ -35,8 +35,8 @@ body{font-family:Arial,sans-serif;background:#f5f7fa;min-height:100vh}
 .btn-danger:hover{background:#c82333}
 .btn-primary{background:#4a90e2;color:white}
 .btn-primary:hover{background:#357abd}
-.btn-warning{background:#ffc107;color:#212529}
-.btn-warning:hover{background:#e0a800}
+.btn-warning{background:#ffc107 !important;color:#212529 !important}
+.btn-warning:hover{background:#e0a800 !important}
 .toggle-switch{position:relative;display:inline-block;width:60px;height:34px}
 .toggle-switch input{opacity:0;width:0;height:0}
 .slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#ccc;transition:.4s;border-radius:34px}
@@ -48,6 +48,98 @@ input:checked+.slider:before{transform:translateX(26px)}
 .debug-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;font-family:Arial,sans-serif}
 .debug-title{font-weight:bold;color:#495057}
 .success-msg{background:#d4edda;color:#155724;padding:0.75rem;border-radius:5px;margin:0.5rem 0;border:1px solid #c3e6cb}
+.gpio-error{border:2px solid #dc3545 !important;animation:blink 1s infinite}
+.gpio-warning{background:#fff3cd;color:#856404;padding:0.5rem;border-radius:3px;margin:0.25rem 0;border:1px solid #ffeaa7;font-size:0.8rem}
+@keyframes blink{0%{border-color:#dc3545}50%{border-color:#ff6b6b}100%{border-color:#dc3545}}
+.btn-group{display:flex;gap:0.5rem;flex-wrap:wrap}
+.btn-sm{padding:0.4rem 0.8rem;font-size:0.85rem;min-width:70px;font-weight:normal}
+.btn-inline{
+  display: flex;
+  gap: 0.5rem;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0.5rem 0;
+}
+
+.btn-inline .btn {
+  flex: 1;
+  max-width: 80px;
+  text-align: center;
+}
+
+.mode-switch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  max-width: 120px;
+}
+
+.mode-switch-label {
+  font-size: 0.8rem;
+  color: #333;
+  font-weight: bold;
+  text-align: center;
+  line-height: 1;
+  margin-bottom: 0.3rem;
+}
+
+/* Switch Man/Auto - ESTILO iOS POLIDO */
+.switch-container {
+  position: relative;
+  display: inline-block;
+  width: 51px;
+  height: 31px;
+}
+
+.switch-container input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.switch-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #e9e9ea;
+  border-radius: 34px;
+  transition: background-color 0.4s;
+}
+
+.switch-slider::before {
+  content: "";
+  position: absolute;
+  height: 19px;
+  width: 19px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  border-radius: 50%;
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2), 0 0 1px rgba(0,0,0,0.1);
+}
+
+input:checked + .switch-slider {
+  background-color: #34c759;
+}
+
+input:checked + .switch-slider::before {
+  transform: translateX(28px);
+}
+
+.mode-switch-status {
+  font-size: 0.7rem;
+  font-weight: bold;
+  margin-top: 0.2rem;
+  color: #666;
+}
+
 @media(max-width:768px){.container{padding:0.5rem}.output-grid{grid-template-columns:1fr}.control-buttons{justify-content:center}}
 </style>
 </head>
@@ -91,15 +183,16 @@ let outputData = {};
 let debugMode = true; // Habilitar debug
 let debugVisible = true;
 let configData = {
-  output1: { pin: 5, name: 'Bomba' },
-  output2: { pin: 4, name: 'Termostato' },
-  output3: { pin: 14, name: 'Chiller' },
-  output4: { pin: 12, name: 'Skimmer' }
+  output1: { pin: 5, name: 'Bomba', autoMode: false },
+  output2: { pin: 4, name: 'Termostato', autoMode: false },
+  output3: { pin: 14, name: 'Chiller', autoMode: false },
+  output4: { pin: 12, name: 'Skimmer', autoMode: false }
 };
 
 // Controle de mudanças para logs inteligentes
 let lastOutputData = {};
 let lastConfigData = {};
+let gpioUpdateTimeouts = {};
 
 function debugLog(message) {
   if (debugMode) {
@@ -141,8 +234,9 @@ function detectChanges(newOutputData, newConfigData) {
   Object.keys(newConfigData).forEach(key => {
     if (!lastConfigData[key] || 
         lastConfigData[key].pin !== newConfigData[key].pin ||
-        lastConfigData[key].name !== newConfigData[key].name) {
-      changes.push(`Config ${key}: ${newConfigData[key].name} (GPIO ${newConfigData[key].pin})`);
+        lastConfigData[key].name !== newConfigData[key].name ||
+        lastConfigData[key].autoMode !== newConfigData[key].autoMode) {
+      changes.push(`Config ${key}: ${newConfigData[key].name} (GPIO ${newConfigData[key].pin}, ${newConfigData[key].autoMode ? 'AUTO' : 'MAN'})`);
     }
   });
   
@@ -204,10 +298,10 @@ async function forceRefresh() {
     // Limpar cache de dados
     outputData = {};
     configData = {
-      output1: { pin: 5, name: 'Bomba' },
-      output2: { pin: 4, name: 'Termostato' },
-      output3: { pin: 14, name: 'Chiller' },
-      output4: { pin: 12, name: 'Skimmer' }
+      output1: { pin: 5, name: 'Bomba', autoMode: false },
+      output2: { pin: 4, name: 'Termostato', autoMode: false },
+      output3: { pin: 14, name: 'Chiller', autoMode: false },
+      output4: { pin: 12, name: 'Skimmer', autoMode: false }
     };
     
     // Recarregar tudo
@@ -256,10 +350,10 @@ async function loadOutputs() {
         // Mapear configurações salvas
         if (savedConfig.outputs && savedConfig.outputs.length >= 4) {
           configData = {
-            output1: { pin: savedConfig.outputs[0].pin, name: savedConfig.outputs[0].name },
-            output2: { pin: savedConfig.outputs[1].pin, name: savedConfig.outputs[1].name },
-            output3: { pin: savedConfig.outputs[2].pin, name: savedConfig.outputs[2].name },
-            output4: { pin: savedConfig.outputs[3].pin, name: savedConfig.outputs[3].name }
+            output1: { pin: savedConfig.outputs[0].pin, name: savedConfig.outputs[0].name, autoMode: savedConfig.outputs[0].autoMode || false },
+            output2: { pin: savedConfig.outputs[1].pin, name: savedConfig.outputs[1].name, autoMode: savedConfig.outputs[1].autoMode || false },
+            output3: { pin: savedConfig.outputs[2].pin, name: savedConfig.outputs[2].name, autoMode: savedConfig.outputs[2].autoMode || false },
+            output4: { pin: savedConfig.outputs[3].pin, name: savedConfig.outputs[3].name, autoMode: savedConfig.outputs[3].autoMode || false }
           };
         } else {
           throw new Error('Configurações inválidas');
@@ -271,10 +365,10 @@ async function loadOutputs() {
       // Fallback para configurações padrão fixas
       debugLog(`⚠️ Usando configurações padrão: ${configError.message}`);
       configData = {
-        output1: { pin: 5, name: 'Bomba' },
-        output2: { pin: 4, name: 'Termostato' },
-        output3: { pin: 14, name: 'Chiller' },
-        output4: { pin: 12, name: 'Skimmer' }
+        output1: { pin: 5, name: 'Bomba', autoMode: false },
+        output2: { pin: 4, name: 'Termostato', autoMode: false },
+        output3: { pin: 14, name: 'Chiller', autoMode: false },
+        output4: { pin: 12, name: 'Skimmer', autoMode: false }
       };
     }
     
@@ -299,9 +393,9 @@ function renderOutputs() {
   
   const outputs = [
     { key: 'output1', title: 'Saída 1', icon: '🔌' },
-    { key: 'output2', title: 'Saída 2', icon: '🔥' },
-    { key: 'output3', title: 'Saída 3', icon: '❄️' },
-    { key: 'output4', title: 'Saída 4', icon: '🌪️' }
+    { key: 'output2', title: 'Saída 2', icon: '🔌' },
+    { key: 'output3', title: 'Saída 3', icon: '🔌' },
+    { key: 'output4', title: 'Saída 4', icon: '🔌' }
   ];
   
   // Salvar valores dos campos que estão sendo editados
@@ -329,6 +423,9 @@ function renderOutputs() {
     const currentPin = configData[output.key].pin;
     // Usar valor preservado se estiver digitando, senão usar o valor dos dados
     const currentName = currentValues[`name_${output.key}`] || configData[output.key].name;
+    const isAutoMode = configData[output.key].autoMode || false;
+    
+    const buttonsDisabled = isAutoMode;
     
     return `
       <div class="output-card">
@@ -340,7 +437,7 @@ function renderOutputs() {
         </div>
         <div class="form-group">
           <label>Pino GPIO:</label>
-          <select id="pin_${output.key}" onchange="updateConfig('${output.key}', 'pin', this.value)">
+          <select id="pin_${output.key}" onchange="validateAndUpdateGPIO('${output.key}', this.value)" class="${getGPIOValidationClass(output.key, currentPin)}">
             <option value="5" ${currentPin === 5 ? 'selected' : ''}>GPIO 5 (D1)</option>
             <option value="4" ${currentPin === 4 ? 'selected' : ''}>GPIO 4 (D2)</option>
             <option value="0" ${currentPin === 0 ? 'selected' : ''}>GPIO 0 (D3)</option>
@@ -350,6 +447,7 @@ function renderOutputs() {
             <option value="13" ${currentPin === 13 ? 'selected' : ''}>GPIO 13 (D7)</option>
             <option value="15" ${currentPin === 15 ? 'selected' : ''}>GPIO 15 (D8)</option>
           </select>
+          <div id="gpio_warning_${output.key}" class="gpio-warning" style="display:none;"></div>
         </div>
         <div class="form-group">
           <label>Nome:</label>
@@ -359,21 +457,29 @@ function renderOutputs() {
         </div>
         <div class="form-group">
           <label>Controle Manual:</label>
-          <label class="toggle-switch">
-            <input type="checkbox" ${isOn ? 'checked' : ''} 
-                   onchange="toggleOutput('${output.key}', this.checked)">
-            <span class="slider"></span>
-          </label>
+          <div class="btn-inline">
+            <button class="btn btn-sm ${isOn ? 'btn-success' : 'btn-secondary'}" 
+                    onclick="setOutput('${output.key}', true)"
+                    ${buttonsDisabled ? 'disabled style="opacity:0.4"' : (isOn ? 'style="opacity:1"' : 'style="opacity:0.6"')}>
+              Liga
+            </button>
+            <button class="btn btn-sm ${!isOn ? 'btn-danger' : 'btn-secondary'}" 
+                    onclick="setOutput('${output.key}', false)"
+                    ${buttonsDisabled ? 'disabled style="opacity:0.4"' : (!isOn ? 'style="opacity:1"' : 'style="opacity:0.6"')}>
+              Desliga
+            </button>
+            <div class="mode-switch">
+              <div class="mode-switch-label">Modo</div>
+              <div class="switch-container">
+                <input type="checkbox" id="mode_${output.key}" ${isAutoMode ? 'checked' : ''} onchange="toggleMode('${output.key}', this.checked)">
+                <label for="mode_${output.key}" class="switch-slider"></label>
+              </div>
+              <div class="mode-switch-status">${isAutoMode ? 'AUTO' : 'MAN'}</div>
+            </div>
+          </div>
         </div>
-        <div class="control-buttons">
-          <button class="btn ${isOn ? 'btn-danger' : 'btn-success'}" 
-                  onclick="toggleOutput('${output.key}', ${!isOn})">
-            ${isOn ? 'Desligar' : 'Ligar'}
-          </button>
-          <button class="btn btn-primary" onclick="testOutput('${output.key}')">
-            Testar
-          </button>
-          <button class="btn btn-warning" onclick="saveConfig('${output.key}')">
+        <div class="control-buttons" style="display: flex; justify-content: center; margin-top: 1rem;">
+          <button class="btn btn-sm btn-primary" onclick="saveConfig('${output.key}')">
             Salvar
           </button>
         </div>
@@ -393,6 +499,70 @@ function renderOutputs() {
       }
     }, 10);
   }
+  
+  // Atualizar switches de modo após render
+  setTimeout(() => {
+    outputs.forEach(output => {
+      const modeSwitch = document.getElementById(`mode_${output.key}`);
+      const isAutoMode = configData[output.key].autoMode || false;
+      if (modeSwitch) {
+        modeSwitch.checked = isAutoMode;
+      }
+    });
+  }, 50);
+}
+
+// Validação de GPIO com debounce
+function validateAndUpdateGPIO(relay, newPin) {
+  const pin = parseInt(newPin);
+  
+  // Limpar timeout anterior se existir
+  if (gpioUpdateTimeouts[relay]) {
+    clearTimeout(gpioUpdateTimeouts[relay]);
+  }
+  
+  // Criar novo timeout para evitar sobreposição rápida
+  gpioUpdateTimeouts[relay] = setTimeout(() => {
+    const isDuplicate = isGPIODuplicate(relay, pin);
+    
+    if (isDuplicate) {
+      showGPIOError(relay, pin);
+      debugLog(`⚠️ GPIO ${pin} já está sendo usado por outra saída!`);
+    } else {
+      clearGPIOError(relay);
+      updateConfig(relay, 'pin', pin);
+      debugLog(`✅ GPIO ${pin} atribuído para ${relay}`);
+    }
+  }, 300); // Aguardar 300ms antes de processar a mudança
+}
+
+function isGPIODuplicate(currentRelay, pin) {
+  return Object.keys(configData).some(relay => 
+    relay !== currentRelay && configData[relay].pin === pin
+  );
+}
+
+function getGPIOValidationClass(relay, pin) {
+  return isGPIODuplicate(relay, pin) ? 'gpio-error' : '';
+}
+
+function showGPIOError(relay, pin) {
+  const select = document.getElementById(`pin_${relay}`);
+  const warning = document.getElementById(`gpio_warning_${relay}`);
+  
+  if (select) select.classList.add('gpio-error');
+  if (warning) {
+    warning.style.display = 'block';
+    warning.textContent = `⚠️ GPIO ${pin} já está sendo usado por outra saída!`;
+  }
+}
+
+function clearGPIOError(relay) {
+  const select = document.getElementById(`pin_${relay}`);
+  const warning = document.getElementById(`gpio_warning_${relay}`);
+  
+  if (select) select.classList.remove('gpio-error');
+  if (warning) warning.style.display = 'none';
 }
 
 // Atualizar configuração local
@@ -409,18 +579,94 @@ function updateConfig(relay, field, value) {
   }
 }
 
-// Salvar configuração
+// Alternar modo manual/automático
+function toggleMode(relay, isAuto) {
+  configData[relay].autoMode = isAuto;
+  
+  debugLog(`🔄 ${configData[relay].name} alterado para modo ${isAuto ? 'AUTOMÁTICO' : 'MANUAL'}`);
+  
+  // Salvar automaticamente a mudança
+  saveConfig(relay);
+  
+  if (isAuto) {
+    debugLog(`🤖 Modo AUTOMÁTICO ativado - controles manuais desabilitados`);
+  } else {
+    debugLog(`👤 Modo MANUAL ativado - controles manuais habilitados`);
+  }
+}
+
+// Alternar modo manual/automático
+function toggleMode(relay, isAuto) {
+  configData[relay].autoMode = isAuto;
+  
+  debugLog(`🔄 ${configData[relay].name} alterado para modo ${isAuto ? 'AUTOMÁTICO' : 'MANUAL'}`);
+  
+  // Salvar automaticamente a mudança
+  saveConfig(relay);
+  
+  if (isAuto) {
+    debugLog(`🤖 Modo AUTOMÁTICO ativado - controles manuais desabilitados`);
+  } else {
+    debugLog(`👤 Modo MANUAL ativado - controles manuais habilitados`);
+  }
+}
+
+// Novo controle de saída (substitui toggleOutput)
+async function setOutput(relay, state) {
+  debugLog(`${state ? 'Ligando' : 'Desligando'} ${relay}...`);
+  
+  try {
+    const payload = {
+      relay: relay,
+      state: state
+    };
+    
+    const response = await fetch('/api/outputs', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    const result = await response.text();
+    debugLog(`✅ ${relay} ${state ? 'LIGADO' : 'DESLIGADO'} com sucesso!`);
+    
+    // Atualizar interface imediatamente
+    setTimeout(loadOutputs, 300);
+    
+  } catch (error) {
+    debugLog(`❌ Erro ao controlar ${relay}: ${error.message}`);
+    alert(`Erro ao controlar ${relay}: ${error.message}`);
+  }
+}
+
+// Salvar configuração com validação
 async function saveConfig(relay) {
   debugLog(`Salvando configuração de ${relay}...`);
+  
+  // Validar GPIOs antes de salvar
+  const duplicateGPIOs = validateAllGPIOs();
+  if (duplicateGPIOs.length > 0) {
+    const errorMsg = `❌ Não é possível salvar: GPIOs duplicados encontrados!\n${duplicateGPIOs.join('\n')}`;
+    debugLog(errorMsg);
+    alert(errorMsg);
+    return;
+  }
   
   try {
     // Preparar payload com todas as configurações
     const payload = {
       outputs: [
-        { index: 0, name: configData.output1.name, pin: configData.output1.pin },
-        { index: 1, name: configData.output2.name, pin: configData.output2.pin },
-        { index: 2, name: configData.output3.name, pin: configData.output3.pin },
-        { index: 3, name: configData.output4.name, pin: configData.output4.pin }
+        { index: 0, name: configData.output1.name, pin: configData.output1.pin, autoMode: configData.output1.autoMode },
+        { index: 1, name: configData.output2.name, pin: configData.output2.pin, autoMode: configData.output2.autoMode },
+        { index: 2, name: configData.output3.name, pin: configData.output3.pin, autoMode: configData.output3.autoMode },
+        { index: 3, name: configData.output4.name, pin: configData.output4.pin, autoMode: configData.output4.autoMode }
       ]
     };
     
@@ -452,6 +698,23 @@ async function saveConfig(relay) {
     debugLog(`ERRO ao salvar ${relay}: ${error.message}`);
     alert(`Erro ao salvar configuração: ${error.message}`);
   }
+}
+
+// Validar todos os GPIOs
+function validateAllGPIOs() {
+  const usedGPIOs = {};
+  const duplicates = [];
+  
+  Object.keys(configData).forEach(relay => {
+    const pin = configData[relay].pin;
+    if (usedGPIOs[pin]) {
+      duplicates.push(`GPIO ${pin}: ${usedGPIOs[pin]} e ${configData[relay].name}`);
+    } else {
+      usedGPIOs[pin] = configData[relay].name;
+    }
+  });
+  
+  return duplicates;
 }
 
 // Controlar saída
@@ -490,28 +753,7 @@ async function toggleOutput(relay, state) {
   }
 }
 
-// Testar saída (ligar por 2 segundos)
-async function testOutput(relay) {
-  debugLog(`Testando ${relay}...`);
-  
-  try {
-    debugLog(`🔧 Testando ${configData[relay].name} por 2 segundos...`);
-    
-    // Ligar
-    await toggleOutput(relay, true);
-    
-    // Desligar após 2 segundos
-    setTimeout(async () => {
-      await toggleOutput(relay, false);
-      debugLog(`Teste de ${relay} concluído!`);
-      debugLog(`✅ Teste de ${configData[relay].name} concluído!`);
-    }, 2000);
-    
-  } catch (error) {
-    debugLog(`ERRO no teste de ${relay}: ${error.message}`);
-    alert(`Erro no teste: ${error.message}`);
-  }
-}
+// Função testOutput removida - substituída pelos controles Liga/Desliga
 
 // Salvar todas as configurações
 async function saveAllConfigs() {
@@ -520,10 +762,10 @@ async function saveAllConfigs() {
   try {
     const payload = {
       outputs: [
-        { index: 0, name: configData.output1.name, pin: configData.output1.pin },
-        { index: 1, name: configData.output2.name, pin: configData.output2.pin },
-        { index: 2, name: configData.output3.name, pin: configData.output3.pin },
-        { index: 3, name: configData.output4.name, pin: configData.output4.pin }
+        { index: 0, name: configData.output1.name, pin: configData.output1.pin, autoMode: configData.output1.autoMode },
+        { index: 1, name: configData.output2.name, pin: configData.output2.pin, autoMode: configData.output2.autoMode },
+        { index: 2, name: configData.output3.name, pin: configData.output3.pin, autoMode: configData.output3.autoMode },
+        { index: 3, name: configData.output4.name, pin: configData.output4.pin, autoMode: configData.output4.autoMode }
       ]
     };
     
@@ -571,7 +813,8 @@ setInterval(() => {
 
 // Carregar dados iniciais
 debugLog('🚀 ReefControl - Sistema de saídas iniciado');
-debugLog('Versão: v2.0.11 - Nomenclatura Padronizada');
+debugLog('Versão: Pro v2.2.10 - SWITCH MAN/AUTO PERFEITAMENTE CENTRALIZADO');
+debugLog('✅ Bolinha 18x18px matematicamente centralizada (top: 5px), visual impecável');
 loadOutputs();
 </script>
 </body>

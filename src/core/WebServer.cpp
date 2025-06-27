@@ -1,8 +1,14 @@
 #include "WebServer.h"
-#include <LittleFS.h>
-#include <ESP8266HTTPUpdateServer.h>
 #include "RelayController.h"
 #include "ConfigManager.h"
+#include "../capabilities/Capabilities.h"
+
+// Compatibilidade WiFi ESP8266/ESP32
+#ifdef ESP32
+  #include <WiFi.h>
+#else
+  #include <ESP8266WiFi.h>
+#endif
 
 bool WebServerManager::begin(RelayController* relayController, ConfigManager* configManager) {
   _relayController = relayController;
@@ -26,6 +32,7 @@ bool WebServerManager::begin(RelayController* relayController, ConfigManager* co
   _server.on("/system", [this]() { serveFile("/html/system.html"); });
   _server.on("/logica", [this]() { serveFile("/html/logica.html"); });
   _server.on("/status", [this]() { serveFile("/html/status.html"); });
+  _server.on("/file_upload", [this]() { serveFile("/html/file_upload.html"); });
   
   // Páginas HTML principais (com .html para compatibilidade)
   _server.on("/login.html", [this]() { serveFile("/html/login.html"); });
@@ -40,6 +47,7 @@ bool WebServerManager::begin(RelayController* relayController, ConfigManager* co
   _server.on("/system.html", [this]() { serveFile("/html/system.html"); });
   _server.on("/logica.html", [this]() { serveFile("/html/logica.html"); });
   _server.on("/status.html", [this]() { serveFile("/html/status.html"); });
+  _server.on("/file_upload.html", [this]() { serveFile("/html/file_upload.html"); });
   
   // API para dados dos sensores
   _server.on("/api/sensors", [this]() {
@@ -50,15 +58,40 @@ bool WebServerManager::begin(RelayController* relayController, ConfigManager* co
   // API para status do sistema
   _server.on("/api/status", [this]() {
     String json = "{";
-        json += "\"version\":\"v2.0.5\",";  
+        json += "\"version\":\"v2.0.12\",";  
     json += "\"build_date\":\"" + String(__DATE__) + " " + String(__TIME__) + "\",";
     json += "\"wifi\":true,";
     json += "\"mqtt\":false,";
     json += "\"uptime\":" + String(millis()) + ",";
     json += "\"heap\":" + String(ESP.getFreeHeap()) + ",";
     json += "\"flash_size\":" + String(ESP.getFlashChipSize()) + ",";
-    json += "\"chip_id\":\"" + String(ESP.getChipId(), HEX) + "\",";
-    json += "\"sdk_version\":\"" + String(ESP.getSdkVersion()) + "\"";
+    #ifdef ESP32
+      json += "\"chip_id\":\"" + String((uint32_t)ESP.getEfuseMac(), HEX) + "\",";
+      json += "\"sdk_version\":\"" + String(ESP.getSdkVersion()) + "\"";
+    #else
+      json += "\"chip_id\":\"" + String(ESP.getChipId(), HEX) + "\",";
+      json += "\"sdk_version\":\"" + String(ESP.getSdkVersion()) + "\"";
+    #endif
+    json += "}";
+    _server.send(200, "application/json", json);
+  });
+
+  // API para capabilities do sistema
+  _server.on("/api/capabilities", [this]() {
+    String json = "{";
+    json += "\"version\":\"" + String(CAPS.version) + "\",";
+    json += "\"hardware\":\"" + String(CAPS.hardware) + "\",";
+    json += "\"maxOutputs\":" + String(CAPS.maxOutputs) + ",";
+    json += "\"maxSensors\":" + String(CAPS.maxSensors) + ",";
+    json += "\"hasAdvancedAutomation\":" + String(CAPS.hasAdvancedAutomation ? "true" : "false") + ",";
+    json += "\"hasAnalytics\":" + String(CAPS.hasAnalytics ? "true" : "false") + ",";
+    json += "\"hasMQTTAdvanced\":" + String(CAPS.hasMQTTAdvanced ? "true" : "false") + ",";
+    json += "\"hasMultiSensors\":" + String(CAPS.hasMultiSensors ? "true" : "false") + ",";
+    json += "\"hasGraphics\":" + String(CAPS.hasGraphics ? "true" : "false") + ",";
+    json += "\"ramAvailable\":" + String(CAPS.ramAvailable) + ",";
+    json += "\"flashAvailable\":" + String(CAPS.flashAvailable) + ",";
+    json += "\"isCompact\":" + String(isCompactVersion() ? "true" : "false") + ",";
+    json += "\"isPro\":" + String(isProVersion() ? "true" : "false");
     json += "}";
     _server.send(200, "application/json", json);
   });
@@ -181,9 +214,77 @@ bool WebServerManager::begin(RelayController* relayController, ConfigManager* co
     _server.send(200, "application/json", json);
   });
 
-  // OTA Update - Sistema nativo ESP8266
-  _httpUpdater.setup(&_server, "/update");
-  Serial.println("🚀 Sistema OTA nativo configurado em /update");
+  // API para upload de arquivos - POST
+  _server.on("/api/upload", HTTP_POST, 
+    [this]() {
+      _server.send(200, "application/json", "{\"success\":true,\"message\":\"Upload concluído\"}");
+    },
+    [this]() {
+      HTTPUpload& upload = _server.upload();
+      
+      if (upload.status == UPLOAD_FILE_START) {
+        String filename = "/html/" + upload.filename;
+        Serial.println("📤 Iniciando upload: " + filename);
+        
+        if (!filename.endsWith(".html") && !filename.endsWith(".css") && 
+            !filename.endsWith(".js") && !filename.endsWith(".json") &&
+            !filename.endsWith(".png") && !filename.endsWith(".jpg") && 
+            !filename.endsWith(".gif") && !filename.endsWith(".ico")) {
+          Serial.println("❌ Tipo de arquivo não permitido: " + filename);
+          return;
+        }
+        
+        _uploadFile = FileSystemClass.open(filename, "w");
+        if (!_uploadFile) {
+          Serial.println("❌ Erro ao criar arquivo: " + filename);
+        }
+      } 
+      else if (upload.status == UPLOAD_FILE_WRITE) {
+        if (_uploadFile) {
+          _uploadFile.write(upload.buf, upload.currentSize);
+        }
+      } 
+      else if (upload.status == UPLOAD_FILE_END) {
+        if (_uploadFile) {
+          _uploadFile.close();
+          Serial.println("✅ Upload concluído: " + upload.filename + " (" + String(upload.totalSize) + " bytes)");
+        }
+      }
+    }
+  );
+
+  // API para informações do sistema
+  _server.on("/api/system/info", [this]() {
+    #ifdef ESP32
+      size_t totalBytes = FileSystemClass.totalBytes();
+      size_t usedBytes = FileSystemClass.usedBytes();
+      size_t freeSpace = totalBytes - usedBytes;
+    #else
+      FSInfo fs_info;
+      FileSystemClass.info(fs_info);
+      size_t totalBytes = fs_info.totalBytes;
+      size_t usedBytes = fs_info.usedBytes;
+      size_t freeSpace = totalBytes - usedBytes;
+    #endif
+    
+    String json = "{";
+    json += "\"version\":\"" + String(getVersionString()) + "\",";
+    json += "\"uptime\":\"" + String(millis() / 1000) + "s\",";
+    json += "\"freeSpace\":" + String(freeSpace) + ",";
+    json += "\"totalSpace\":" + String(totalBytes) + ",";
+    json += "\"usedSpace\":" + String(usedBytes) + ",";
+    json += "\"wifi\":\"" + WiFi.SSID() + " (" + WiFi.RSSI() + "dBm)\"";
+    json += "}";
+    _server.send(200, "application/json", json);
+  });
+
+  // OTA Update - Sistema nativo (ESP8266 apenas)
+  #ifndef ESP32
+    _httpUpdater.setup(&_server, "/update");
+    Serial.println("🚀 Sistema OTA nativo ESP8266 configurado em /update");
+  #else
+    Serial.println("🚀 Sistema OTA ESP32 disponível via /update (implementação futura)");
+  #endif
   
   // Página 404
   _server.onNotFound([this]() {
@@ -200,8 +301,8 @@ bool WebServerManager::begin(RelayController* relayController, ConfigManager* co
 }
 
 void WebServerManager::serveFile(const String& path) {
-  if (LittleFS.exists(path)) {
-    File file = LittleFS.open(path, "r");
+  if (FileSystemClass.exists(path)) {
+    File file = FileSystemClass.open(path, "r");
     if (file) {
       _server.streamFile(file, "text/html");
       file.close();

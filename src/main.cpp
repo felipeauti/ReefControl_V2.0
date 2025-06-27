@@ -9,6 +9,9 @@
 
 #include <Arduino.h>
 
+// Capabilities system
+#include "capabilities/Capabilities.h"
+
 // Core modules
 #include "core/ConfigManager.h"
 #include "core/SensorManager.h"
@@ -60,19 +63,34 @@ SystemStatus systemStatus;
  */
 void setup() {
   Serial.begin(115200);
+  delay(2000);  // Aguardar estabilização do sistema
+  
   Serial.println();
   Serial.println("========================================");
-  Serial.println("🐠 ReefControl v2.0.9 - Interface Limpa Sem Mensagens");
+  Serial.printf("🐠 %s\n", getVersionString());
+  Serial.printf("💻 Hardware: %s\n", getHardwarePlatform());
+  Serial.printf("💾 RAM livre: %d bytes\n", ESP.getFreeHeap());
   Serial.println("========================================");
   
-  // 1. Inicializar configurações
+  // Mostrar capabilities do sistema
+  printCapabilities();
+  
+  // 1. Inicializar configurações (inclui sistema de arquivos)
   Serial.println("📋 Inicializando configurações...");
-  config.begin();
+  yield();  // Proteger contra watchdog
+  if (!config.begin()) {
+    Serial.println("❌ ERRO: Falha ao inicializar configurações!");
+    delay(5000);
+    ESP.restart();
+  }
   
   // 2. Inicializar hardware
   Serial.println("🔧 Inicializando hardware...");
+  yield();  // Proteger contra watchdog
   sensors.begin();
+  yield();
   relays.begin();
+  yield();
   
   // 3. Display removido para otimização
   Serial.println("📺 Display removido - otimização de RAM");
@@ -145,10 +163,7 @@ void loop() {
     // Controle automático
     relays.autoControl(sensors.getTemperature(), sensors.getPH());
     
-    // Log dos sensores
-    Serial.printf("📊 Temp: %.1f°C | pH: %.1f | TDS: %d | Nível: %d%%\n", 
-                  sensors.getTemperature(), sensors.getPH(), 
-                  sensors.getTDS(), sensors.getWaterLevel());
+    // Log dos sensores removido para não poluir o terminal
   }
   
   // Publicar no MQTT a cada 10 segundos
@@ -173,6 +188,7 @@ void loop() {
   systemStatus.ntpSynced = ntpClient.isTimeSet();
   // systemStatus.displayActive removido
   
-  // Pequeno delay para não sobrecarregar o processador
-  delay(50);
+  // Proteção contra watchdog timeout e yield para sistema
+  yield();
+  delay(100);  // Aumentado para reduzir carga do processador
 } 
