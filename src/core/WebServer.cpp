@@ -1,5 +1,6 @@
 #include "WebServer.h"
 #include <LittleFS.h>
+#include <ESP8266HTTPUpdateServer.h>
 
 bool WebServerManager::begin() {
   // Página inicial - redireciona para login
@@ -44,11 +45,23 @@ bool WebServerManager::begin() {
   
   // API para status do sistema
   _server.on("/api/status", [this]() {
-    String json = "{\"wifi\":true,\"mqtt\":false,\"uptime\":";
-    json += millis();
-    json += ",\"heap\":" + String(ESP.getFreeHeap()) + "}";
+    String json = "{";
+        json += "\"version\":\"v2.0.5\",";  
+    json += "\"build_date\":\"" + String(__DATE__) + " " + String(__TIME__) + "\",";
+    json += "\"wifi\":true,";
+    json += "\"mqtt\":false,";
+    json += "\"uptime\":" + String(millis()) + ",";
+    json += "\"heap\":" + String(ESP.getFreeHeap()) + ",";
+    json += "\"flash_size\":" + String(ESP.getFlashChipSize()) + ",";
+    json += "\"chip_id\":\"" + String(ESP.getChipId(), HEX) + "\",";
+    json += "\"sdk_version\":\"" + String(ESP.getSdkVersion()) + "\"";
+    json += "}";
     _server.send(200, "application/json", json);
   });
+
+  // OTA Update - Sistema nativo ESP8266
+  _httpUpdater.setup(&_server, "/update");
+  Serial.println("🚀 Sistema OTA nativo configurado em /update");
   
   // Página 404
   _server.onNotFound([this]() {
@@ -60,6 +73,7 @@ bool WebServerManager::begin() {
   
   _server.begin();
   Serial.println("🌐 Servidor web completo iniciado na porta 80");
+  Serial.println("🚀 OTA Update habilitado em /update");
   return true;
 }
 

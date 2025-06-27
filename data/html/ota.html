@@ -35,9 +35,10 @@ body{font-family:Arial,sans-serif;background:#f5f7fa;min-height:100vh}
 <a href="config.html" class="back-btn">← Voltar</a>
 </div>
 <div class="container">
-<div class="current-version">
-<h3>Versão Atual: v1.0.0</h3>
-<p>Último update: 15/12/2024 14:30</p>
+<div class="current-version" id="versionInfo">
+<h3>Versão Atual: <span id="currentVersion">Carregando...</span></h3>
+<p>Uptime: <span id="systemUptime">Carregando...</span></p>
+<p>Memória livre: <span id="freeHeap">Carregando...</span> KB</p>
 </div>
 <div class="warning">
 ⚠️ <strong>Atenção:</strong> Durante a atualização, o sistema ficará temporariamente indisponível. Certifique-se de que o dispositivo está conectado à energia estável.
@@ -139,6 +140,39 @@ status.className='status status-'+type;
 status.style.display='block';
 setTimeout(()=>status.style.display='none',5000);
 }
+
+// Carregar informações do sistema
+async function loadSystemInfo(){
+try{
+const response=await fetch('/api/status');
+const data=await response.json();
+document.getElementById('currentVersion').textContent=data.version || 'v2.0.0';
+document.getElementById('systemUptime').textContent=formatUptime(data.uptime);
+document.getElementById('freeHeap').textContent=(data.heap/1024).toFixed(1);
+// Adicionar info de build na versão
+const versionElement=document.getElementById('currentVersion');
+versionElement.title=`Build: ${data.build_date || 'N/A'} | Chip: ${data.chip_id || 'N/A'}`;
+}catch(error){
+console.error('Erro ao carregar informações:',error);
+document.getElementById('currentVersion').textContent='v2.0.0';
+document.getElementById('systemUptime').textContent='Erro ao carregar';
+document.getElementById('freeHeap').textContent='N/A';
+}
+}
+
+function formatUptime(ms){
+const seconds=Math.floor(ms/1000);
+const minutes=Math.floor(seconds/60);
+const hours=Math.floor(minutes/60);
+const days=Math.floor(hours/24);
+if(days>0)return `${days}d ${hours%24}h ${minutes%60}m`;
+if(hours>0)return `${hours}h ${minutes%60}m`;
+if(minutes>0)return `${minutes}m ${seconds%60}s`;
+return `${seconds}s`;
+}
+
+// Carregar informações quando a página carrega
+window.addEventListener('load',loadSystemInfo);
 
 if(!sessionStorage.getItem('loggedIn')){
 window.location.href='login.html';
