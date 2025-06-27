@@ -74,42 +74,42 @@ bool WebServerManager::begin(RelayController* relayController, ConfigManager* co
     
     // Se temos ConfigManager, usar configurações persistidas
     if (_configManager) {
-      json += "\"pump1\":{";
+      json += "\"output1\":{";
       json += "\"state\":" + String(_relayController->getPump1State() ? "true" : "false") + ",";
       json += "\"pin\":" + String(_configManager->relay.outputs[0].pin) + ",";
       json += "\"name\":\"" + String(_configManager->relay.outputs[0].name) + "\"},";
       
-      json += "\"heater\":{";
+      json += "\"output2\":{";
       json += "\"state\":" + String(_relayController->getHeaterState() ? "true" : "false") + ",";
       json += "\"pin\":" + String(_configManager->relay.outputs[1].pin) + ",";
       json += "\"name\":\"" + String(_configManager->relay.outputs[1].name) + "\"},";
       
-      json += "\"light\":{";
+      json += "\"output3\":{";
       json += "\"state\":" + String(_relayController->getLightState() ? "true" : "false") + ",";
       json += "\"pin\":" + String(_configManager->relay.outputs[2].pin) + ",";
       json += "\"name\":\"" + String(_configManager->relay.outputs[2].name) + "\"},";
       
-      json += "\"pump2\":{";
+      json += "\"output4\":{";
       json += "\"state\":" + String(_relayController->getPump2State() ? "true" : "false") + ",";
       json += "\"pin\":" + String(_configManager->relay.outputs[3].pin) + ",";
       json += "\"name\":\"" + String(_configManager->relay.outputs[3].name) + "\"}";
     } else {
       // Fallback para valores padrão
-      json += "\"pump1\":{";
+      json += "\"output1\":{";
       json += "\"state\":" + String(_relayController->getPump1State() ? "true" : "false") + ",";
-      json += "\"pin\":5,\"name\":\"Bomba Principal\"},";
+      json += "\"pin\":5,\"name\":\"Bomba\"},";
       
-      json += "\"heater\":{";
+      json += "\"output2\":{";
       json += "\"state\":" + String(_relayController->getHeaterState() ? "true" : "false") + ",";
-      json += "\"pin\":4,\"name\":\"Aquecedor\"},";
+      json += "\"pin\":4,\"name\":\"Termostato\"},";
       
-      json += "\"light\":{";
+      json += "\"output3\":{";
       json += "\"state\":" + String(_relayController->getLightState() ? "true" : "false") + ",";
-      json += "\"pin\":14,\"name\":\"Iluminação LED\"},";
+      json += "\"pin\":14,\"name\":\"Chiller\"},";
       
-      json += "\"pump2\":{";
+      json += "\"output4\":{";
       json += "\"state\":" + String(_relayController->getPump2State() ? "true" : "false") + ",";
-      json += "\"pin\":12,\"name\":\"Bomba Reposição\"}";
+      json += "\"pin\":12,\"name\":\"Skimmer\"}";
     }
     
     json += "}";
@@ -126,26 +126,26 @@ bool WebServerManager::begin(RelayController* relayController, ConfigManager* co
     String body = _server.arg("plain");
     Serial.println("📦 Comando recebido: " + body);
     
-    // Parse simples do JSON (formato: {"relay":"pump1","state":true})
-    if (body.indexOf("pump1") > 0) {
+    // Parse simples do JSON (formato: {"relay":"output1","state":true})
+    if (body.indexOf("output1") > 0) {
       bool state = body.indexOf("true") > 0;
       _relayController->setPump1(state);
-      Serial.println("🔌 Bomba Principal: " + String(state ? "LIGADA" : "DESLIGADA"));
+      Serial.println("🔌 Saída 1: " + String(state ? "LIGADA" : "DESLIGADA"));
     }
-    else if (body.indexOf("heater") > 0) {
+    else if (body.indexOf("output2") > 0) {
       bool state = body.indexOf("true") > 0;
       _relayController->setHeater(state);
-      Serial.println("🔥 Aquecedor: " + String(state ? "LIGADO" : "DESLIGADO"));
+      Serial.println("🔥 Saída 2: " + String(state ? "LIGADA" : "DESLIGADA"));
     }
-    else if (body.indexOf("light") > 0) {
+    else if (body.indexOf("output3") > 0) {
       bool state = body.indexOf("true") > 0;
       _relayController->setLight(state);
-      Serial.println("💡 Iluminação: " + String(state ? "LIGADA" : "DESLIGADA"));
+      Serial.println("💡 Saída 3: " + String(state ? "LIGADA" : "DESLIGADA"));
     }
-    else if (body.indexOf("pump2") > 0) {
+    else if (body.indexOf("output4") > 0) {
       bool state = body.indexOf("true") > 0;
       _relayController->setPump2(state);
-      Serial.println("🔌 Bomba Reposição: " + String(state ? "LIGADA" : "DESLIGADA"));
+      Serial.println("🔌 Saída 4: " + String(state ? "LIGADA" : "DESLIGADA"));
     }
     
     _server.send(200, "application/json", "{\"success\":true}");

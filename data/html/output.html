@@ -61,14 +61,7 @@ input:checked+.slider:before{transform:translateX(26px)}
 🔄 Carregando status das saídas...
 </div>
 
-<div id="saveAllContainer" class="save-all-container" style="display:none; margin-bottom: 20px;">
-  <button class="btn btn-success" onclick="saveAllConfigs()" style="width: 48%; font-size: 16px; padding: 12px; margin-right: 4%;">
-    💾 Salvar Todas as Configurações
-  </button>
-  <button class="btn btn-primary" onclick="forceRefresh()" style="width: 48%; font-size: 16px; padding: 12px;">
-    🔄 Forçar Atualização
-  </button>
-</div>
+<!-- Botões removidos - não são mais necessários -->
 
 <div id="outputGrid" class="output-grid" style="display:none">
 <!-- Conteúdo será carregado dinamicamente -->
@@ -98,10 +91,10 @@ let outputData = {};
 let debugMode = true; // Habilitar debug
 let debugVisible = true;
 let configData = {
-  pump1: { pin: 5, name: 'Bomba Principal' },
-  heater: { pin: 4, name: 'Aquecedor' },
-  light: { pin: 14, name: 'Iluminação LED' },
-  pump2: { pin: 12, name: 'Bomba Reposição' }
+  output1: { pin: 5, name: 'Bomba' },
+  output2: { pin: 4, name: 'Termostato' },
+  output3: { pin: 14, name: 'Chiller' },
+  output4: { pin: 12, name: 'Skimmer' }
 };
 
 // Controle de mudanças para logs inteligentes
@@ -211,10 +204,10 @@ async function forceRefresh() {
     // Limpar cache de dados
     outputData = {};
     configData = {
-      pump1: { pin: 5, name: 'Bomba Principal' },
-      heater: { pin: 4, name: 'Aquecedor' },
-      light: { pin: 14, name: 'Iluminação LED' },
-      pump2: { pin: 12, name: 'Bomba Reposição' }
+      output1: { pin: 5, name: 'Bomba' },
+      output2: { pin: 4, name: 'Termostato' },
+      output3: { pin: 14, name: 'Chiller' },
+      output4: { pin: 12, name: 'Skimmer' }
     };
     
     // Recarregar tudo
@@ -263,10 +256,10 @@ async function loadOutputs() {
         // Mapear configurações salvas
         if (savedConfig.outputs && savedConfig.outputs.length >= 4) {
           configData = {
-            pump1: { pin: savedConfig.outputs[0].pin, name: savedConfig.outputs[0].name },
-            heater: { pin: savedConfig.outputs[1].pin, name: savedConfig.outputs[1].name },
-            light: { pin: savedConfig.outputs[2].pin, name: savedConfig.outputs[2].name },
-            pump2: { pin: savedConfig.outputs[3].pin, name: savedConfig.outputs[3].name }
+            output1: { pin: savedConfig.outputs[0].pin, name: savedConfig.outputs[0].name },
+            output2: { pin: savedConfig.outputs[1].pin, name: savedConfig.outputs[1].name },
+            output3: { pin: savedConfig.outputs[2].pin, name: savedConfig.outputs[2].name },
+            output4: { pin: savedConfig.outputs[3].pin, name: savedConfig.outputs[3].name }
           };
         } else {
           throw new Error('Configurações inválidas');
@@ -275,13 +268,13 @@ async function loadOutputs() {
         throw new Error(`Config HTTP ${configResponse.status}`);
       }
     } catch (configError) {
-      // Fallback para configurações do status
+      // Fallback para configurações padrão fixas
       debugLog(`⚠️ Usando configurações padrão: ${configError.message}`);
       configData = {
-        pump1: { pin: outputData.pump1.pin, name: outputData.pump1.name },
-        heater: { pin: outputData.heater.pin, name: outputData.heater.name },
-        light: { pin: outputData.light.pin, name: outputData.light.name },
-        pump2: { pin: outputData.pump2.pin, name: outputData.pump2.name }
+        output1: { pin: 5, name: 'Bomba' },
+        output2: { pin: 4, name: 'Termostato' },
+        output3: { pin: 14, name: 'Chiller' },
+        output4: { pin: 12, name: 'Skimmer' }
       };
     }
     
@@ -291,7 +284,6 @@ async function loadOutputs() {
     renderOutputs();
     
     document.getElementById('loading').style.display = 'none';
-    document.getElementById('saveAllContainer').style.display = 'block';
     document.getElementById('outputGrid').style.display = 'grid';
     
   } catch (error) {
@@ -306,10 +298,10 @@ function renderOutputs() {
   const grid = document.getElementById('outputGrid');
   
   const outputs = [
-    { key: 'pump1', title: 'Bomba Principal', icon: '🔌' },
-    { key: 'heater', title: 'Aquecedor', icon: '🔥' },
-    { key: 'light', title: 'Iluminação LED', icon: '💡' },
-    { key: 'pump2', title: 'Bomba Reposição', icon: '🔌' }
+    { key: 'output1', title: 'Saída 1', icon: '🔌' },
+    { key: 'output2', title: 'Saída 2', icon: '🔥' },
+    { key: 'output3', title: 'Saída 3', icon: '❄️' },
+    { key: 'output4', title: 'Saída 4', icon: '🌪️' }
   ];
   
   // Salvar valores dos campos que estão sendo editados
@@ -425,10 +417,10 @@ async function saveConfig(relay) {
     // Preparar payload com todas as configurações
     const payload = {
       outputs: [
-        { index: 0, name: configData.pump1.name, pin: configData.pump1.pin },
-        { index: 1, name: configData.heater.name, pin: configData.heater.pin },
-        { index: 2, name: configData.light.name, pin: configData.light.pin },
-        { index: 3, name: configData.pump2.name, pin: configData.pump2.pin }
+        { index: 0, name: configData.output1.name, pin: configData.output1.pin },
+        { index: 1, name: configData.output2.name, pin: configData.output2.pin },
+        { index: 2, name: configData.output3.name, pin: configData.output3.pin },
+        { index: 3, name: configData.output4.name, pin: configData.output4.pin }
       ]
     };
     
@@ -528,10 +520,10 @@ async function saveAllConfigs() {
   try {
     const payload = {
       outputs: [
-        { index: 0, name: configData.pump1.name, pin: configData.pump1.pin },
-        { index: 1, name: configData.heater.name, pin: configData.heater.pin },
-        { index: 2, name: configData.light.name, pin: configData.light.pin },
-        { index: 3, name: configData.pump2.name, pin: configData.pump2.pin }
+        { index: 0, name: configData.output1.name, pin: configData.output1.pin },
+        { index: 1, name: configData.output2.name, pin: configData.output2.pin },
+        { index: 2, name: configData.output3.name, pin: configData.output3.pin },
+        { index: 3, name: configData.output4.name, pin: configData.output4.pin }
       ]
     };
     
@@ -579,7 +571,7 @@ setInterval(() => {
 
 // Carregar dados iniciais
 debugLog('🚀 ReefControl - Sistema de saídas iniciado');
-debugLog('Versão: v2.0.9 - Interface Limpa Sem Mensagens');
+debugLog('Versão: v2.0.11 - Nomenclatura Padronizada');
 loadOutputs();
 </script>
 </body>

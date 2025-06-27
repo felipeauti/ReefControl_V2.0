@@ -98,7 +98,52 @@ void ConfigManager::setDefaults() {
   sensor.tdsEnabled = true;
   sensor.levelEnabled = true;
   
-  // Relés padrões
+  // Configurações de saídas - CORREÇÃO DO BUG!
+  strcpy(relay.outputs[0].name, "Bomba");
+  relay.outputs[0].pin = 5;
+  relay.outputs[0].enabled = true;
+  relay.outputs[0].autoMode = true;
+  relay.outputs[0].onTime = 8;
+  relay.outputs[0].offTime = 22;
+  relay.outputs[0].onTemp = 0.0;
+  relay.outputs[0].offTemp = 0.0;
+  relay.outputs[0].interval = 0;
+  relay.outputs[0].duration = 0;
+  
+  strcpy(relay.outputs[1].name, "Termostato");
+  relay.outputs[1].pin = 4;
+  relay.outputs[1].enabled = true;
+  relay.outputs[1].autoMode = true;
+  relay.outputs[1].onTime = 0;
+  relay.outputs[1].offTime = 0;
+  relay.outputs[1].onTemp = 24.0;
+  relay.outputs[1].offTemp = 26.0;
+  relay.outputs[1].interval = 0;
+  relay.outputs[1].duration = 0;
+  
+  strcpy(relay.outputs[2].name, "Chiller");
+  relay.outputs[2].pin = 14;
+  relay.outputs[2].enabled = true;
+  relay.outputs[2].autoMode = true;
+  relay.outputs[2].onTime = 8;
+  relay.outputs[2].offTime = 20;
+  relay.outputs[2].onTemp = 0.0;
+  relay.outputs[2].offTemp = 0.0;
+  relay.outputs[2].interval = 0;
+  relay.outputs[2].duration = 0;
+  
+  strcpy(relay.outputs[3].name, "Skimmer");
+  relay.outputs[3].pin = 12;
+  relay.outputs[3].enabled = true;
+  relay.outputs[3].autoMode = false;
+  relay.outputs[3].onTime = 0;
+  relay.outputs[3].offTime = 0;
+  relay.outputs[3].onTemp = 0.0;
+  relay.outputs[3].offTemp = 0.0;
+  relay.outputs[3].interval = 60;
+  relay.outputs[3].duration = 30;
+  
+  // Relés padrões (compatibilidade)
   relay.pump1Enabled = true;
   relay.heaterEnabled = true;
   relay.lightEnabled = true;

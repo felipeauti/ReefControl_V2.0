@@ -90,10 +90,10 @@ struct OutputConfig {
 struct RelayConfig {
   // Configurações individuais das saídas
   OutputConfig outputs[4] = {
-    {"Bomba Principal", 5, true, true, 8, 22, 0.0, 0.0, 0, 0},
-    {"Aquecedor", 4, true, true, 0, 0, 24.0, 26.0, 0, 0},
-    {"Iluminação LED", 14, true, true, 8, 20, 0.0, 0.0, 0, 0},
-    {"Bomba Reposição", 12, true, false, 0, 0, 0.0, 0.0, 60, 30}
+    {"Bomba", 5, true, true, 8, 22, 0.0, 0.0, 0, 0},
+    {"Termostato", 4, true, true, 0, 0, 24.0, 26.0, 0, 0},
+    {"Chiller", 14, true, true, 8, 20, 0.0, 0.0, 0, 0},
+    {"Skimmer", 12, true, false, 0, 0, 0.0, 0.0, 60, 30}
   };
   
   // Compatibilidade com código antigo

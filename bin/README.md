@@ -6,28 +6,85 @@
 
 ## 📊 **VERSÃO MAIS RECENTE**
 
-### **ReefControl_V2.0.9.bin** ⭐ **RECOMENDADO**
-- **📅 Data de Compilação:** 27/06/2025 00:15
-- **📦 Tamanho:** 367.9KB (376.688 bytes)
-- **🧠 Uso de RAM:** 42.7% (35.004/81.920 bytes)
-- **💾 Uso de Flash:** 35.7% (372.539/1.044.464 bytes)
-- **🔥 Novidades:** Interface 100% limpa - eliminadas todas as mensagens verdes que atrapalhavam o layout!
+### **ReefControl_V2.0.11.bin** ⭐ **RECOMENDADO**
+- **📅 Data de Compilação:** 27/06/2025 13:20
+- **📦 Tamanho:** 417.0KB (427.024 bytes)
+- **🧠 Uso de RAM:** 45.6% (37.356/81.920 bytes)
+- **💾 Uso de Flash:** 40.5% (422.871/1.044.464 bytes)
+- **🔥 Novidades:** NOMENCLATURA PADRONIZADA - APIs e interface unificadas com output1, output2, output3, output4!
 
-**✨ PRINCIPAIS FUNCIONALIDADES v2.0.9:**
+**✨ PRINCIPAIS FUNCIONALIDADES v2.0.11:**
+- ✅ **NOMENCLATURA PADRONIZADA** - Todas as APIs agora usam output1, output2, output3, output4
+- ✅ **NOMES PADRÃO ATUALIZADOS** - Bomba, Termostato, Chiller, Skimmer (mais apropriados para aquarismo)
+- ✅ **ÍCONES ESPECÍFICOS** - 🔌 Bomba, 🔥 Termostato, ❄️ Chiller, 🌪️ Skimmer
+- ✅ **APIs CONSISTENTES** - WebServer, ConfigManager e interface HTML totalmente alinhados
+- ✅ **PERSISTÊNCIA 100% CORRIGIDA** - Configurações de GPIO e nomes salvos permanentemente
+- ✅ **Bug Crítico Resolvido** - setDefaults() inicializa corretamente as configurações de saídas
 - ✅ **Interface 100% Limpa** - Zero mensagens verdes atrapalhando o layout
-- ✅ **Mensagens no Debug Console** - Todas as notificações organizadas no console
 - ✅ **Anti-Interrupção de Digitação** - Pode digitar nomes completos sem ser interrompido
-- ✅ **Timer Inteligente** - Pausa atualizações quando usuário está editando campos
-- ✅ **Preservação de Dados** - Zero perda de informações durante digitação
-- ✅ **Foco Automático** - Restaura posição do cursor após atualizações
-- ✅ **Debug Console Otimizado** - Movido para o final da página, não atrapalha mais
-- ✅ **Logs Inteligentes** - Registra apenas mudanças reais, não spam a cada segundo
-- ✅ **Persistência REAL** - Configurações de GPIO e nomes salvos permanentemente
-- ✅ **API REST Completa** - `/api/outputs/config` para salvar/carregar configurações
+- ✅ **Debug Console Otimizado** - Logs organizados e interface profissional
 
 ---
 
 ## 📈 **CHANGELOG COMPLETO**
+
+### **v2.0.11** - 27/06/2025 - NOMENCLATURA PADRONIZADA! 🏷️✨
+**🎯 MELHORIA SOLICITADA:** Padronizar nomenclatura das saídas em todo o sistema!
+
+**✅ MUDANÇAS IMPLEMENTADAS:**
+
+**🏷️ Nomenclatura Unificada:**
+- `pump1` → `output1` (Saída 1)
+- `heater` → `output2` (Saída 2) 
+- `light` → `output3` (Saída 3)
+- `pump2` → `output4` (Saída 4)
+
+**🏷️ Nomes Padrão Atualizados:**
+- "Bomba Principal" → "Bomba" 🔌
+- "Aquecedor" → "Termostato" 🔥
+- "Iluminação LED" → "Chiller" ❄️
+- "Bomba Reposição" → "Skimmer" 🌪️
+
+**🔧 Arquivos Atualizados:**
+- **ConfigManager:** setDefaults() com novos nomes padrão
+- **WebServer:** APIs `/api/outputs` com nomenclatura output1-4
+- **Interface HTML:** output.html, status.html com nova estrutura
+- **MQTT Topics:** Sugestões atualizadas para output1-4
+- **Todas as referências** pump1/heater/light/pump2 → output1/2/3/4
+
+**🎯 RESULTADO:** Sistema 100% consistente com nomenclatura padronizada em todas as camadas!
+
+### **v2.0.10** - 27/06/2025 - BUG CRÍTICO CORRIGIDO! 🐛➡️✅
+**🎯 PROBLEMA RESOLVIDO:** Configurações de GPIO e nomes sempre voltavam ao padrão após reinicialização!
+
+**🔍 CAUSA RAIZ IDENTIFICADA:**
+- A função `setDefaults()` no ConfigManager NÃO estava inicializando o array `relay.outputs[]`
+- Apenas as variáveis antigas de compatibilidade eram inicializadas
+- Resultado: configurações ficavam com valores inválidos (zeros ou lixo de memória)
+
+**✅ CORREÇÃO IMPLEMENTADA:**
+```cpp
+// ANTES (BUG):
+void setDefaults() {
+  // ... outras configurações ...
+  relay.pump1Enabled = true;  // ← Só as antigas
+  relay.heaterEnabled = true;
+  // relay.outputs[] NÃO era inicializado! ❌
+}
+
+// DEPOIS (CORRIGIDO):
+void setDefaults() {
+  // ... outras configurações ...
+  
+  // Configurações de saídas - CORREÇÃO DO BUG!
+  strcpy(relay.outputs[0].name, "Bomba Principal");
+  relay.outputs[0].pin = 5;
+  relay.outputs[0].enabled = true;
+  // ... todos os 4 outputs inicializados corretamente ✅
+}
+```
+
+**🎯 RESULTADO:** Agora as configurações de GPIO e nomes são REALMENTE persistentes e funcionam 100%!
 
 ### **v2.0.9** - 27/06/2025 - INTERFACE 100% LIMPA 🧹✨
 **🎯 PROBLEMA RESOLVIDO:** Mensagens verdes de sucesso atrapalhavam o layout e deslocavam os cards!
