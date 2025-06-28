@@ -49,7 +49,8 @@ struct NtpConfig {
   char server1[64] = "pool.ntp.org";
   char server2[64] = "time.google.com";
   char server3[64] = "br.pool.ntp.org";
-  char timezone[64] = "America/Sao_Paulo";
+  char timezone[64] = "America/Sao_Paulo"; // Manter compatibilidade
+  int timezoneOffset = 0; // UTC offset em horas (novo campo)
   int syncInterval = 3600; // segundos
 };
 

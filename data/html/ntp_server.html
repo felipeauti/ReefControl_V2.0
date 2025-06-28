@@ -54,15 +54,20 @@ body{font-family:Arial,sans-serif;background:#f5f7fa;min-height:100vh}
 <a href="config.html" class="back-btn">← Voltar</a>
 </div>
 <div class="container">
+
+<!-- Display de Data/Hora Atual -->
 <div class="current-time loading">
 <div class="time-display loading" id="currentTime"><span class="loading-spinner"></span>Carregando...</div>
 <div class="date-display loading" id="currentDate">Aguardando dados do ESP32...</div>
 </div>
+
+<!-- Configuração de Servidores NTP -->
 <div class="config-section">
-<div class="section-title">🌐 Servidor NTP</div>
+<div class="section-title">🌐 Servidores NTP</div>
 <div class="status-info loading" id="statusInfo">
 <span class="loading-spinner"></span><strong>Status:</strong> Carregando dados do ESP32...
 </div>
+
 <div class="form-group">
 <label>Servidor NTP Primário:</label>
 <input type="text" id="server1" placeholder="Carregando..." disabled>
@@ -75,6 +80,7 @@ body{font-family:Arial,sans-serif;background:#f5f7fa;min-height:100vh}
 <label>Servidor NTP Terciário:</label>
 <input type="text" id="server3" placeholder="Carregando..." disabled>
 </div>
+
 <div class="server-list">
 <h4>Servidores NTP Recomendados:</h4>
 <ul style="margin-top:0.5rem;padding-left:1.5rem">
@@ -84,69 +90,40 @@ body{font-family:Arial,sans-serif;background:#f5f7fa;min-height:100vh}
 <li><strong>Microsoft:</strong> time.windows.com</li>
 </ul>
 </div>
+
 <button class="btn btn-primary" id="saveServers" disabled>Salvar Servidores</button>
 <button class="btn btn-warning" id="testConnectivity" disabled>Testar Conectividade</button>
 </div>
+
+<!-- Configuração de Fuso Horário -->
 <div class="config-section">
 <div class="section-title">🌍 Fuso Horário</div>
 <div class="form-group">
-<label>Fuso Horário:</label>
+<label>Fuso Horário UTC:</label>
 <select id="timezone" disabled>
 <option value="">Carregando...</option>
-<option value="-5">UTC-5 (Acre - Rio Branco)</option>
-<option value="-4">UTC-4 (Amazonas - Manaus)</option>
-<option value="-3">UTC-3 (Brasília - São Paulo)</option>
-<option value="-2">UTC-2 (Fernando de Noronha)</option>
-<option value="0">UTC+0 (Greenwich)</option>
+<option value="0">UTC+0 (Universal - Greenwich)</option>
+<option value="-3">UTC-3 (Brasil - Brasília/São Paulo)</option>
+<option value="-4">UTC-4 (Brasil - Amazonas/Manaus)</option>
+<option value="-5">UTC-5 (Brasil - Acre/Rio Branco)</option>
+<option value="-2">UTC-2 (Brasil - Fernando de Noronha)</option>
 </select>
 </div>
-<div class="form-group">
-<label>Horário de Verão:</label>
-<select id="dst" disabled>
-<option value="">Carregando...</option>
-<option value="auto">Automático</option>
-<option value="enabled">Sempre Habilitado</option>
-<option value="disabled">Sempre Desabilitado</option>
-</select>
+<button class="btn btn-primary" id="saveTimezone" disabled>Salvar Fuso Horário</button>
 </div>
-<button class="btn btn-primary" id="saveTimezone" disabled>Salvar Fuso</button>
-</div>
+
+<!-- Configurações de Sincronização -->
 <div class="config-section">
-<div class="section-title">⚙️ Configurações Avançadas</div>
+<div class="section-title">⚙️ Configurações de Sincronização</div>
 <div class="form-row">
 <div class="form-group">
 <label>Intervalo de Sincronização (min):</label>
 <input type="number" id="syncInterval" placeholder="Carregando..." min="1" max="1440" disabled>
 </div>
 <div class="form-group">
-<label>Timeout (seg):</label>
-<input type="number" id="timeout" placeholder="Carregando..." min="1" max="60" disabled>
+<label>Atualização da Interface (seg):</label>
+<input type="number" id="interfaceUpdate" value="10" min="5" max="300" title="Intervalo de atualização da interface web">
 </div>
-</div>
-<div class="form-group">
-<label>Sincronização na Inicialização:</label>
-<select id="syncOnBoot" disabled>
-<option value="">Carregando...</option>
-<option value="enabled">Habilitado</option>
-<option value="disabled">Desabilitado</option>
-</select>
-</div>
-<div class="form-group">
-<label>Formato de Data:</label>
-<select id="dateFormat" disabled>
-<option value="">Carregando...</option>
-<option value="dd/mm/yyyy">DD/MM/AAAA</option>
-<option value="mm/dd/yyyy">MM/DD/AAAA</option>
-<option value="yyyy-mm-dd">AAAA-MM-DD</option>
-</select>
-</div>
-<div class="form-group">
-<label>Formato de Hora:</label>
-<select id="timeFormat" disabled>
-<option value="">Carregando...</option>
-<option value="24h">24 horas</option>
-<option value="12h">12 horas (AM/PM)</option>
-</select>
 </div>
 <button class="btn btn-primary" id="saveAdvanced" disabled>Salvar Configurações</button>
 <button class="btn btn-success" id="syncNow" disabled>Sincronizar Agora</button>
@@ -164,7 +141,9 @@ body{font-family:Arial,sans-serif;background:#f5f7fa;min-height:100vh}
 </div>
 <div id="debugContent"></div>
 </div>
+
 </div>
+
 <script>
 // Verificar login
 if(!sessionStorage.getItem('loggedIn')){
@@ -176,6 +155,8 @@ let ntpStatus = {};
 let debugMode = true;
 let debugVisible = true;
 let isLoading = true;
+let updateInterval = null;
+let currentUpdateTime = 10;
 
 // Função de debug para NTP
 function debugLog(message) {
@@ -256,6 +237,38 @@ function enableInterface() {
   debugLog('✅ Interface NTP habilitada - dados carregados do ESP32');
 }
 
+// Configurar intervalo de atualização
+function setUpdateInterval(seconds) {
+  // Limpar intervalo anterior
+  if (updateInterval) {
+    clearInterval(updateInterval);
+    debugLog(`🔄 Intervalo anterior cancelado`);
+  }
+  
+  currentUpdateTime = seconds;
+  
+  // Criar novo intervalo
+  updateInterval = setInterval(() => {
+    if (!isLoading) {
+      debugLog(`⏰ Atualização automática de status (intervalo ${currentUpdateTime}s)`);
+      updateTime();
+    }
+  }, seconds * 1000);
+  
+  debugLog(`✅ Novo intervalo configurado: ${seconds}s`);
+}
+
+// Listener para mudança do intervalo
+function onUpdateIntervalChange() {
+  const newInterval = parseInt(document.getElementById('interfaceUpdate').value);
+  if (newInterval >= 5 && newInterval <= 300) {
+    setUpdateInterval(newInterval);
+    debugLog(`🎯 Usuário alterou intervalo para ${newInterval}s`);
+  } else {
+    debugLog(`⚠️ Intervalo inválido: ${newInterval}s (deve ser 5-300s)`);
+  }
+}
+
 // Atualizar display de tempo do ESP32
 function updateTime() {
   debugLog('🔄 Solicitando status NTP do ESP32...');
@@ -268,74 +281,48 @@ function updateTime() {
       return response.json();
     })
     .then(data => {
-      ntpStatus = data;
-      debugLog(`📡 Status recebido: ${data.synchronized ? 'Sincronizado' : 'Não sincronizado'} | Timestamp: ${data.timestamp} | Uptime: ${Math.floor(data.uptime/60)}min`);
+      debugLog(`📡 Status recebido: sync=${data.synchronized}, timestamp=${data.timestamp}`);
       
-      if (data.synchronized && data.currentTime) {
-        // Usar tempo do ESP32 se sincronizado
-        const serverTime = new Date(data.currentTime);
-        const timeOptions = {hour:'2-digit',minute:'2-digit',second:'2-digit'};
-        const dateOptions = {weekday:'long',year:'numeric',month:'long',day:'numeric'};
-        
-        document.getElementById('currentTime').textContent = serverTime.toLocaleTimeString('pt-BR', timeOptions);
-        document.getElementById('currentDate').textContent = serverTime.toLocaleDateString('pt-BR', dateOptions);
-        
-        // Atualizar status
-        const statusDiv = document.getElementById('statusInfo');
-        statusDiv.innerHTML = `✅ <strong>Status:</strong> Sincronizado | Última sincronização: ${data.lastSync} | Uptime: ${Math.floor(data.uptime/60)}min`;
+      // Atualizar status
+      const statusDiv = document.getElementById('statusInfo');
+      if (data.synchronized) {
+        statusDiv.innerHTML = '✅ <strong>Status:</strong> Sincronizado com servidor NTP';
         statusDiv.className = 'status-info success';
-        
-        debugLog(`✅ Tempo sincronizado exibido: ${serverTime.toLocaleString('pt-BR')}`);
       } else {
-        // Usar timestamp do ESP32 mesmo se não sincronizado
-        let displayTime;
-        if (data.timestamp && data.timestamp > 1000000000) {
-          displayTime = new Date(data.timestamp * 1000);
-          debugLog(`⚠️ NTP não sincronizado, usando timestamp ESP32: ${data.timestamp}`);
-        } else {
-          displayTime = new Date();
-          debugLog(`⚠️ Timestamp inválido, usando tempo local do navegador`);
-        }
-        
-        const timeOptions = {hour:'2-digit',minute:'2-digit',second:'2-digit'};
-        const dateOptions = {weekday:'long',year:'numeric',month:'long',day:'numeric'};
-        
-        document.getElementById('currentTime').textContent = displayTime.toLocaleTimeString('pt-BR', timeOptions);
-        document.getElementById('currentDate').textContent = displayTime.toLocaleDateString('pt-BR', dateOptions);
-        
-        const statusDiv = document.getElementById('statusInfo');
-        statusDiv.innerHTML = `⚠️ <strong>Status:</strong> Não sincronizado | Aguardando conexão NTP | Uptime: ${Math.floor(data.uptime/60)}min`;
-        statusDiv.className = 'status-info';
+        statusDiv.innerHTML = '❌ <strong>Status:</strong> Não sincronizado';
+        statusDiv.className = 'status-info error';
       }
       
-      // Habilitar interface na primeira carga bem-sucedida
-      if (isLoading) {
-        enableInterface();
+      // Atualizar display de tempo
+      if (data.currentTime && data.currentTime > 1000000000) {
+        // Criar data sem aplicar timezone local
+        const timestamp = data.currentTime * 1000; // Converter para milissegundos
+        const date = new Date(timestamp);
+        
+        // Formatar hora manualmente para evitar conversão de timezone
+        const timeStr = date.toLocaleTimeString('pt-BR', { timeZone: 'UTC' });
+        const dateStr = date.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+        
+        document.getElementById('currentTime').textContent = timeStr;
+        document.getElementById('currentDate').textContent = dateStr;
+        
+        debugLog(`🕐 Tempo atualizado: ${dateStr} ${timeStr}`);
+      } else {
+        document.getElementById('currentTime').textContent = 'Tempo não disponível';
+        document.getElementById('currentDate').textContent = 'Aguardando sincronização...';
+        debugLog('⚠️ Timestamp inválido recebido do ESP32');
       }
     })
     .catch(error => {
-      console.error('Erro ao obter status NTP:', error);
-      debugLog(`❌ Erro ao obter status NTP: ${error.message}`);
-      
-      const statusDiv = document.getElementById('statusInfo');
-      statusDiv.innerHTML = `❌ <strong>Status:</strong> Erro de comunicação com ESP32: ${error.message}`;
-      statusDiv.className = 'status-info error';
-      
-      // Fallback para tempo local
-      const now = new Date();
-      const timeOptions = {hour:'2-digit',minute:'2-digit',second:'2-digit'};
-      const dateOptions = {weekday:'long',year:'numeric',month:'long',day:'numeric'};
-      
-      document.getElementById('currentTime').textContent = now.toLocaleTimeString('pt-BR', timeOptions);
-      document.getElementById('currentDate').textContent = now.toLocaleDateString('pt-BR', dateOptions);
-      
-      debugLog(`🔄 Fallback para tempo local ativado: ${now.toLocaleString('pt-BR')}`);
+      debugLog(`❌ Erro ao buscar status: ${error.message}`);
+      document.getElementById('statusInfo').innerHTML = '❌ <strong>Status:</strong> Erro de comunicação';
+      document.getElementById('statusInfo').className = 'status-info error';
     });
 }
 
 // Carregar configurações NTP
 async function loadNtpConfig() {
-  debugLog('🔄 Carregando configurações NTP do ESP32...');
+  debugLog('📥 Carregando configurações NTP do ESP32...');
   
   try {
     const response = await fetch('/api/ntp/config');
@@ -344,25 +331,16 @@ async function loadNtpConfig() {
     }
     
     const data = await response.json();
-    ntpConfig = data;
+    debugLog(`📋 Configurações recebidas: server1="${data.server1}", interval=${data.syncInterval}s`);
     
-    debugLog(`📥 Configurações recebidas: Servidor1="${data.server1}" | Servidor2="${data.server2}" | Servidor3="${data.server3}" | Intervalo=${Math.floor((data.syncInterval || 3600) / 60)}min`);
-    
-    // Preencher campos com configurações reais
+    // Preencher campos de servidores
     document.getElementById('server1').value = data.server1 || 'pool.ntp.org';
     document.getElementById('server2').value = data.server2 || 'time.google.com';
     document.getElementById('server3').value = data.server3 || 'time.cloudflare.com';
     
-    // Preencher outros campos
+    // Preencher configurações
     document.getElementById('syncInterval').value = Math.floor((data.syncInterval || 3600) / 60);
-    document.getElementById('timeout').value = data.timeout || 10;
-    
-    // Configurar selects com valores padrão
-    document.getElementById('timezone').value = '-3';
-    document.getElementById('dst').value = 'disabled';
-    document.getElementById('syncOnBoot').value = 'enabled';
-    document.getElementById('dateFormat').value = 'dd/mm/yyyy';
-    document.getElementById('timeFormat').value = '24h';
+    document.getElementById('timezone').value = data.timezone || '0'; // UTC 0 padrão
     
     console.log('✅ Configurações NTP carregadas:', data);
     debugLog('✅ Campos da interface preenchidos com dados do ESP32');
@@ -376,12 +354,7 @@ async function loadNtpConfig() {
     document.getElementById('server2').value = 'time.google.com';
     document.getElementById('server3').value = 'time.cloudflare.com';
     document.getElementById('syncInterval').value = 60;
-    document.getElementById('timeout').value = 10;
-    document.getElementById('timezone').value = '-3';
-    document.getElementById('dst').value = 'disabled';
-    document.getElementById('syncOnBoot').value = 'enabled';
-    document.getElementById('dateFormat').value = 'dd/mm/yyyy';
-    document.getElementById('timeFormat').value = '24h';
+    document.getElementById('timezone').value = '0';
   }
 }
 
@@ -394,17 +367,18 @@ async function saveNtpConfig() {
     const server2 = document.getElementById('server2').value;
     const server3 = document.getElementById('server3').value;
     const syncInterval = parseInt(document.getElementById('syncInterval').value) * 60;
+    const timezone = parseInt(document.getElementById('timezone').value);
     
     const config = {
       enabled: true,
       server1: server1,
       server2: server2,
       server3: server3,
-      timezone: "America/Sao_Paulo",
+      timezone: timezone,
       syncInterval: syncInterval
     };
     
-    debugLog(`📤 Enviando configurações: Servidor1="${server1}" | Servidor2="${server2}" | Servidor3="${server3}" | Intervalo=${syncInterval/60}min`);
+    debugLog(`📤 Enviando: Servers="${server1}|${server2}|${server3}" | UTC${timezone>=0?'+':''}${timezone} | Intervalo=${syncInterval/60}min`);
     
     const response = await fetch('/api/ntp/config', {
       method: 'POST',
@@ -517,7 +491,7 @@ async function testConnectivity() {
 
 // Event listeners para botões
 document.addEventListener('DOMContentLoaded', () => {
-  debugLog('🚀 Página NTP carregada - Inicializando interface...');
+  debugLog('🚀 Página NTP simplificada carregada - Inicializando interface...');
   
   // Botão Salvar Servidores
   document.getElementById('saveServers').onclick = saveNtpConfig;
@@ -534,21 +508,26 @@ document.addEventListener('DOMContentLoaded', () => {
   // Botão Testar Conectividade
   document.getElementById('testConnectivity').onclick = testConnectivity;
   
+  // Listener para mudança do intervalo de atualização
+  document.getElementById('interfaceUpdate').onchange = onUpdateIntervalChange;
+  
   // Carregar configurações iniciais
   loadNtpConfig();
   
-  debugLog('✅ Event listeners configurados - Interface NTP pronta');
+  debugLog('✅ Event listeners configurados - Interface NTP simplificada pronta');
 });
 
 // Inicializar
-debugLog('🕐 Sistema de debug NTP ativado - Carregando dados reais do ESP32...');
+debugLog('🕐 Sistema de debug NTP ativado - Interface simplificada carregando...');
 updateTime();
-setInterval(() => {
-  if (!isLoading) {
-    debugLog('⏰ Atualização automática de status (intervalo 10s)');
-    updateTime();
-  }
-}, 10000); // Atualizar a cada 10 segundos
+
+// Configurar intervalo inicial de atualização
+setUpdateInterval(10); // 10 segundos inicial
+
+// Habilitar interface após 2 segundos
+setTimeout(() => {
+  enableInterface();
+}, 2000);
 </script>
 </body>
 </html> 

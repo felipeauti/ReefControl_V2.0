@@ -238,6 +238,7 @@ String ConfigManager::toJson() {
   ntpObj["server2"] = ntp.server2;
   ntpObj["server3"] = ntp.server3;
   ntpObj["timezone"] = ntp.timezone;
+  ntpObj["timezoneOffset"] = ntp.timezoneOffset;  // Adicionar timezone numérico
   ntpObj["syncInterval"] = ntp.syncInterval;
   
   // Sensores
@@ -373,6 +374,7 @@ bool ConfigManager::fromJson(const String& json) {
     strcpy(ntp.server2, ntpObj["server2"] | ntp.server2);
     strcpy(ntp.server3, ntpObj["server3"] | ntp.server3);
     strcpy(ntp.timezone, ntpObj["timezone"] | ntp.timezone);
+    ntp.timezoneOffset = ntpObj["timezoneOffset"] | ntp.timezoneOffset;  // Carregar timezone numérico
     ntp.syncInterval = ntpObj["syncInterval"] | ntp.syncInterval;
   }
   

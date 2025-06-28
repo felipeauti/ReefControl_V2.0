@@ -110,7 +110,8 @@ void setup() {
       config.ntp.server1,
       config.ntp.server2, 
       config.ntp.server3,
-      config.ntp.syncInterval
+      config.ntp.syncInterval,
+      config.ntp.timezoneOffset
     );
     systemStatus.ntpSynced = ntpClient.isTimeSet();
     

@@ -228,7 +228,8 @@ bool WebServerManager::begin(RelayController* relayController, ConfigManager* co
     json += "\"server1\":\"" + String(_configManager->ntp.server1) + "\",";
     json += "\"server2\":\"" + String(_configManager->ntp.server2) + "\",";
     json += "\"server3\":\"" + String(_configManager->ntp.server3) + "\",";
-    json += "\"timezone\":\"" + String(_configManager->ntp.timezone) + "\",";
+    json += "\"timezone\":" + String(_configManager->ntp.timezoneOffset) + ",";  // Numérico
+    json += "\"timezoneString\":\"" + String(_configManager->ntp.timezone) + "\",";  // Compatibilidade
     json += "\"syncInterval\":" + String(_configManager->ntp.syncInterval);
     json += "}";
     _server.send(200, "application/json", json);
@@ -273,11 +274,28 @@ bool WebServerManager::begin(RelayController* relayController, ConfigManager* co
       }
     }
     if (body.indexOf("timezone") > 0) {
-      int start = body.indexOf("\"timezone\":\"") + 12;
-      int end = body.indexOf("\"", start);
-      if (start > 11 && end > start) {
-        String tz = body.substring(start, end);
-        tz.toCharArray(_configManager->ntp.timezone, sizeof(_configManager->ntp.timezone));
+      // Verificar se é timezone numérico (novo formato)
+      int numStart = body.indexOf("\"timezone\":") + 11;
+      int numEnd = body.indexOf(",", numStart);
+      if (numEnd == -1) numEnd = body.indexOf("}", numStart);
+      
+      if (numStart > 10 && numEnd > numStart) {
+        String tzValue = body.substring(numStart, numEnd);
+        tzValue.trim();
+        
+        // Se for numérico, usar como offset UTC
+        if (tzValue.indexOf("\"") == -1) {
+          _configManager->ntp.timezoneOffset = tzValue.toInt();
+          Serial.println("🌍 Timezone numérico configurado: UTC" + String(tzValue.toInt() >= 0 ? "+" : "") + tzValue);
+        } else {
+          // Formato string (compatibilidade)
+          int start = body.indexOf("\"timezone\":\"") + 12;
+          int end = body.indexOf("\"", start);
+          if (start > 11 && end > start) {
+            String tz = body.substring(start, end);
+            tz.toCharArray(_configManager->ntp.timezone, sizeof(_configManager->ntp.timezone));
+          }
+        }
       }
     }
     if (body.indexOf("syncInterval") > 0) {
@@ -306,6 +324,7 @@ bool WebServerManager::begin(RelayController* relayController, ConfigManager* co
           String(_configManager->ntp.server3)
         );
         _ntpClient->setSyncInterval(_configManager->ntp.syncInterval);
+        _ntpClient->setTimezone(_configManager->ntp.timezoneOffset);  // Aplicar timezone
         _ntpClient->setEnabled(_configManager->ntp.enabled);
         
         // Forçar sincronização com novas configurações
@@ -366,7 +385,7 @@ bool WebServerManager::begin(RelayController* relayController, ConfigManager* co
     json += "\"synchronized\":" + String(synchronized ? "true" : "false") + ",";
     json += "\"timestamp\":" + String(now) + ",";
     json += "\"lastSync\":\"" + lastSync + "\",";
-    json += "\"currentTime\":" + String((unsigned long long)now * 1000ULL) + ",";  // Fix overflow com ULL
+    json += "\"currentTime\":" + String(now) + ",";
     json += "\"status\":\"" + status + "\",";
     json += "\"uptime\":" + String(uptime);
     json += "}";

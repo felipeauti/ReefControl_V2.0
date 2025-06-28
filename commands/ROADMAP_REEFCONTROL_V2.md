@@ -193,9 +193,9 @@ struct SystemCapabilities {
 ### **Interface Adaptativa Funcionando:**
 ```javascript
 // Interface carrega capabilities automaticamente
-const caps = await fetch('/api/capabilities').then(r => r.json());
+  const caps = await fetch('/api/capabilities').then(r => r.json());
 // Adapta interface baseado em maxOutputs e recursos
-renderOutputGrid(caps.maxOutputs);
+  renderOutputGrid(caps.maxOutputs);
 if (caps.hasAdvancedAutomation) showAdvancedAutomation();
 ```
 
