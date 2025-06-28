@@ -21,6 +21,7 @@
 // Forward declarations
 class RelayController;
 class ConfigManager;
+class NtpClientManager;
 
 class WebServerManager {
 private:
@@ -30,13 +31,14 @@ private:
   #endif
   RelayController* _relayController = nullptr;
   ConfigManager* _configManager = nullptr;
+  NtpClientManager* _ntpClient = nullptr;
   bool _otaError = false;
   File _uploadFile;
   void serveFile(const String& path);
 
 public:
   WebServerManager() : _server(80) {}
-  bool begin(RelayController* relayController = nullptr, ConfigManager* configManager = nullptr);
+  bool begin(RelayController* relayController = nullptr, ConfigManager* configManager = nullptr, NtpClientManager* ntpClient = nullptr);
   void handleClient();
 };
 

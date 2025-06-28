@@ -106,7 +106,12 @@ void setup() {
     
     // 5. Inicializar NTP
     Serial.println("🕐 Inicializando NTP...");
-    ntpClient.begin();
+    ntpClient.begin(
+      config.ntp.server1,
+      config.ntp.server2, 
+      config.ntp.server3,
+      config.ntp.syncInterval
+    );
     systemStatus.ntpSynced = ntpClient.isTimeSet();
     
     // 6. Inicializar MQTT
@@ -119,7 +124,7 @@ void setup() {
     
     // 8. Inicializar servidor web
     Serial.println("🌐 Inicializando servidor web...");
-    webServer.begin(&relays, &config);
+    webServer.begin(&relays, &config, &ntpClient);
     
     // 9. Inicializar agendador
     Serial.println("⏰ Inicializando agendador...");

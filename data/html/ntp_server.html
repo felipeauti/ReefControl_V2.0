@@ -29,6 +29,14 @@ body{font-family:Arial,sans-serif;background:#f5f7fa;min-height:100vh}
 .time-display{font-size:2rem;font-weight:bold;color:#155724;margin-bottom:0.5rem}
 .date-display{font-size:1.2rem;color:#155724}
 .server-list{background:#f8f9fa;padding:1rem;border-radius:8px;margin-top:1rem}
+.debug{background:#f8f9fa;border:1px solid #dee2e6;padding:1rem;margin:1rem 0;border-radius:5px;font-family:monospace;font-size:0.8rem;max-height:300px;overflow-y:auto}
+.debug-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;font-family:Arial,sans-serif}
+.debug-title{font-weight:bold;color:#495057}
+.debug-controls{display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap}
+.debug-btn{padding:0.25rem 0.5rem;border:none;border-radius:3px;cursor:pointer;font-size:0.8rem}
+.debug-btn.toggle{background:#6c757d;color:white}
+.debug-btn.clear{background:#dc3545;color:white}
+.debug-btn.disable{background:#28a745;color:white}
 @media(max-width:768px){.container{padding:0.5rem}.form-row{grid-template-columns:1fr}.time-display{font-size:1.5rem}}
 </style>
 </head>
@@ -68,8 +76,8 @@ body{font-family:Arial,sans-serif;background:#f5f7fa;min-height:100vh}
 <li><strong>Microsoft:</strong> time.windows.com</li>
 </ul>
 </div>
-<button class="btn btn-primary">Salvar Servidores</button>
-<button class="btn btn-warning">Testar Conectividade</button>
+<button class="btn btn-primary" id="saveServers">Salvar Servidores</button>
+<button class="btn btn-warning" id="testConnectivity">Testar Conectividade</button>
 </div>
 <div class="config-section">
 <div class="section-title">🌍 Fuso Horário</div>
@@ -91,7 +99,7 @@ body{font-family:Arial,sans-serif;background:#f5f7fa;min-height:100vh}
 <option value="disabled" selected>Sempre Desabilitado</option>
 </select>
 </div>
-<button class="btn btn-primary">Salvar Fuso</button>
+<button class="btn btn-primary" id="saveTimezone">Salvar Fuso</button>
 </div>
 <div class="config-section">
 <div class="section-title">⚙️ Configurações Avançadas</div>
@@ -127,23 +135,308 @@ body{font-family:Arial,sans-serif;background:#f5f7fa;min-height:100vh}
 <option value="12h">12 horas (AM/PM)</option>
 </select>
 </div>
-<button class="btn btn-primary">Salvar Configurações</button>
-<button class="btn btn-success">Sincronizar Agora</button>
+<button class="btn btn-primary" id="saveAdvanced">Salvar Configurações</button>
+<button class="btn btn-success" id="syncNow">Sincronizar Agora</button>
+</div>
+
+<!-- Debug Console NTP -->
+<div id="debug" class="debug" style="display:block; margin-top: 30px;">
+<div class="debug-header">
+<span class="debug-title">🕐 DEBUG NTP CONSOLE</span>
+<div class="debug-controls">
+<button class="debug-btn toggle" onclick="toggleDebugVisibility()">Minimizar</button>
+<button class="debug-btn clear" onclick="clearDebug()">Limpar</button>
+<button class="debug-btn disable" onclick="toggleDebugMode()">Desabilitar</button>
+</div>
+</div>
+<div id="debugContent"></div>
 </div>
 </div>
 <script>
-function updateTime(){
-const now=new Date();
-const timeOptions={hour:'2-digit',minute:'2-digit',second:'2-digit'};
-const dateOptions={weekday:'long',year:'numeric',month:'long',day:'numeric'};
-document.getElementById('currentTime').textContent=now.toLocaleTimeString('pt-BR',timeOptions);
-document.getElementById('currentDate').textContent=now.toLocaleDateString('pt-BR',dateOptions);
-}
-updateTime();
-setInterval(updateTime,1000);
+// Verificar login
 if(!sessionStorage.getItem('loggedIn')){
-window.location.href='login.html';
+  window.location.href='login.html';
 }
+
+let ntpConfig = {};
+let ntpStatus = {};
+let debugMode = true; // Habilitar debug NTP
+let debugVisible = true;
+
+// Função de debug para NTP
+function debugLog(message) {
+  if (debugMode) {
+    console.log('🕐 NTP DEBUG:', message);
+    const debugDiv = document.getElementById('debugContent');
+    const timestamp = new Date().toLocaleTimeString();
+    debugDiv.innerHTML += `<span style="color:#6c757d">${timestamp}:</span> ${message}<br>`;
+    
+    if (debugVisible) {
+      document.getElementById('debug').style.display = 'block';
+    }
+    
+    // Auto-scroll para o final
+    debugDiv.scrollTop = debugDiv.scrollHeight;
+    
+    // Limitar a 100 linhas para performance
+    const lines = debugDiv.innerHTML.split('<br>');
+    if (lines.length > 100) {
+      debugDiv.innerHTML = lines.slice(-100).join('<br>');
+    }
+  }
+}
+
+function toggleDebugVisibility() {
+  const debugDiv = document.getElementById('debug');
+  const toggleBtn = document.querySelector('.debug-btn.toggle');
+  
+  if (debugVisible) {
+    debugDiv.style.display = 'none';
+    toggleBtn.textContent = 'Mostrar Debug';
+    debugVisible = false;
+    debugLog('Debug console minimizado');
+  } else {
+    debugDiv.style.display = 'block';
+    toggleBtn.textContent = 'Minimizar';
+    debugVisible = true;
+    debugLog('Debug console restaurado');
+  }
+}
+
+function clearDebug() {
+  document.getElementById('debugContent').innerHTML = '';
+  debugLog('Debug console limpo pelo usuário');
+}
+
+function toggleDebugMode() {
+  const disableBtn = document.querySelector('.debug-btn.disable');
+  
+  if (debugMode) {
+    debugMode = false;
+    disableBtn.textContent = 'Habilitar';
+    disableBtn.style.background = '#dc3545';
+    document.getElementById('debug').style.display = 'none';
+    console.log('🕐 NTP Debug mode DESABILITADO');
+  } else {
+    debugMode = true;
+    disableBtn.textContent = 'Desabilitar';
+    disableBtn.style.background = '#28a745';
+    debugLog('NTP Debug mode HABILITADO novamente');
+  }
+}
+
+// Atualizar display de tempo do ESP32
+function updateTime() {
+  debugLog('🔄 Solicitando status NTP do ESP32...');
+  
+  fetch('/api/ntp/status')
+    .then(response => response.json())
+    .then(data => {
+      ntpStatus = data;
+      debugLog(`📡 Status recebido: ${data.synchronized ? 'Sincronizado' : 'Não sincronizado'} | Uptime: ${Math.floor(data.uptime/60)} min`);
+      
+      if (data.synchronized) {
+        // Usar tempo do ESP32 se sincronizado
+        const serverTime = new Date(data.currentTime);
+        const timeOptions = {hour:'2-digit',minute:'2-digit',second:'2-digit'};
+        const dateOptions = {weekday:'long',year:'numeric',month:'long',day:'numeric'};
+        
+        document.getElementById('currentTime').textContent = serverTime.toLocaleTimeString('pt-BR', timeOptions);
+        document.getElementById('currentDate').textContent = serverTime.toLocaleDateString('pt-BR', dateOptions);
+        
+        // Atualizar status
+        document.querySelector('.status-info').innerHTML = 
+          `✅ <strong>Status:</strong> Sincronizado | Última sincronização: ${data.lastSync} | Uptime: ${Math.floor(data.uptime/60)} min`;
+        
+        debugLog(`✅ Tempo sincronizado exibido: ${serverTime.toLocaleString('pt-BR')}`);
+      } else {
+        // Fallback para tempo local do navegador
+        const now = new Date();
+        const timeOptions = {hour:'2-digit',minute:'2-digit',second:'2-digit'};
+        const dateOptions = {weekday:'long',year:'numeric',month:'long',day:'numeric'};
+        
+        document.getElementById('currentTime').textContent = now.toLocaleTimeString('pt-BR', timeOptions);
+        document.getElementById('currentDate').textContent = now.toLocaleDateString('pt-BR', dateOptions);
+        
+        document.querySelector('.status-info').innerHTML = 
+          `⚠️ <strong>Status:</strong> Não sincronizado | Aguardando conexão NTP | Uptime: ${Math.floor(data.uptime/60)} min`;
+        
+        debugLog(`⚠️ NTP não sincronizado, usando tempo local do navegador: ${now.toLocaleString('pt-BR')}`);
+      }
+    })
+    .catch(error => {
+      console.error('Erro ao obter status NTP:', error);
+      debugLog(`❌ Erro ao obter status NTP: ${error.message}`);
+      
+      // Fallback para tempo local
+      const now = new Date();
+      const timeOptions = {hour:'2-digit',minute:'2-digit',second:'2-digit'};
+      const dateOptions = {weekday:'long',year:'numeric',month:'long',day:'numeric'};
+      
+      document.getElementById('currentTime').textContent = now.toLocaleTimeString('pt-BR', timeOptions);
+      document.getElementById('currentDate').textContent = now.toLocaleDateString('pt-BR', dateOptions);
+      
+      debugLog(`🔄 Fallback para tempo local ativado: ${now.toLocaleString('pt-BR')}`);
+    });
+}
+
+// Carregar configurações NTP
+async function loadNtpConfig() {
+  debugLog('🔄 Carregando configurações NTP do ESP32...');
+  
+  try {
+    const response = await fetch('/api/ntp/config');
+    const data = await response.json();
+    ntpConfig = data;
+    
+    debugLog(`📥 Configurações recebidas: Servidor1="${data.server1}" | Servidor2="${data.server2}" | Servidor3="${data.server3}" | Intervalo=${Math.floor(data.syncInterval / 60)}min`);
+    
+    // Preencher campos com configurações reais
+    document.querySelector('input[placeholder="pool.ntp.org"]').value = data.server1 || 'pool.ntp.org';
+    document.querySelector('input[placeholder="time.google.com"]').value = data.server2 || 'time.google.com';
+    document.querySelector('input[placeholder="time.cloudflare.com"]').value = data.server3 || 'time.cloudflare.com';
+    
+    // Preencher outros campos
+    document.querySelector('input[type="number"][value="60"]').value = Math.floor(data.syncInterval / 60) || 60;
+    
+    console.log('✅ Configurações NTP carregadas:', data);
+    debugLog('✅ Campos da interface preenchidos com dados do ESP32');
+  } catch (error) {
+    console.error('❌ Erro ao carregar configurações NTP:', error);
+    debugLog(`❌ Erro ao carregar configurações: ${error.message}`);
+    showMessage('Erro ao carregar configurações NTP', 'error');
+  }
+}
+
+// Salvar configurações NTP
+async function saveNtpConfig() {
+  debugLog('💾 Preparando salvamento das configurações NTP...');
+  
+  try {
+    const server1 = document.querySelector('input[placeholder="pool.ntp.org"]').value;
+    const server2 = document.querySelector('input[placeholder="time.google.com"]').value;
+    const server3 = document.querySelector('input[placeholder="time.cloudflare.com"]').value;
+    const syncInterval = parseInt(document.querySelector('input[type="number"][value="60"]').value) * 60;
+    
+    const config = {
+      enabled: true,
+      server1: server1,
+      server2: server2,
+      server3: server3,
+      timezone: "America/Sao_Paulo",
+      syncInterval: syncInterval
+    };
+    
+    debugLog(`📤 Enviando configurações: Servidor1="${server1}" | Servidor2="${server2}" | Servidor3="${server3}" | Intervalo=${syncInterval/60}min`);
+    
+    const response = await fetch('/api/ntp/config', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(config)
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      showMessage('Configurações NTP salvas com sucesso!', 'success');
+      console.log('✅ Configurações NTP salvas');
+      debugLog('✅ Configurações NTP salvas no ESP32 com sucesso');
+    } else {
+      showMessage('Erro ao salvar configurações: ' + result.error, 'error');
+      debugLog(`❌ Erro retornado pelo ESP32: ${result.error}`);
+    }
+  } catch (error) {
+    console.error('❌ Erro ao salvar configurações NTP:', error);
+    debugLog(`❌ Erro de comunicação ao salvar: ${error.message}`);
+    showMessage('Erro ao salvar configurações NTP', 'error');
+  }
+}
+
+// Forçar sincronização NTP
+async function syncNow() {
+  debugLog('🔄 Iniciando sincronização NTP manual...');
+  
+  try {
+    showMessage('Iniciando sincronização NTP...', 'info');
+    
+    const response = await fetch('/api/ntp/sync', {
+      method: 'POST'
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      showMessage('Sincronização NTP iniciada!', 'success');
+      debugLog('✅ Comando de sincronização manual enviado ao ESP32');
+      setTimeout(() => {
+        debugLog('⏱️ Atualizando status após sincronização manual...');
+        updateTime();
+      }, 2000); // Atualizar status após 2 segundos
+    } else {
+      showMessage('Erro na sincronização: ' + result.error, 'error');
+      debugLog(`❌ Erro na sincronização manual: ${result.error}`);
+    }
+  } catch (error) {
+    console.error('❌ Erro na sincronização NTP:', error);
+    debugLog(`❌ Erro de comunicação na sincronização: ${error.message}`);
+    showMessage('Erro na sincronização NTP', 'error');
+  }
+}
+
+// Função para mostrar mensagens
+function showMessage(message, type = 'info') {
+  const statusDiv = document.querySelector('.status-info');
+  const originalContent = statusDiv.innerHTML;
+  
+  const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
+  statusDiv.innerHTML = `${icon} <strong>Status:</strong> ${message}`;
+  statusDiv.className = `status-info ${type}`;
+  
+  // Restaurar após 3 segundos
+  setTimeout(() => {
+    statusDiv.innerHTML = originalContent;
+    statusDiv.className = 'status-info';
+  }, 3000);
+}
+
+// Event listeners para botões
+document.addEventListener('DOMContentLoaded', () => {
+  debugLog('🚀 Página NTP carregada - Inicializando interface...');
+  
+  // Botão Salvar Servidores
+  document.getElementById('saveServers').onclick = saveNtpConfig;
+  
+  // Botão Sincronizar Agora
+  document.getElementById('syncNow').onclick = syncNow;
+  
+  // Botão Salvar Fuso
+  document.getElementById('saveTimezone').onclick = saveNtpConfig;
+  
+  // Botão Salvar Configurações Avançadas
+  document.getElementById('saveAdvanced').onclick = saveNtpConfig;
+  
+  // Botão Testar Conectividade
+  document.getElementById('testConnectivity').onclick = () => {
+    debugLog('🔧 Testando conectividade com servidores NTP...');
+    showMessage('Testando conectividade NTP...', 'info');
+    // Implementar teste de conectividade
+  };
+  
+  // Carregar configurações iniciais
+  loadNtpConfig();
+  
+  debugLog('✅ Event listeners configurados - Interface NTP pronta');
+});
+
+// Inicializar
+debugLog('🕐 Sistema de debug NTP ativado');
+updateTime();
+setInterval(() => {
+  debugLog('⏰ Atualização automática de status (intervalo 10s)');
+  updateTime();
+}, 10000); // Atualizar a cada 10 segundos
 </script>
 </body>
 </html> 

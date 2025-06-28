@@ -1,6 +1,7 @@
 #include "WebServer.h"
 #include "RelayController.h"
 #include "ConfigManager.h"
+#include "../time/NtpClient.h"
 #include "../capabilities/Capabilities.h"
 
 // Compatibilidade WiFi ESP8266/ESP32
@@ -10,9 +11,10 @@
   #include <ESP8266WiFi.h>
 #endif
 
-bool WebServerManager::begin(RelayController* relayController, ConfigManager* configManager) {
+bool WebServerManager::begin(RelayController* relayController, ConfigManager* configManager, NtpClientManager* ntpClient) {
   _relayController = relayController;
   _configManager = configManager;
+  _ntpClient = ntpClient;
   // Página inicial - redireciona para login
   _server.on("/", [this]() {
     _server.sendHeader("Location", "/login");
@@ -212,6 +214,203 @@ bool WebServerManager::begin(RelayController* relayController, ConfigManager* co
     
     String json = _configManager->getOutputsJson();
     _server.send(200, "application/json", json);
+  });
+
+  // API para configurações NTP - GET
+  _server.on("/api/ntp/config", HTTP_GET, [this]() {
+    if (!_configManager) {
+      _server.send(500, "application/json", "{\"error\":\"ConfigManager não inicializado\"}");
+      return;
+    }
+    
+    String json = "{";
+    json += "\"enabled\":" + String(_configManager->ntp.enabled ? "true" : "false") + ",";
+    json += "\"server1\":\"" + String(_configManager->ntp.server1) + "\",";
+    json += "\"server2\":\"" + String(_configManager->ntp.server2) + "\",";
+    json += "\"server3\":\"" + String(_configManager->ntp.server3) + "\",";
+    json += "\"timezone\":\"" + String(_configManager->ntp.timezone) + "\",";
+    json += "\"syncInterval\":" + String(_configManager->ntp.syncInterval);
+    json += "}";
+    _server.send(200, "application/json", json);
+  });
+
+  // API para configurações NTP - POST
+  _server.on("/api/ntp/config", HTTP_POST, [this]() {
+    if (!_configManager) {
+      _server.send(500, "application/json", "{\"error\":\"ConfigManager não inicializado\"}");
+      return;
+    }
+    
+    String body = _server.arg("plain");
+    Serial.println("🕐 Configuração NTP recebida: " + body);
+    
+    // Parse JSON simples
+    if (body.indexOf("enabled") > 0) {
+      _configManager->ntp.enabled = body.indexOf("\"enabled\":true") > 0;
+    }
+    if (body.indexOf("server1") > 0) {
+      int start = body.indexOf("\"server1\":\"") + 11;
+      int end = body.indexOf("\"", start);
+      if (start > 10 && end > start) {
+        String server = body.substring(start, end);
+        server.toCharArray(_configManager->ntp.server1, sizeof(_configManager->ntp.server1));
+      }
+    }
+    if (body.indexOf("server2") > 0) {
+      int start = body.indexOf("\"server2\":\"") + 11;
+      int end = body.indexOf("\"", start);
+      if (start > 10 && end > start) {
+        String server = body.substring(start, end);
+        server.toCharArray(_configManager->ntp.server2, sizeof(_configManager->ntp.server2));
+      }
+    }
+    if (body.indexOf("server3") > 0) {
+      int start = body.indexOf("\"server3\":\"") + 11;
+      int end = body.indexOf("\"", start);
+      if (start > 10 && end > start) {
+        String server = body.substring(start, end);
+        server.toCharArray(_configManager->ntp.server3, sizeof(_configManager->ntp.server3));
+      }
+    }
+    if (body.indexOf("timezone") > 0) {
+      int start = body.indexOf("\"timezone\":\"") + 12;
+      int end = body.indexOf("\"", start);
+      if (start > 11 && end > start) {
+        String tz = body.substring(start, end);
+        tz.toCharArray(_configManager->ntp.timezone, sizeof(_configManager->ntp.timezone));
+      }
+    }
+    if (body.indexOf("syncInterval") > 0) {
+      int start = body.indexOf("\"syncInterval\":") + 15;
+      int end = body.indexOf("}", start);
+      if (end == -1) end = body.indexOf(",", start);
+      if (start > 14 && end > start) {
+        _configManager->ntp.syncInterval = body.substring(start, end).toInt();
+      }
+    }
+    
+    if (_configManager->save()) {
+      Serial.println("✅ Configurações NTP salvas com sucesso!");
+      
+      // Aplicar configurações no NTPClient real
+      if (_ntpClient) {
+        Serial.println("🔍 DEBUG CONFIG: Aplicando configurações NTP...");
+        Serial.println("🔍 DEBUG CONFIG: Servidor1 = " + String(_configManager->ntp.server1));
+        Serial.println("🔍 DEBUG CONFIG: Servidor2 = " + String(_configManager->ntp.server2));
+        Serial.println("🔍 DEBUG CONFIG: Servidor3 = " + String(_configManager->ntp.server3));
+        Serial.println("🔍 DEBUG CONFIG: Intervalo = " + String(_configManager->ntp.syncInterval));
+        
+        _ntpClient->setServers(
+          String(_configManager->ntp.server1),
+          String(_configManager->ntp.server2),
+          String(_configManager->ntp.server3)
+        );
+        _ntpClient->setSyncInterval(_configManager->ntp.syncInterval);
+        _ntpClient->setEnabled(_configManager->ntp.enabled);
+        
+        // Forçar sincronização com novas configurações
+        Serial.println("🔍 DEBUG CONFIG: Forçando sincronização...");
+        bool configSync = _ntpClient->forceUpdate();
+        Serial.println("🔍 DEBUG CONFIG: Resultado sincronização = " + String(configSync));
+      }
+      
+      _server.send(200, "application/json", "{\"success\":true,\"message\":\"Configurações NTP salvas com sucesso!\"}");
+    } else {
+      Serial.println("❌ Erro ao salvar configurações NTP");
+      _server.send(500, "application/json", "{\"error\":\"Erro ao salvar configurações NTP\"}");
+    }
+  });
+
+  // API para status NTP - GET
+  _server.on("/api/ntp/status", HTTP_GET, [this]() {
+    if (!_ntpClient) {
+      _server.send(500, "application/json", "{\"error\":\"NTP Client não inicializado\"}");
+      return;
+    }
+    
+    Serial.println("🔍 DEBUG API: Obtendo status NTP...");
+    
+    // DIAGNÓSTICO COMPLETO PRIMEIRO
+    Serial.println("🔍 DEBUG API: Estado do NTPClient:");
+    Serial.println("🔍 DEBUG API: - _ntpClient pointer = " + String((unsigned long)_ntpClient, HEX));
+    Serial.println("🔍 DEBUG API: - WiFi conectado = " + String(WiFi.isConnected()));
+    Serial.println("🔍 DEBUG API: - Uptime = " + String(millis()/1000) + "s");
+    
+    bool synchronized = _ntpClient->isSynchronized();
+    Serial.println("🔍 DEBUG API: isSynchronized = " + String(synchronized));
+    
+    time_t now = _ntpClient->getCurrentTime();
+    Serial.println("🔍 DEBUG API: getCurrentTime retornou = " + String(now));
+    Serial.println("🔍 DEBUG API: Data Unix timestamp " + String(now) + " = " + String(ctime(&now)));
+    
+    // FORÇAR verificação do que está acontecendo!
+    if (now < 1000000000) {
+      Serial.println("❌ PROBLEMA ENCONTRADO: Timestamp muito baixo!");
+      Serial.println("❌ Isso indica que o sistema não foi sincronizado!");
+      
+      // Verificar se NTP está realmente funcionando
+      if (_ntpClient->isSynchronized()) {
+        Serial.println("⚠️ PARADOXO: isSynchronized=true mas timestamp baixo!");
+      } else {
+        Serial.println("⚠️ CONFIRMADO: isSynchronized=false - NTP não sincronizado!");
+      }
+    } else {
+      Serial.println("✅ Timestamp parece válido (> 1 bilhão)");
+    }
+    
+    String status = _ntpClient->getStatus();
+    String lastSync = _ntpClient->getLastSyncFormatted();
+    unsigned long uptime = _ntpClient->getUptime();
+    
+    String json = "{";
+    json += "\"synchronized\":" + String(synchronized ? "true" : "false") + ",";
+    json += "\"timestamp\":" + String(now) + ",";
+    json += "\"lastSync\":\"" + lastSync + "\",";
+    json += "\"currentTime\":" + String((unsigned long long)now * 1000ULL) + ",";  // Fix overflow com ULL
+    json += "\"status\":\"" + status + "\",";
+    json += "\"uptime\":" + String(uptime);
+    json += "}";
+    _server.send(200, "application/json", json);
+  });
+
+  // API para forçar sincronização NTP - POST
+  _server.on("/api/ntp/sync", HTTP_POST, [this]() {
+    if (!_ntpClient) {
+      _server.send(500, "application/json", "{\"error\":\"NTP Client não inicializado\"}");
+      return;
+    }
+    
+    Serial.println("🕐 Forçando sincronização NTP via API...");
+    Serial.println("🔍 DEBUG SYNC: Antes do forceUpdate");
+    
+    time_t beforeSync = _ntpClient->getCurrentTime();
+    Serial.println("🔍 DEBUG SYNC: Tempo antes = " + String(beforeSync));
+    
+    bool success = _ntpClient->forceUpdate();
+    Serial.println("🔍 DEBUG SYNC: forceUpdate retornou = " + String(success));
+    
+    time_t afterSync = _ntpClient->getCurrentTime();
+    Serial.println("🔍 DEBUG SYNC: Tempo depois = " + String(afterSync));
+    
+    // VERIFICAÇÃO CRÍTICA
+    if (success && afterSync < 1000000000) {
+      Serial.println("🚨 ERRO CRÍTICO: Sync reportou sucesso mas timestamp ainda baixo!");
+      Serial.println("🚨 Tentando diagnóstico mais profundo...");
+      
+      // Verificar estado do NTPClient
+      Serial.println("🔍 isSynchronized: " + String(_ntpClient->isSynchronized()));
+      Serial.println("🔍 getStatus: " + _ntpClient->getStatus());
+      Serial.println("🔍 getLastSyncFormatted: " + _ntpClient->getLastSyncFormatted());
+    }
+    
+    String json = "{";
+    json += "\"success\":" + String(success ? "true" : "false") + ",";
+    json += "\"message\":\"" + String(success ? "Sincronização NTP bem-sucedida" : "Falha na sincronização NTP") + "\",";
+    json += "\"timestamp\":" + String(millis());
+    json += "}";
+    _server.send(200, "application/json", json);
+    
+    Serial.println(success ? "✅ Sincronização NTP bem-sucedida" : "❌ Falha na sincronização NTP");
   });
 
   // API para upload de arquivos - POST
