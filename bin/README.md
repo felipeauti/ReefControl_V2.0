@@ -774,4 +774,17 @@ esptool.py --port COM3 --baud 921600 write_flash 0x0 ReefControl_V2.0.7.bin
 ---
 
 **🐠 ReefControl v2.0 - Automação Profissional para Aquários**  
-*Desenvolvido com ❤️ para a comunidade aquarista* 
+*Desenvolvido com ❤️ para a comunidade aquarista*
+
+# ReefControl - Histórico de Versões
+
+## v3.0.0 (2024-01-09)
+- Suporte a sensor de temperatura DS18B20 funcionando em ambas plataformas
+- ESP32 Pro: Sensor no GPIO4
+- Wemos D1 Mini: Sensor no D2 (GPIO4)
+- Debug serial mostrando temperatura a cada 5 segundos
+- Validação de temperatura (-50°C a 100°C)
+- Média móvel de 10 leituras
+- Controle automático do aquecedor
+- Publicação MQTT
+- Interface web atualizada 

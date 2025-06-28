@@ -23,7 +23,7 @@
   #define PH_TDS_PIN 36      // GPIO36 (ADC1_CH0) - Sensor pH/TDS analógico
   #define LEVEL_PIN 39       // GPIO39 (ADC1_CH3) - Sensor de nível
 #else
-  #define ONE_WIRE_BUS D3    // GPIO0 - Sensor de temperatura DS18B20
+  #define ONE_WIRE_BUS D2    // GPIO4 - Sensor de temperatura DS18B20
   #define PH_TDS_PIN A0      // A0 - Sensor pH/TDS analógico
   #define LEVEL_PIN A0       // A0 - Sensor de nível (compartilhado ou separado)
 #endif
@@ -106,10 +106,37 @@ private:
   
 public:
   // Construtor
-  SensorManager();
+  SensorManager() : _oneWire(ONE_WIRE_BUS), _tempSensor(&_oneWire) {}
   
   // Métodos principais
-  bool begin(ConfigManager* config = nullptr);
+  bool begin(ConfigManager* config = nullptr) {
+    _config = config;
+    _tempSensor.begin();
+    int deviceCount = _tempSensor.getDeviceCount();
+    Serial.printf("✅ %d sensor(es) de temperatura encontrado(s)\n", deviceCount);
+    
+    // Adiciona debug do endereço
+    if (deviceCount > 0) {
+      DeviceAddress addr;
+      for(int i=0; i<deviceCount; i++) {
+        if(_tempSensor.getAddress(addr, i)) {
+          Serial.print("🔍 Endereço do sensor ");
+          Serial.print(i);
+          Serial.print(": ");
+          for (uint8_t j = 0; j < 8; j++) {
+            if (addr[j] < 16) Serial.print("0");
+            Serial.print(addr[j], HEX);
+          }
+          Serial.println();
+        }
+      }
+    }
+    
+    _data.tempValid = true;
+    Serial.println("✅ Sensores inicializados");
+    return true;
+  }
+  
   void readAll();
   void update();
   
