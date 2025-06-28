@@ -1,6 +1,7 @@
 #include "WebServer.h"
 #include "RelayController.h"
 #include "ConfigManager.h"
+#include "SensorManager.h"
 #include "../time/NtpClient.h"
 #include "../capabilities/Capabilities.h"
 
@@ -11,10 +12,11 @@
   #include <ESP8266WiFi.h>
 #endif
 
-bool WebServerManager::begin(RelayController* relayController, ConfigManager* configManager, NtpClientManager* ntpClient) {
+bool WebServerManager::begin(RelayController* relayController, ConfigManager* configManager, NtpClientManager* ntpClient, SensorManager* sensorManager) {
   _relayController = relayController;
   _configManager = configManager;
   _ntpClient = ntpClient;
+  _sensorManager = sensorManager;
   // Página inicial - redireciona para login
   _server.on("/", [this]() {
     _server.sendHeader("Location", "/login");
@@ -53,7 +55,17 @@ bool WebServerManager::begin(RelayController* relayController, ConfigManager* co
   
   // API para dados dos sensores
   _server.on("/api/sensors", [this]() {
-    String json = "{\"temperature\":25.5,\"ph\":7.2,\"tds\":320,\"level\":85}";
+    if (!_sensorManager) {
+      _server.send(500, "application/json", "{\"error\":\"SensorManager não inicializado\"}");
+      return;
+    }
+
+    String json = "{";
+    json += "\"temp\":" + String(_sensorManager->getTemperature(), 1) + ",";
+    json += "\"ph\":" + String(_sensorManager->getPH(), 1) + ",";
+    json += "\"tds\":" + String(_sensorManager->getTDS()) + ",";
+    json += "\"level\":" + String(_sensorManager->getWaterLevel());
+    json += "}";
     _server.send(200, "application/json", json);
   });
   

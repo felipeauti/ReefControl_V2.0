@@ -75,7 +75,59 @@ void setup() {
   // Mostrar capabilities do sistema
   printCapabilities();
   
-  // 1. Inicializar configurações (inclui sistema de arquivos)
+  // 1. Inicializar sistema de arquivos
+  Serial.println("📂 Inicializando sistema de arquivos...");
+  #ifdef ESP32
+    if (!SPIFFS.begin(true)) {
+      Serial.println("❌ ERRO: Falha ao inicializar SPIFFS!");
+      Serial.println("⚠️ Tentando formatar SPIFFS...");
+      if (!SPIFFS.format()) {
+        Serial.println("❌ ERRO: Falha ao formatar SPIFFS!");
+      } else {
+        Serial.println("✅ SPIFFS formatado com sucesso!");
+        if (!SPIFFS.begin(true)) {
+          Serial.println("❌ ERRO: Falha ao inicializar SPIFFS após formatação!");
+          delay(5000);
+          ESP.restart();
+        }
+      }
+    }
+  #else
+    if (!LittleFS.begin()) {
+      Serial.println("❌ ERRO: Falha ao inicializar LittleFS!");
+      Serial.println("⚠️ Tentando formatar LittleFS...");
+      if (!LittleFS.format()) {
+        Serial.println("❌ ERRO: Falha ao formatar LittleFS!");
+      } else {
+        Serial.println("✅ LittleFS formatado com sucesso!");
+        if (!LittleFS.begin()) {
+          Serial.println("❌ ERRO: Falha ao inicializar LittleFS após formatação!");
+          delay(5000);
+          ESP.restart();
+        }
+      }
+    }
+  #endif
+  Serial.println("✅ Sistema de arquivos inicializado");
+  
+  // Listar arquivos para debug
+  Serial.println("\n📂 Listando arquivos no sistema:");
+  #ifdef ESP32
+    File root = SPIFFS.open("/");
+    File file = root.openNextFile();
+    while(file) {
+      Serial.printf("  📄 %s (%d bytes)\n", file.name(), file.size());
+      file = root.openNextFile();
+    }
+  #else
+    Dir dir = LittleFS.openDir("/");
+    while (dir.next()) {
+      Serial.printf("  📄 %s (%d bytes)\n", dir.fileName().c_str(), dir.fileSize());
+    }
+  #endif
+  Serial.println();
+  
+  // 2. Inicializar configurações
   Serial.println("📋 Inicializando configurações...");
   yield();  // Proteger contra watchdog
   if (!config.begin()) {
@@ -84,7 +136,7 @@ void setup() {
     ESP.restart();
   }
   
-  // 2. Inicializar hardware
+  // 3. Inicializar hardware
   Serial.println("🔧 Inicializando hardware...");
   yield();  // Proteger contra watchdog
   sensors.begin();
@@ -92,10 +144,10 @@ void setup() {
   relays.begin();
   yield();
   
-  // 3. Display removido para otimização
+  // 4. Display removido para otimização
   Serial.println("📺 Display removido - otimização de RAM");
   
-  // 4. Inicializar WiFi
+  // 5. Inicializar WiFi
   Serial.println("📶 Inicializando WiFi...");
   wifiManager.begin();
   systemStatus.wifiConnected = wifiManager.isConnected();
@@ -104,7 +156,7 @@ void setup() {
     Serial.printf("✅ WiFi conectado: %s\n", WiFi.localIP().toString().c_str());
     // display.showStatus removido
     
-    // 5. Inicializar NTP
+    // 6. Inicializar NTP
     Serial.println("🕐 Inicializando NTP...");
     ntpClient.begin(
       config.ntp.server1,
@@ -115,19 +167,19 @@ void setup() {
     );
     systemStatus.ntpSynced = ntpClient.isTimeSet();
     
-    // 6. Inicializar MQTT
+    // 7. Inicializar MQTT
     Serial.println("📡 Inicializando MQTT...");
     mqttClient.begin();
     
-    // 7. Inicializar OTA
+    // 8. Inicializar OTA
     Serial.println("🚀 Inicializando OTA...");
     otaManager.begin();
     
-    // 8. Inicializar servidor web
+    // 9. Inicializar servidor web
     Serial.println("🌐 Inicializando servidor web...");
-    webServer.begin(&relays, &config, &ntpClient);
+    webServer.begin(&relays, &config, &ntpClient, &sensors);
     
-    // 9. Inicializar agendador
+    // 10. Inicializar agendador
     Serial.println("⏰ Inicializando agendador...");
     scheduler.begin();
     

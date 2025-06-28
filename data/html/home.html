@@ -35,19 +35,19 @@ body{font-family:Arial,sans-serif;background:#f5f7fa;min-height:100vh}
 <div class="container">
 <div class="stats">
 <div class="stat-card">
-<div class="stat-value status-ok" id="temp">24.5°C</div>
+<div class="stat-value" id="temp">--°C</div>
 <div class="stat-label">Temperatura</div>
 </div>
 <div class="stat-card">
-<div class="stat-value status-ok" id="ph">7.8</div>
+<div class="stat-value" id="ph">--</div>
 <div class="stat-label">pH</div>
 </div>
 <div class="stat-card">
-<div class="stat-value status-warning" id="tds">380</div>
+<div class="stat-value" id="tds">--</div>
 <div class="stat-label">TDS (ppm)</div>
 </div>
 <div class="stat-card">
-<div class="stat-value status-ok" id="level">85%</div>
+<div class="stat-value" id="level">--%</div>
 <div class="stat-label">Nível Água</div>
 </div>
 </div>
@@ -75,12 +75,50 @@ sessionStorage.removeItem('loggedIn');
 window.location.href='login.html';
 }
 function updateStats(){
-fetch('/api/status').then(r=>r.json()).then(data=>{
-document.getElementById('temp').textContent=data.temp+'°C';
-document.getElementById('ph').textContent=data.ph;
-document.getElementById('tds').textContent=data.tds;
-document.getElementById('level').textContent=data.level+'%';
-}).catch(()=>console.log('Erro ao carregar dados'));
+fetch('/api/sensors')
+.then(r => r.json())
+.then(data => {
+// Temperatura
+const tempElement = document.getElementById('temp');
+tempElement.textContent = data.temp.toFixed(1) + '°C';
+if (data.temp < 24) {
+tempElement.className = 'stat-value status-error';
+} else if (data.temp > 28) {
+tempElement.className = 'stat-value status-warning';
+} else {
+tempElement.className = 'stat-value status-ok';
+}
+
+// pH
+const phElement = document.getElementById('ph');
+phElement.textContent = data.ph.toFixed(1);
+if (data.ph < 7.8 || data.ph > 8.4) {
+phElement.className = 'stat-value status-warning';
+} else {
+phElement.className = 'stat-value status-ok';
+}
+
+// TDS
+const tdsElement = document.getElementById('tds');
+tdsElement.textContent = data.tds;
+if (data.tds < 300 || data.tds > 450) {
+tdsElement.className = 'stat-value status-warning';
+} else {
+tdsElement.className = 'stat-value status-ok';
+}
+
+// Nível
+const levelElement = document.getElementById('level');
+levelElement.textContent = data.level + '%';
+if (data.level < 50) {
+levelElement.className = 'stat-value status-error';
+} else if (data.level < 70) {
+levelElement.className = 'stat-value status-warning';
+} else {
+levelElement.className = 'stat-value status-ok';
+}
+})
+.catch(() => console.log('Erro ao carregar dados'));
 }
 if(!sessionStorage.getItem('loggedIn')){
 window.location.href='login.html';
