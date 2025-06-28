@@ -6,6 +6,20 @@
 
 ## 📊 **VERSÕES MAIS RECENTES**
 
+### **ReefControl_V2.2.28_Pro_ESP32.bin** ⭐ **MAIS RECENTE - PRO ESP32**
+- **📅 Data de Compilação:** 27/01/2024
+- **📦 Tamanho:** 986.6KB (986.629 bytes)
+- **🧠 Uso de RAM:** 14.9% (48.892/327.680 bytes)
+- **💾 Uso de Flash:** 31.4% (986.629/3.145.728 bytes)
+- **🔥 Novidades:** NTP Server 100% funcional em ambas plataformas (ESP32 Pro e Wemos Compact)!
+
+### **ReefControl_V2.2.28_Compact_ESP8266.bin** ⭐ **MAIS RECENTE - COMPACT ESP8266**
+- **📅 Data de Compilação:** 27/01/2024
+- **📦 Tamanho:** 442.4KB (442.475 bytes)
+- **🧠 Uso de RAM:** 49.6% (40.592/81.920 bytes)
+- **💾 Uso de Flash:** 42.4% (442.475/1.044.464 bytes)
+- **🔥 Novidades:** NTP Server 100% funcional em ambas plataformas (ESP32 Pro e Wemos Compact)!
+
 ### **ReefControl_V2.2.8_Pro_ESP32.bin** ⭐ **MAIS RECENTE - PRO ESP32**
 - **📅 Data de Compilação:** 27/06/2025 22:15
 - **📦 Tamanho:** 943.2KB (958.765 bytes)
@@ -98,6 +112,39 @@
 ---
 
 ## 📈 **CHANGELOG COMPLETO**
+
+### **v2.2.28** - 27/01/2024 - NTP SERVER 100% FUNCIONAL! 🌐✨
+**🎯 COMPATIBILIDADE TOTAL:** NTP Server funcionando perfeitamente em ambas plataformas!
+
+**✅ FUNCIONALIDADES TESTADAS:**
+
+**🕒 NTP Server:**
+- **Timezone UTC-3 (Brasil)** funcionando corretamente em ambas plataformas
+- **Sincronização automática** do horário via internet
+- **Persistência de configurações** do servidor NTP
+- **Interface web** mostrando horário correto
+- **Debug console** com timestamps precisos
+
+**🔌 Saídas de Controle:**
+- **ESP32 Pro:** 8 saídas disponíveis
+- **Wemos Compact:** 4 saídas disponíveis
+- **Interface adaptativa** ajustando-se ao número de saídas
+- **Controle manual/automático** funcionando
+- **Persistência de estados** após reinicialização
+
+**📱 Interface Web:**
+- **Design responsivo** em ambas plataformas
+- **Debug console** em todas as páginas
+- **Switches premium** para controle visual
+- **Status em tempo real** das saídas
+- **Configuração simplificada** do timezone
+
+**🔧 Otimizações:**
+- **Uso de memória otimizado** para ESP8266
+- **Sistema de arquivos** (SPIFFS/LittleFS) organizado
+- **Código compatível** entre plataformas
+- **Logs limpos** e informativos
+- **Performance melhorada** em ambos dispositivos
 
 ### **v2.2.7** - 27/06/2025 - BUG CORRIGIDO! ✅🛠️
 **🔧 CORREÇÃO CRÍTICA:** Interface Man/Auto funcionando perfeitamente após correção do switch premium!
