@@ -24,6 +24,7 @@ body{font-family:Arial,sans-serif;background:#f5f7fa;min-height:100vh}
 .status-ok{color:#27ae60}
 .status-warning{color:#f39c12}
 .status-error{color:#e74c3c}
+.footer{text-align:center;padding:1rem;color:#666;font-size:0.8rem;margin-top:2rem}
 @media(max-width:768px){.container{padding:0.5rem}.stats{grid-template-columns:repeat(2,1fr)}.nav-grid{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
@@ -69,6 +70,7 @@ body{font-family:Arial,sans-serif;background:#f5f7fa;min-height:100vh}
 </a>
 </div>
 </div>
+<div class="footer" id="version">ReefControl</div>
 <script>
 function logout(){
 sessionStorage.removeItem('loggedIn');
@@ -117,6 +119,10 @@ levelElement.className = 'stat-value status-warning';
 } else {
 levelElement.className = 'stat-value status-ok';
 }
+
+// Versão
+const versionElement = document.getElementById('version');
+versionElement.textContent = data.version;
 })
 .catch(() => console.log('Erro ao carregar dados'));
 }

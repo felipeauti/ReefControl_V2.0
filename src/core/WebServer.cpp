@@ -64,7 +64,8 @@ bool WebServerManager::begin(RelayController* relayController, ConfigManager* co
     json += "\"temp\":" + String(_sensorManager->getTemperature(), 1) + ",";
     json += "\"ph\":" + String(_sensorManager->getPH(), 1) + ",";
     json += "\"tds\":" + String(_sensorManager->getTDS()) + ",";
-    json += "\"level\":" + String(_sensorManager->getWaterLevel());
+    json += "\"level\":" + String(_sensorManager->getWaterLevel()) + ",";
+    json += "\"version\":\"" + String(getVersionString()) + "\"";
     json += "}";
     _server.send(200, "application/json", json);
   });
