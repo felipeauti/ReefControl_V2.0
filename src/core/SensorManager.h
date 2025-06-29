@@ -15,7 +15,16 @@
 #include <Arduino.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
+#include <ArduinoJson.h>
 #include "ConfigManager.h"
+
+#ifdef ESP32
+  #include <SPIFFS.h>
+  #define FileSystemClass SPIFFS
+#else
+  #include <LittleFS.h>
+  #define FileSystemClass LittleFS
+#endif
 
 // Pinos dos sensores - compatibilidade ESP8266/ESP32
 #ifdef ESP32
@@ -23,7 +32,7 @@
   #define PH_TDS_PIN 36      // GPIO36 (ADC1_CH0) - Sensor pH/TDS analógico
   #define LEVEL_PIN 39       // GPIO39 (ADC1_CH3) - Sensor de nível
 #else
-  #define ONE_WIRE_BUS D2    // GPIO4 - Sensor de temperatura DS18B20
+  #define ONE_WIRE_BUS D2    // GPIO4 (D2) - Sensor de temperatura DS18B20
   #define PH_TDS_PIN A0      // A0 - Sensor pH/TDS analógico
   #define LEVEL_PIN A0       // A0 - Sensor de nível (compartilhado ou separado)
 #endif
@@ -133,60 +142,18 @@ private:
     _data.temperature = applyTempOffset(rawTemp);
   }
   
+  // Métodos para persistência
+  bool saveSensorsToFile();
+  bool loadSensorsFromFile();
+  
 public:
   // Construtor
-  SensorManager() : _oneWire(ONE_WIRE_BUS), _tempSensor(&_oneWire) {}
-  
-  // Métodos principais
-  bool begin(ConfigManager* config = nullptr) {
-    _config = config;
-    
-    Serial.println("\n🌡️ Inicializando sensores de temperatura...");
-    Serial.printf("📍 Pino OneWire: GPIO%d\n", ONE_WIRE_BUS);
-    
-    _tempSensor.begin();
-    _tempSensor.setResolution(12); // Configura resolução para 12 bits (0.0625°C)
-    
-    int deviceCount = _tempSensor.getDeviceCount();
-    Serial.printf("✅ %d sensor(es) de temperatura encontrado(s)\n", deviceCount);
-    
-    // Adiciona debug do endereço
-    if (deviceCount > 0) {
-      DeviceAddress addr;
-      for(int i=0; i<deviceCount; i++) {
-        if(_tempSensor.getAddress(addr, i)) {
-          Serial.print("🔍 Endereço do sensor ");
-          Serial.print(i);
-          Serial.print(": ");
-          for (uint8_t j = 0; j < 8; j++) {
-            if (addr[j] < 16) Serial.print("0");
-            Serial.print(addr[j], HEX);
-          }
-          Serial.println();
-          
-          // Configura resolução individual
-          _tempSensor.setResolution(addr, 12);
-          
-          // Verifica resolução
-          Serial.printf("📊 Resolução do sensor %d: %d bits\n", 
-            i, _tempSensor.getResolution(addr));
-        }
-      }
-    } else {
-      Serial.println("⚠️ Nenhum sensor DS18B20 encontrado!");
-    }
-    
-    // Carrega o offset do ConfigManager
-    if (_config) {
-      _data.tempOffset = _config->sensor.tempOffset;
-      Serial.printf("📥 Offset de temperatura carregado: %.2f°C\n", _data.tempOffset);
-    }
-    
-    _data.tempValid = deviceCount > 0;
-    Serial.println("✅ Sensores inicializados");
-    return true;
+  SensorManager() : _oneWire(ONE_WIRE_BUS), _tempSensor(&_oneWire) {
+    _numDS18B20Sensors = 0;
   }
   
+  // Métodos principais
+  bool begin(ConfigManager* config = nullptr);
   void readAll();
   void update();
   

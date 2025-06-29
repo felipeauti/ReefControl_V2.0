@@ -908,3 +908,17 @@ esptool.py --port COM3 --baud 921600 write_flash 0x0 ReefControl_V2.0.7.bin
 - **v3.0.5** - APIs para endereços e pinos
 - **v3.0.6** - Implementação inicial da calibração
 - **v3.0.7** - Sistema 100% funcional! 
+
+## v3.2.0 (2024-03-19)
+### Melhorias
+- Otimização do sistema de arquivos LittleFS para ESP8266
+- Buffer JSON reduzido para evitar erros de memória
+- Debug detalhado do OneWire/DS18B20 no ESP8266
+- Delay de inicialização aumentado para estabilidade
+- Mensagens de debug melhoradas com dicas de conexão
+- Verificação detalhada de sensores conectados
+
+### Correções
+- Ajuste no tamanho do sistema de arquivos para 2MB
+- Correção na detecção de sensores DS18B20
+- Melhor gerenciamento de memória no ESP8266
