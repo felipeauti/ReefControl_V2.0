@@ -31,7 +31,9 @@
 // Estrutura para dados dos sensores
 struct SensorData {
   // Temperatura
-  float temperature = 25.0;
+  float temperature = 25.0;  // Temperatura com offset aplicado
+  float rawTemperature = 25.0;  // Temperatura raw do sensor
+  float tempOffset = 0.0;  // Offset de calibração
   bool tempValid = false;
   unsigned long tempLastRead = 0;
   
@@ -104,6 +106,17 @@ private:
   // Calibração pH
   float mapPHValue(int rawValue);
   
+  // Método privado para aplicar offset
+  float applyTempOffset(float rawTemp) {
+    return rawTemp + _data.tempOffset;
+  }
+  
+  // Método privado para calcular temperatura com offset
+  void updateTemperature(float rawTemp) {
+    _data.rawTemperature = rawTemp;
+    _data.temperature = applyTempOffset(rawTemp);
+  }
+  
 public:
   // Construtor
   SensorManager() : _oneWire(ONE_WIRE_BUS), _tempSensor(&_oneWire) {}
@@ -130,6 +143,12 @@ public:
           Serial.println();
         }
       }
+    }
+    
+    // Carrega o offset do ConfigManager
+    if (_config) {
+      _data.tempOffset = _config->sensor.tempOffset;
+      Serial.printf("📥 Offset de temperatura carregado: %.2f°C\n", _data.tempOffset);
     }
     
     _data.tempValid = true;
@@ -176,6 +195,41 @@ public:
   void calibratePH(float ph4Value, float ph7Value);
   void resetCalibration();
   
+  // Métodos de calibração de temperatura
+  float getRawTemperature() const { 
+    return _data.rawTemperature;
+  }
+  
+  float getTempOffset() const { 
+    return _data.tempOffset; 
+  }
+  
+  void calibrateTemperature(float measuredTemp) {
+    // Calcula o offset como a diferença entre a temperatura medida e a temperatura raw
+    _data.tempOffset = measuredTemp - _data.rawTemperature;
+    // Atualiza a temperatura com o novo offset
+    _data.temperature = applyTempOffset(_data.rawTemperature);
+    
+    // Salva o offset no ConfigManager
+    if (_config) {
+      _config->sensor.tempOffset = _data.tempOffset;
+      _config->save();
+      Serial.printf("💾 Offset de temperatura salvo: %.2f°C\n", _data.tempOffset);
+    }
+  }
+  
+  void resetTempCalibration() {
+    _data.tempOffset = 0.0;
+    _data.temperature = _data.rawTemperature;
+    
+    // Persiste o reset no ConfigManager
+    if (_config) {
+      _config->sensor.tempOffset = 0.0;
+      _config->save();
+      Serial.println("🔄 Calibração de temperatura resetada");
+    }
+  }
+  
   // Utilitários
   String toJson() const;
   void printReadings() const;
@@ -188,6 +242,29 @@ public:
   static String phToString(float ph);
   static String tdsToString(int tds);
   static String levelToString(int level);
+
+  // Busca endereços OneWire disponíveis
+  String scanOneWireAddresses() {
+    DeviceAddress addr;
+    String addresses = "";
+    
+    _tempSensor.begin();
+    int deviceCount = _tempSensor.getDeviceCount();
+    
+    if (deviceCount > 0) {
+      for (int i = 0; i < deviceCount; i++) {
+        if (_tempSensor.getAddress(addr, i)) {
+          for (uint8_t j = 0; j < 8; j++) {
+            if (addr[j] < 16) addresses += "0";
+            addresses += String(addr[j], HEX);
+          }
+          break; // Por enquanto pegamos só o primeiro
+        }
+      }
+    }
+    
+    return addresses;
+  }
 };
 
 #endif // SENSOR_MANAGER_H 

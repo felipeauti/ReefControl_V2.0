@@ -1,10 +1,42 @@
-# 🐠 ReefControl v2.0 - Binários de Firmware
+# 🐠 ReefControl v3.0 - Binários de Firmware
 
-**Sistema de Automação para Aquários - ESP8266 D1 Mini**
+**Sistema de Automação para Aquários - ESP32 Pro & ESP8266 Compact**
 
 ---
 
 ## 📊 **VERSÕES MAIS RECENTES**
+
+### **ReefControl_V3.0.7_Pro_ESP32.bin** ⭐ **MAIS RECENTE - PRO ESP32**
+- **📅 Data de Compilação:** 13/03/2024
+- **🧠 Uso de RAM:** 14.8% (48604 bytes de 327680 bytes)
+- **💾 Uso de Flash:** 31.5% (990041 bytes de 3145728 bytes)
+- **🔥 Novidades:** Calibração de temperatura do DS18B20 100% funcional!
+  - ✅ Detecção automática do endereço OneWire
+  - ✅ Interface web para calibração
+  - ✅ Cálculo de offset preciso
+  - ✅ Persistência da calibração
+  - ✅ Logs detalhados no console
+
+### **ReefControl_V3.0.7_Compact_ESP8266.bin** ⭐ **MAIS RECENTE - COMPACT ESP8266**
+- **📅 Data de Compilação:** 13/03/2024
+- **🔥 Novidades:** Mesmas funcionalidades da versão Pro, otimizadas para ESP8266
+
+### **ReefControl_V3.0.6_Pro_ESP32.bin** & **Compact_ESP8266.bin**
+- **📅 Data de Compilação:** 12/03/2024
+- **🔥 Novidades:** Implementação inicial da calibração de temperatura
+- **⚠️ Conhecido:** Valor real não estava sendo enviado corretamente ao backend
+
+### **ReefControl_V3.0.5_Pro_ESP32.bin** & **Compact_ESP8266.bin**
+- **📅 Data de Compilação:** 11/03/2024
+- **🔥 Novidades:** Adição de APIs para buscar endereços OneWire e pinos disponíveis
+
+### **ReefControl_V3.0.4_Pro_ESP32.bin** & **Compact_ESP8266.bin**
+- **📅 Data de Compilação:** 10/03/2024
+- **🔥 Novidades:** Implementação do método scanOneWireAddresses
+
+### **ReefControl_V3.0.3_Pro_ESP32.bin** & **Compact_ESP8266.bin**
+- **📅 Data de Compilação:** 09/03/2024
+- **🔥 Novidades:** Restauração do HTML original da página sensors.html com IDs corretos
 
 ### **ReefControl_V2.2.28_Pro_ESP32.bin** ⭐ **MAIS RECENTE - PRO ESP32**
 - **📅 Data de Compilação:** 27/01/2024
@@ -788,3 +820,41 @@ esptool.py --port COM3 --baud 921600 write_flash 0x0 ReefControl_V2.0.7.bin
 - Controle automático do aquecedor
 - Publicação MQTT
 - Interface web atualizada 
+
+### **v3.0.x** - Março/2024 - CALIBRAÇÃO DE TEMPERATURA DS18B20! 🌡️✨
+**🎯 EVOLUÇÃO COMPLETA:** Sistema de calibração de temperatura implementado e funcionando!
+
+**✅ FUNCIONALIDADES IMPLEMENTADAS:**
+
+**🌡️ Calibração DS18B20:**
+- **Detecção Automática** do endereço OneWire (28ff5feb61160367)
+- **Interface Web Dedicada** para calibração de temperatura
+- **Cálculo de Offset Preciso** baseado em valor real informado
+- **Persistência da Calibração** após reinicialização
+- **Logs Detalhados** mostrando temperatura raw, offset e ajustada
+
+**🔌 APIs Implementadas:**
+- **/api/onewire/scan** - Busca endereços OneWire disponíveis
+- **/api/pins/available** - Lista pinos disponíveis para sensores
+- **/api/sensor/calibrate** - Endpoint para calibração de temperatura
+
+**📱 Interface Web:**
+- **Página Sensors** completamente reformulada
+- **Campo para Valor Real** de temperatura
+- **Botão de Calibração** com feedback visual
+- **Exibição do Endereço OneWire** do sensor
+- **Status em Tempo Real** da temperatura
+
+**🔧 Correções e Melhorias:**
+- **Restauração do HTML** original com IDs corretos
+- **Implementação do JavaScript** para calibração
+- **Correção do Envio** do valor real ao backend
+- **Otimização do Código** para ambas plataformas
+- **Debug Console** com informações detalhadas
+
+**📊 Versões Lançadas:**
+- **v3.0.3** - Restauração do HTML original
+- **v3.0.4** - Implementação do scanOneWireAddresses
+- **v3.0.5** - APIs para endereços e pinos
+- **v3.0.6** - Implementação inicial da calibração
+- **v3.0.7** - Sistema 100% funcional! 

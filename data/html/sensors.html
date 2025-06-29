@@ -48,37 +48,50 @@ body{font-family:Arial,sans-serif;background:#f5f7fa;min-height:100vh}
 🌡️ Temperatura
 <span class="status-indicator online"></span>
 </div>
-<div class="sensor-value">24.5°C</div>
+<div class="sensor-value" id="currentTemp">24.5°C</div>
 </div>
+
 <div class="form-group">
 <label>Tipo de Sensor:</label>
-<select>
-<option value="ds18b20" selected>DS18B20</option>
+<select id="sensorType" onchange="handleSensorTypeChange()">
+<option value="ds18b20" selected>DS18B20 (OneWire)</option>
+<option value="dht11">DHT11</option>
 <option value="dht22">DHT22</option>
-<option value="bmp280">BMP280</option>
 </select>
 </div>
+
+<div class="form-group" id="oneWireAddressGroup" style="display: none;">
+<label>Endereço OneWire:</label>
+<div style="display: flex; gap: 0.5rem;">
+<input type="text" id="oneWireAddress" readonly placeholder="Buscando endereços..." style="flex: 1;">
+<button class="btn btn-primary" onclick="scanOneWire()">Buscar</button>
+</div>
+<small style="display: block; margin-top: 0.5rem; color: #666;">Clique em "Buscar" para detectar sensores DS18B20 conectados</small>
+</div>
+
 <div class="form-group">
 <label>Pino:</label>
-<select>
-<option value="14" selected>GPIO 14 (D5)</option>
-<option value="12">GPIO 12 (D6)</option>
-<option value="13">GPIO 13 (D7)</option>
+<select id="sensorPin">
+<option value="" disabled selected>Selecione o pino</option>
 </select>
 </div>
+
 <div class="form-group">
 <label>Correção (°C):</label>
-<input type="number" step="0.1" value="0.0">
+<input type="number" step="0.1" value="0.0" id="tempOffset" readonly>
 </div>
+
 <div class="calibration-section">
 <div class="calibration-title">Calibração</div>
-<p>Valor atual: <strong>24.5°C</strong></p>
+<p>Valor atual: <strong id="currentTemp">24.5°C</strong></p>
 <div class="form-group">
 <label>Temperatura real:</label>
-<input type="number" step="0.1" placeholder="25.0">
+<input type="number" step="0.1" placeholder="25.0" id="realTemp">
 </div>
-<button class="btn btn-warning">Calibrar</button>
+<button class="btn btn-warning" onclick="calibrateTemperature()">Calibrar</button>
+<button class="btn btn-warning" onclick="resetCalibration()">Resetar Calibração</button>
 </div>
+
 <button class="btn btn-primary">Salvar</button>
 </div>
 <div class="sensor-card">
@@ -202,10 +215,142 @@ body{font-family:Arial,sans-serif;background:#f5f7fa;min-height:100vh}
 </div>
 </div>
 </div>
+</div>
 <script>
 if(!sessionStorage.getItem('loggedIn')){
-window.location.href='login.html';
+    window.location.href='login.html';
 }
+
+// Funções para gerenciar sensores
+function handleSensorTypeChange() {
+    const sensorType = document.getElementById('sensorType').value;
+    const oneWireGroup = document.getElementById('oneWireAddressGroup');
+    
+    // Mostrar/ocultar grupo de endereço OneWire
+    oneWireGroup.style.display = sensorType === 'ds18b20' ? 'block' : 'none';
+    
+    // Atualizar lista de pinos disponíveis
+    updateAvailablePins(sensorType);
+}
+
+function updateAvailablePins(sensorType) {
+    // Buscar pinos disponíveis via API
+    fetch('/api/sensors/available_pins?type=' + sensorType)
+        .then(response => response.json())
+        .then(data => {
+            const pinSelect = document.getElementById('sensorPin');
+            pinSelect.innerHTML = '<option value="" disabled selected>Selecione o pino</option>';
+            
+            data.pins.forEach(pin => {
+                const option = document.createElement('option');
+                option.value = pin.number;
+                option.textContent = pin.label;
+                pinSelect.appendChild(option);
+            });
+        })
+        .catch(error => console.error('Erro ao buscar pinos:', error));
+}
+
+function scanOneWire() {
+    const addressInput = document.getElementById('oneWireAddress');
+    const scanButton = document.querySelector('#oneWireAddressGroup button');
+    
+    // Desabilitar botão durante a busca
+    scanButton.disabled = true;
+    scanButton.textContent = 'Buscando...';
+    addressInput.value = 'Procurando sensores...';
+    
+    // Chamar API para buscar endereços
+    fetch('/api/sensors/scan_onewire')
+        .then(response => response.json())
+        .then(data => {
+            if (data.addresses && data.addresses.length > 0) {
+                addressInput.value = data.addresses[0]; // Por enquanto pegamos só o primeiro
+            } else {
+                addressInput.value = 'Nenhum sensor encontrado';
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao buscar sensores:', error);
+            addressInput.value = 'Erro ao buscar sensores';
+        })
+        .finally(() => {
+            scanButton.disabled = false;
+            scanButton.textContent = 'Buscar';
+        });
+}
+
+// Função para calibrar temperatura
+function calibrateTemperature() {
+    const measuredTemp = parseFloat(document.getElementById('realTemp').value);
+    if (isNaN(measuredTemp)) {
+        alert('Por favor, digite uma temperatura válida');
+        return;
+    }
+    
+    fetch('/api/sensors/calibrate', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ measuredTemp: measuredTemp })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Calibração realizada com sucesso!');
+            location.reload(); // Recarrega para mostrar novos valores
+        } else {
+            alert('Erro na calibração: ' + (data.error || 'Erro desconhecido'));
+        }
+    })
+    .catch(error => {
+        console.error('Erro ao calibrar:', error);
+        alert('Erro ao calibrar temperatura');
+    });
+}
+
+// Função para resetar calibração
+function resetCalibration() {
+    if (!confirm('Tem certeza que deseja resetar a calibração?')) return;
+    
+    fetch('/api/sensors/calibrate/reset', {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Calibração resetada com sucesso!');
+            location.reload(); // Recarrega para mostrar novos valores
+        } else {
+            alert('Erro ao resetar calibração: ' + (data.error || 'Erro desconhecido'));
+        }
+    })
+    .catch(error => {
+        console.error('Erro ao resetar:', error);
+        alert('Erro ao resetar calibração');
+    });
+}
+
+// Atualizar valores em tempo real
+function updateSensorValues() {
+    fetch('/api/sensors')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('currentTemp').textContent = data.temp.toFixed(1) + '°C';
+            document.getElementById('tempOffset').value = data.tempOffset.toFixed(1);
+        })
+        .catch(error => console.error('Erro ao atualizar valores:', error));
+}
+
+// Atualizar valores a cada 5 segundos
+setInterval(updateSensorValues, 5000);
+
+// Inicializar
+document.addEventListener('DOMContentLoaded', function() {
+    handleSensorTypeChange(); // Configurar visibilidade inicial
+    updateSensorValues(); // Buscar valores iniciais
+});
 </script>
 </body>
 </html> 

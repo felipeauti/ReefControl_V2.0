@@ -22,10 +22,12 @@ void SensorManager::readTemperature() {
     float temp = _tempSensor.getTempCByIndex(0);
     
     if (temp != DEVICE_DISCONNECTED_C && temp > -50 && temp < 100) {
-        _data.temperature = calculateMovingAverage(_tempHistory, temp);
+        float rawTemp = calculateMovingAverage(_tempHistory, temp);
+        updateTemperature(rawTemp);
         _data.tempValid = true;
         _data.tempLastRead = millis();
-        Serial.printf("🌡️ Temperatura: %.2f°C\n", _data.temperature);
+        Serial.printf("🌡️ Temperatura: %.2f°C (raw: %.2f°C, offset: %.2f°C)\n", 
+                     _data.temperature, _data.rawTemperature, _data.tempOffset);
     } else {
         _data.tempValid = false;
     }

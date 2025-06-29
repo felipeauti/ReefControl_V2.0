@@ -62,12 +62,51 @@ bool WebServerManager::begin(RelayController* relayController, ConfigManager* co
 
     String json = "{";
     json += "\"temp\":" + String(_sensorManager->getTemperature(), 1) + ",";
+    json += "\"tempOffset\":" + String(_sensorManager->getTempOffset(), 1) + ",";
     json += "\"ph\":" + String(_sensorManager->getPH(), 1) + ",";
     json += "\"tds\":" + String(_sensorManager->getTDS()) + ",";
     json += "\"level\":" + String(_sensorManager->getWaterLevel()) + ",";
     json += "\"version\":\"" + String(getVersionString()) + "\"";
     json += "}";
     _server.send(200, "application/json", json);
+  });
+  
+  // API para calibração de temperatura
+  _server.on("/api/sensors/calibrate", HTTP_POST, [this]() {
+    if (!_sensorManager) {
+      _server.send(500, "application/json", "{\"error\":\"SensorManager não inicializado\"}");
+      return;
+    }
+
+    String body = _server.arg("plain");
+    
+    // Parse do JSON
+    int start = body.indexOf("\"measuredTemp\":") + 14;
+    int end = body.indexOf("}", start);
+    if (start > 13 && end > start) {
+      float measuredTemp = body.substring(start, end).toFloat();
+      
+      // Validar temperatura
+      if (measuredTemp >= -50 && measuredTemp <= 100) {
+        _sensorManager->calibrateTemperature(measuredTemp);
+        _server.send(200, "application/json", "{\"success\":true}");
+      } else {
+        _server.send(400, "application/json", "{\"error\":\"Temperatura inválida\"}");
+      }
+    } else {
+      _server.send(400, "application/json", "{\"error\":\"JSON inválido\"}");
+    }
+  });
+
+  // API para resetar calibração de temperatura
+  _server.on("/api/sensors/calibrate/reset", HTTP_POST, [this]() {
+    if (!_sensorManager) {
+      _server.send(500, "application/json", "{\"error\":\"SensorManager não inicializado\"}");
+      return;
+    }
+    
+    _sensorManager->resetTempCalibration();
+    _server.send(200, "application/json", "{\"success\":true}");
   });
   
   // API para status do sistema
@@ -523,6 +562,32 @@ bool WebServerManager::begin(RelayController* relayController, ConfigManager* co
       "<!DOCTYPE html><html><head><title>404 - Página não encontrada</title></head>"
       "<body><h1>404 - Página não encontrada</h1>"
       "<p><a href='/home'>Voltar ao início</a></p></body></html>");
+  });
+  
+  // API para listar pinos disponíveis por tipo de sensor
+  _server.on("/api/sensors/available_pins", HTTP_GET, [this]() {
+    String sensorType = _server.arg("type");
+    String json = "{\"pins\":[";
+    
+    if (sensorType == "ds18b20") {
+      // Apenas GPIO4 para OneWire
+      json += "{\"number\":4,\"label\":\"GPIO 4 (OneWire)\"}";
+    }
+    
+    json += "]}";
+    _server.send(200, "application/json", json);
+  });
+
+  // API para buscar endereços OneWire
+  _server.on("/api/sensors/scan_onewire", HTTP_GET, [this]() {
+    if (!_sensorManager) {
+      _server.send(500, "application/json", "{\"error\":\"SensorManager não inicializado\"}");
+      return;
+    }
+
+    String addresses = _sensorManager->scanOneWireAddresses();
+    String json = "{\"addresses\":[\"" + addresses + "\"]}";
+    _server.send(200, "application/json", json);
   });
   
   _server.begin();
