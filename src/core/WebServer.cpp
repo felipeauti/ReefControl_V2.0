@@ -665,6 +665,28 @@ bool WebServerManager::begin(RelayController* relayController, ConfigManager* co
     _sensorManager->resetDS18B20Calibration(address);
     _server.send(200, "application/json", "{\"success\":true}");
   });
+
+  _server.on("/api/ds18b20/rename", HTTP_POST, [this]() {
+    if (!_server.hasArg("plain")) {
+      _server.send(400, "application/json", "{\"success\":false,\"error\":\"No data\"}");
+      return;
+    }
+
+    String data = _server.arg("plain");
+    DynamicJsonDocument doc(256);
+    deserializeJson(doc, data);
+    
+    String address = doc["address"].as<String>();
+    String name = doc["name"].as<String>();
+    
+    DS18B20Sensor* sensor = _sensorManager->getDS18B20Sensor(address);
+    if (sensor) {
+      sensor->name = name;
+      _server.send(200, "application/json", "{\"success\":true}");
+    } else {
+      _server.send(404, "application/json", "{\"success\":false,\"error\":\"Sensor não encontrado\"}");
+    }
+  });
   
   _server.begin();
   Serial.println("🌐 Servidor web completo iniciado na porta 80");
