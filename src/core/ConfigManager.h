@@ -56,29 +56,29 @@ struct NtpConfig {
 
 struct SensorConfig {
   // Temperatura
+  float tempOffset = 0.0;  // Offset de calibração
   bool tempEnabled = true;
-  float tempOffset = 0.0;
-  float tempMin = 20.0;
-  float tempMax = 30.0;
+  int tempPin = 4;  // GPIO4 (D2) para DS18B20
   
   // pH
-  bool phEnabled = true;
   float phOffset = 0.0;
-  float phMin = 6.5;
-  float phMax = 8.5;
-  float phCalibration4 = 512.0;  // Valor ADC para pH 4
-  float phCalibration7 = 410.0;  // Valor ADC para pH 7
+  bool phEnabled = false;
+  int phPin = 0;  // A0
+  float ph4Voltage = 2.0;
+  float ph7Voltage = 2.5;
   
   // TDS
-  bool tdsEnabled = true;
   float tdsOffset = 0.0;
-  int tdsMin = 200;
-  int tdsMax = 500;
+  bool tdsEnabled = false;
+  int tdsPin = 0;  // A0
+  float tdsKValue = 1.0;
   
-  // Nível da água
-  bool levelEnabled = true;
-  int levelMin = 20;
-  int levelMax = 95;
+  // Nível
+  float levelOffset = 0.0;
+  bool levelEnabled = false;
+  int levelPin = 0;  // A0
+  float levelEmpty = 0.0;
+  float levelFull = 100.0;
 };
 
 struct OutputConfig {

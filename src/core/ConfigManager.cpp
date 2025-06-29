@@ -245,21 +245,24 @@ String ConfigManager::toJson() {
   JsonObject sensorObj = doc.createNestedObject("sensor");
   sensorObj["tempEnabled"] = sensor.tempEnabled;
   sensorObj["tempOffset"] = sensor.tempOffset;
-  sensorObj["tempMin"] = sensor.tempMin;
-  sensorObj["tempMax"] = sensor.tempMax;
+  sensorObj["tempPin"] = sensor.tempPin;
+  
   sensorObj["phEnabled"] = sensor.phEnabled;
   sensorObj["phOffset"] = sensor.phOffset;
-  sensorObj["phMin"] = sensor.phMin;
-  sensorObj["phMax"] = sensor.phMax;
-  sensorObj["phCalibration4"] = sensor.phCalibration4;
-  sensorObj["phCalibration7"] = sensor.phCalibration7;
+  sensorObj["phPin"] = sensor.phPin;
+  sensorObj["ph4Voltage"] = sensor.ph4Voltage;
+  sensorObj["ph7Voltage"] = sensor.ph7Voltage;
+  
   sensorObj["tdsEnabled"] = sensor.tdsEnabled;
   sensorObj["tdsOffset"] = sensor.tdsOffset;
-  sensorObj["tdsMin"] = sensor.tdsMin;
-  sensorObj["tdsMax"] = sensor.tdsMax;
+  sensorObj["tdsPin"] = sensor.tdsPin;
+  sensorObj["tdsKValue"] = sensor.tdsKValue;
+  
   sensorObj["levelEnabled"] = sensor.levelEnabled;
-  sensorObj["levelMin"] = sensor.levelMin;
-  sensorObj["levelMax"] = sensor.levelMax;
+  sensorObj["levelOffset"] = sensor.levelOffset;
+  sensorObj["levelPin"] = sensor.levelPin;
+  sensorObj["levelEmpty"] = sensor.levelEmpty;
+  sensorObj["levelFull"] = sensor.levelFull;
   
   // Relés
   JsonObject relayObj = doc.createNestedObject("relay");

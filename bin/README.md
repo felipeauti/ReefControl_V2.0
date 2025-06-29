@@ -6,6 +6,22 @@
 
 ## 📊 **VERSÕES MAIS RECENTES**
 
+### **ReefControl_V3.0.8_Pro_ESP32.bin** ⭐ **MAIS RECENTE - PRO ESP32**
+- **📅 Data de Compilação:** 13/03/2024
+- **🧠 Uso de RAM:** 14.8% (48604 bytes de 327680 bytes)
+- **💾 Uso de Flash:** 31.5% (990041 bytes de 3145728 bytes)
+- **🔥 Novidades:** Otimização geral do sistema e correções de bugs
+  - ✅ Melhorias na interface de calibração
+  - ✅ Otimização do código do sensor DS18B20
+  - ✅ Logs mais detalhados no console
+  - ✅ Correções de estabilidade
+
+### **ReefControl_V3.0.8_Compact_ESP8266.bin** ⭐ **MAIS RECENTE - COMPACT ESP8266**
+- **📅 Data de Compilação:** 13/03/2024
+- **🧠 Uso de RAM:** 50.5% (41392 bytes de 81920 bytes)
+- **💾 Uso de Flash:** 42.6% (445155 bytes de 1044464 bytes)
+- **🔥 Novidades:** Mesmas otimizações da versão Pro, adaptadas para ESP8266
+
 ### **ReefControl_V3.0.7_Pro_ESP32.bin** ⭐ **MAIS RECENTE - PRO ESP32**
 - **📅 Data de Compilação:** 13/03/2024
 - **🧠 Uso de RAM:** 14.8% (48604 bytes de 327680 bytes)

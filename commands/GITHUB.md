@@ -1,6 +1,26 @@
-# 🚀 AquaControl - Comandos GitHub
+# 🚀 ReefControl - Comandos GitHub
 
-## 📋 Guia Completo de Comandos Git para o Projeto
+## 📋 Guia Completo de Comandos Git e PlatformIO
+
+### 🔧 Comandos de Compilação
+
+```bash
+# Compilar versão Pro (ESP32)
+python -m platformio run -e pro
+python -m platformio run -e pro -v  # Modo verbose
+python -m platformio run -e pro -t upload --upload-port COM4
+python -m platformio run -e pro -t uploadfs --upload-port COM4
+
+# Compilar versão Compact (ESP8266)
+python -m platformio run -e compact
+python -m platformio run -e compact -v  # Modo verbose
+python -m platformio run -e compact -t upload --upload-port COM3
+python -m platformio run -e compact -t uploadfs --upload-port COM3
+
+# Monitor serial
+python -m platformio device monitor -p COM3 -b 115200  # ESP8266
+python -m platformio device monitor -p COM4 -b 115200  # ESP32
+```
 
 ### 🔧 Configuração Inicial do Repositório
 
@@ -12,25 +32,24 @@ git init
 git add .
 
 # Fazer commit inicial
-git commit -m "🚀 AquaControl - Sistema OTA Completo com Interface Web Moderna
+git commit -m "🚀 ReefControl v3.0.8 - Sistema Dual-Version ESP32/ESP8266
 
 ✅ Funcionalidades implementadas:
-- Interface web responsiva e moderna
-- Sistema OTA com barra de progresso simulada 
-- Redirecionamento automático após upload
-- Detecção inteligente de reinício do dispositivo
-- Páginas de sucesso e erro personalizadas
-- Sistema de fallback manual
-- Documentação completa de comandos seriais
+- Suporte ESP32 Pro (8 saídas) e ESP8266 Compact (4 saídas)
+- Sistema de capabilities para detecção de recursos
+- Multi-sensor DS18B20 com calibração
+- NTP Server com timezone Brasil (UTC-3)
+- Interface web responsiva e adaptativa
+- APIs REST para integração externa
 
 🎯 Principais arquivos:
-- src/principal.cpp - Interface web e sistema OTA
-- src/main.cpp - Código principal do ESP8266  
-- DICA_SERIAL.md - Comandos para monitor serial
-- platformio.ini - Configuração do projeto
+- src/capabilities/Capabilities.h - Sistema de capabilities
+- src/core/* - Módulos principais do sistema
+- src/sensors/DS18B20Sensor.h - Suporte multi-sensor
+- platformio.ini - Configuração dual-version
 
-🔧 Hardware: ESP8266 (D1 Mini)
-📡 Recursos: WiFiManager, OTA Update, WebServer, NTP"
+🔧 Hardware: ESP32 Pro & ESP8266 Compact
+📡 Recursos: WiFiManager, OTA, NTP, MQTT"
 ```
 
 ### 🌐 Configuração do Repositório Remoto

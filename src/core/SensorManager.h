@@ -73,6 +73,17 @@ struct SensorAlerts {
   bool sensorError = false;
 };
 
+// Estrutura para sensor DS18B20
+struct DS18B20Sensor {
+  DeviceAddress address;  // Endereço OneWire do sensor
+  String name;           // Nome amigável do sensor (ex: "Aquário")
+  float temperature;     // Última temperatura lida
+  float rawTemperature;  // Temperatura raw
+  float offset;         // Offset de calibração
+  bool isValid;         // Status do sensor
+  unsigned long lastRead; // Última leitura
+};
+
 // Classe principal
 class SensorManager {
 private:
@@ -81,6 +92,11 @@ private:
   DallasTemperature _tempSensor;
   SensorData _data;
   SensorAlerts _alerts;
+  
+  // Array de sensores DS18B20
+  static const int MAX_DS18B20_SENSORS = 4;  // Máximo de 4 sensores
+  DS18B20Sensor _ds18b20Sensors[MAX_DS18B20_SENSORS];
+  int _numDS18B20Sensors = 0;  // Número atual de sensores
   
   // Arrays para médias móveis
   static const int MOVING_AVERAGE_SIZE = 10;
@@ -124,7 +140,13 @@ public:
   // Métodos principais
   bool begin(ConfigManager* config = nullptr) {
     _config = config;
+    
+    Serial.println("\n🌡️ Inicializando sensores de temperatura...");
+    Serial.printf("📍 Pino OneWire: GPIO%d\n", ONE_WIRE_BUS);
+    
     _tempSensor.begin();
+    _tempSensor.setResolution(12); // Configura resolução para 12 bits (0.0625°C)
+    
     int deviceCount = _tempSensor.getDeviceCount();
     Serial.printf("✅ %d sensor(es) de temperatura encontrado(s)\n", deviceCount);
     
@@ -141,8 +163,17 @@ public:
             Serial.print(addr[j], HEX);
           }
           Serial.println();
+          
+          // Configura resolução individual
+          _tempSensor.setResolution(addr, 12);
+          
+          // Verifica resolução
+          Serial.printf("📊 Resolução do sensor %d: %d bits\n", 
+            i, _tempSensor.getResolution(addr));
         }
       }
+    } else {
+      Serial.println("⚠️ Nenhum sensor DS18B20 encontrado!");
     }
     
     // Carrega o offset do ConfigManager
@@ -151,7 +182,7 @@ public:
       Serial.printf("📥 Offset de temperatura carregado: %.2f°C\n", _data.tempOffset);
     }
     
-    _data.tempValid = true;
+    _data.tempValid = deviceCount > 0;
     Serial.println("✅ Sensores inicializados");
     return true;
   }
@@ -245,25 +276,59 @@ public:
 
   // Busca endereços OneWire disponíveis
   String scanOneWireAddresses() {
-    DeviceAddress addr;
     String addresses = "";
-    
-    _tempSensor.begin();
+    DeviceAddress addr;
     int deviceCount = _tempSensor.getDeviceCount();
     
-    if (deviceCount > 0) {
-      for (int i = 0; i < deviceCount; i++) {
-        if (_tempSensor.getAddress(addr, i)) {
-          for (uint8_t j = 0; j < 8; j++) {
-            if (addr[j] < 16) addresses += "0";
-            addresses += String(addr[j], HEX);
-          }
-          break; // Por enquanto pegamos só o primeiro
+    for(int i=0; i<deviceCount; i++) {
+      if(_tempSensor.getAddress(addr, i)) {
+        if(i > 0) addresses += ",";
+        for (uint8_t j = 0; j < 8; j++) {
+          if (addr[j] < 16) addresses += "0";
+          addresses += String(addr[j], HEX);
         }
       }
     }
-    
     return addresses;
+  }
+
+  // Métodos para gerenciar sensores DS18B20
+  bool addDS18B20Sensor(const String& address, const String& name);
+  bool removeDS18B20Sensor(const String& address);
+  DS18B20Sensor* getDS18B20Sensor(const String& address);
+  String getDS18B20SensorsJson() const;
+  void calibrateDS18B20Sensor(const String& address, float measuredTemp);
+  void resetDS18B20Calibration(const String& address);
+  
+  // Busca endereços OneWire disponíveis e retorna em formato JSON
+  String scanOneWireAddressesJson() {
+    String json = "[";
+    DeviceAddress addr;
+    int deviceCount = _tempSensor.getDeviceCount();
+    
+    for(int i=0; i<deviceCount; i++) {
+      if(_tempSensor.getAddress(addr, i)) {
+        if(i > 0) json += ",";
+        json += "{\"address\":\"";
+        for (uint8_t j = 0; j < 8; j++) {
+          if (addr[j] < 16) json += "0";
+          json += String(addr[j], HEX);
+        }
+        json += "\",\"inUse\":";
+        // Verifica se o endereço já está em uso
+        bool inUse = false;
+        for(int k=0; k<_numDS18B20Sensors; k++) {
+          if(memcmp(addr, _ds18b20Sensors[k].address, 8) == 0) {
+            inUse = true;
+            break;
+          }
+        }
+        json += inUse ? "true" : "false";
+        json += "}";
+      }
+    }
+    json += "]";
+    return json;
   }
 };
 

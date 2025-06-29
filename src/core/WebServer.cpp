@@ -590,6 +590,82 @@ bool WebServerManager::begin(RelayController* relayController, ConfigManager* co
     _server.send(200, "application/json", json);
   });
   
+  // Endpoints para sensores DS18B20
+  _server.on("/api/onewire/scan", HTTP_GET, [this]() {
+    String json = _sensorManager->scanOneWireAddressesJson();
+    _server.send(200, "application/json", json);
+  });
+
+  _server.on("/api/ds18b20/sensors", HTTP_GET, [this]() {
+    String json = _sensorManager->getDS18B20SensorsJson();
+    _server.send(200, "application/json", json);
+  });
+
+  _server.on("/api/ds18b20/add", HTTP_POST, [this]() {
+    if (!_server.hasArg("plain")) {
+      _server.send(400, "application/json", "{\"success\":false,\"error\":\"No data\"}");
+      return;
+    }
+
+    String data = _server.arg("plain");
+    DynamicJsonDocument doc(512);
+    deserializeJson(doc, data);
+    
+    String address = doc["address"].as<String>();
+    String name = doc["name"].as<String>();
+    
+    bool success = _sensorManager->addDS18B20Sensor(address, name);
+    String response = "{\"success\":" + String(success ? "true" : "false") + "}";
+    _server.send(200, "application/json", response);
+  });
+
+  _server.on("/api/ds18b20/remove", HTTP_POST, [this]() {
+    if (!_server.hasArg("plain")) {
+      _server.send(400, "application/json", "{\"success\":false,\"error\":\"No data\"}");
+      return;
+    }
+
+    String data = _server.arg("plain");
+    DynamicJsonDocument doc(256);
+    deserializeJson(doc, data);
+    
+    String address = doc["address"].as<String>();
+    bool success = _sensorManager->removeDS18B20Sensor(address);
+    String response = "{\"success\":" + String(success ? "true" : "false") + "}";
+    _server.send(200, "application/json", response);
+  });
+
+  _server.on("/api/ds18b20/calibrate", HTTP_POST, [this]() {
+    if (!_server.hasArg("plain")) {
+      _server.send(400, "application/json", "{\"success\":false,\"error\":\"No data\"}");
+      return;
+    }
+
+    String data = _server.arg("plain");
+    DynamicJsonDocument doc(256);
+    deserializeJson(doc, data);
+    
+    String address = doc["address"].as<String>();
+    float measuredTemp = doc["temperature"].as<float>();
+    _sensorManager->calibrateDS18B20Sensor(address, measuredTemp);
+    _server.send(200, "application/json", "{\"success\":true}");
+  });
+
+  _server.on("/api/ds18b20/reset-calibration", HTTP_POST, [this]() {
+    if (!_server.hasArg("plain")) {
+      _server.send(400, "application/json", "{\"success\":false,\"error\":\"No data\"}");
+      return;
+    }
+
+    String data = _server.arg("plain");
+    DynamicJsonDocument doc(256);
+    deserializeJson(doc, data);
+    
+    String address = doc["address"].as<String>();
+    _sensorManager->resetDS18B20Calibration(address);
+    _server.send(200, "application/json", "{\"success\":true}");
+  });
+  
   _server.begin();
   Serial.println("🌐 Servidor web completo iniciado na porta 80");
   Serial.println("🚀 OTA Update habilitado em /update");
