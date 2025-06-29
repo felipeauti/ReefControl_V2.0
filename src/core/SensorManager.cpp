@@ -505,6 +505,11 @@ bool SensorManager::begin(ConfigManager* config) {
         Serial.printf("📍 Pino OneWire: GPIO%d\n", ONE_WIRE_BUS);
     #else
         Serial.printf("📍 Pino OneWire: D2 (GPIO%d)\n", ONE_WIRE_BUS);
+        Serial.println("📌 Dicas de conexão para ESP8266:");
+        Serial.println("1. Use o pino D2 (GPIO4)");
+        Serial.println("2. Resistor pullup de 4.7k entre DATA e VCC");
+        Serial.println("3. Verifique a alimentação (3.3V)");
+        Serial.println("4. Certifique-se que o pino não está em uso por outra função");
     #endif
     
     // Inicializa o sensor OneWire com delay de proteção
@@ -516,11 +521,54 @@ bool SensorManager::begin(ConfigManager* config) {
     Serial.printf("🔍 Sensores DS18B20 encontrados: %d\n", deviceCount);
     
     if (deviceCount == 0) {
-        Serial.println("⚠️ Nenhum sensor DS18B20 encontrado! Verifique as conexões.");
-        Serial.println("📌 Dicas de conexão para ESP8266:");
-        Serial.println("1. Use o pino D2 (GPIO4)");
-        Serial.println("2. Resistor pullup de 4.7k entre DATA e VCC");
-        Serial.println("3. Verifique a alimentação (3.3V)");
+        Serial.println("⚠️ Nenhum sensor DS18B20 encontrado! Verificando conexões...");
+        
+        // Tenta ler endereços para debug
+        DeviceAddress addr;
+        if (_tempSensor.getAddress(addr, 0)) {
+            Serial.print("✅ Endereço do primeiro sensor: ");
+            for (uint8_t i = 0; i < 8; i++) {
+                if (addr[i] < 16) Serial.print("0");
+                Serial.print(addr[i], HEX);
+            }
+            Serial.println();
+        } else {
+            Serial.println("❌ Não foi possível ler nenhum endereço!");
+        }
+        
+        // Tenta uma leitura de temperatura para debug
+        _tempSensor.requestTemperatures();
+        float temp = _tempSensor.getTempCByIndex(0);
+        if (temp != DEVICE_DISCONNECTED_C) {
+            Serial.printf("✅ Temperatura lida: %.2f°C\n", temp);
+        } else {
+            Serial.println("❌ Erro ao ler temperatura!");
+        }
+    } else {
+        // Lista todos os sensores encontrados
+        DeviceAddress addr;
+        for (int i = 0; i < deviceCount; i++) {
+            if (_tempSensor.getAddress(addr, i)) {
+                Serial.printf("✅ Sensor %d - Endereço: ", i);
+                for (uint8_t j = 0; j < 8; j++) {
+                    if (addr[j] < 16) Serial.print("0");
+                    Serial.print(addr[j], HEX);
+                }
+                Serial.println();
+                
+                // Mostra resolução
+                Serial.printf("📊 Resolução: %d bits\n", _tempSensor.getResolution(addr));
+                
+                // Tenta uma leitura
+                _tempSensor.requestTemperaturesByAddress(addr);
+                float temp = _tempSensor.getTempC(addr);
+                if (temp != DEVICE_DISCONNECTED_C) {
+                    Serial.printf("📡 Temperatura: %.2f°C\n", temp);
+                } else {
+                    Serial.println("❌ Erro ao ler temperatura!");
+                }
+            }
+        }
     }
     
     _tempSensor.setResolution(12); // Configura resolução para 12 bits (0.0625°C)

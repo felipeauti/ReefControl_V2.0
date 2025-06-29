@@ -428,15 +428,15 @@ function renderOutputs() {
     const buttonsDisabled = isAutoMode;
     
     return `
-      <div class="output-card">
-        <div class="output-header">
+<div class="output-card">
+<div class="output-header">
           <div class="output-title">${output.icon} ${currentName}</div>
           <div class="output-status ${isOn ? 'status-on' : 'status-off'}">
             ${isOn ? 'LIGADO' : 'DESLIGADO'}
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Pino GPIO:</label>
+</div>
+</div>
+<div class="form-group">
+<label>Pino GPIO:</label>
           <select id="pin_${output.key}" onchange="validateAndUpdateGPIO('${output.key}', this.value)" class="${getGPIOValidationClass(output.key, currentPin)}">
             <option value="5" ${currentPin === 5 ? 'selected' : ''}>GPIO 5 (D1)</option>
             <option value="4" ${currentPin === 4 ? 'selected' : ''}>GPIO 4 (D2)</option>
@@ -446,17 +446,17 @@ function renderOutputs() {
             <option value="12" ${currentPin === 12 ? 'selected' : ''}>GPIO 12 (D6)</option>
             <option value="13" ${currentPin === 13 ? 'selected' : ''}>GPIO 13 (D7)</option>
             <option value="15" ${currentPin === 15 ? 'selected' : ''}>GPIO 15 (D8)</option>
-          </select>
+</select>
           <div id="gpio_warning_${output.key}" class="gpio-warning" style="display:none;"></div>
-        </div>
-        <div class="form-group">
-          <label>Nome:</label>
+</div>
+<div class="form-group">
+<label>Nome:</label>
           <input type="text" id="name_${output.key}" value="${currentName}" 
                  onchange="updateConfig('${output.key}', 'name', this.value)"
                  placeholder="Digite o nome da saída">
-        </div>
-        <div class="form-group">
-          <label>Controle Manual:</label>
+</div>
+<div class="form-group">
+<label>Controle Manual:</label>
           <div class="btn-inline">
             <button class="btn btn-sm ${isOn ? 'btn-success' : 'btn-secondary'}" 
                     onclick="setOutput('${output.key}', true)"
@@ -473,17 +473,17 @@ function renderOutputs() {
               <div class="switch-container">
                 <input type="checkbox" id="mode_${output.key}" ${isAutoMode ? 'checked' : ''} onchange="toggleMode('${output.key}', this.checked)">
                 <label for="mode_${output.key}" class="switch-slider"></label>
-              </div>
+</div>
               <div class="mode-switch-status">${isAutoMode ? 'AUTO' : 'MAN'}</div>
-            </div>
-          </div>
-        </div>
+</div>
+</div>
+</div>
         <div class="control-buttons" style="display: flex; justify-content: center; margin-top: 1rem;">
           <button class="btn btn-sm btn-primary" onclick="saveConfig('${output.key}')">
             Salvar
           </button>
-        </div>
-      </div>
+</div>
+</div>
     `;
   }).join('');
   

@@ -271,6 +271,21 @@ AquaControl/
    git push origin --tags
    ```
 
+## 🔄 Comandos de Restauração do GitHub
+
+```bash
+# Descartar todas as alterações locais e voltar para a versão do GitHub
+git reset --hard origin/master
+
+# Compilar e fazer upload para ESP8266 Compact
+python -m platformio run -e compact -t upload --upload-port COM3
+python -m platformio run -e compact -t uploadfs --upload-port COM3
+
+# Compilar e fazer upload para ESP32 Pro
+python -m platformio run -e pro -t upload --upload-port COM4
+python -m platformio run -e pro -t uploadfs --upload-port COM4
+```
+
 ---
 
 ## 🔗 Links Úteis
