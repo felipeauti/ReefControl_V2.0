@@ -1,10 +1,27 @@
-# 🐠 ReefControl v3.0 - Binários de Firmware
+# 🐠 ReefControl v3.1.0 - Binários de Firmware
 
 **Sistema de Automação para Aquários - ESP32 Pro & ESP8266 Compact**
 
 ---
 
 ## 📊 **VERSÕES MAIS RECENTES**
+
+### **ReefControl_V3.1.0_Pro_ESP32.bin** ⭐ **MAIS RECENTE - PRO ESP32**
+- **📅 Data de Compilação:** 14/03/2024
+- **🧠 Uso de RAM:** 14.9% (48788 bytes de 327680 bytes)
+- **💾 Uso de Flash:** 31.8% (999685 bytes de 3145728 bytes)
+- **🔥 Novidades:** Interface de sensores DS18B20 totalmente remodelada!
+  - ✅ Modal de gerenciamento unificado (calibração, renomeação e remoção)
+  - ✅ Layout otimizado e responsivo
+  - ✅ Botões padronizados e organizados
+  - ✅ Feedback visual aprimorado
+  - ✅ Correções de estabilidade
+
+### **ReefControl_V3.1.0_Compact_ESP8266.bin** ⭐ **MAIS RECENTE - COMPACT ESP8266**
+- **📅 Data de Compilação:** 14/03/2024
+- **🧠 Uso de RAM:** 51.8% (42460 bytes de 81920 bytes)
+- **💾 Uso de Flash:** 43.3% (452575 bytes de 1044464 bytes)
+- **🔥 Novidades:** Mesmas melhorias da versão Pro, adaptadas para ESP8266
 
 ### **ReefControl_V3.0.8_Pro_ESP32.bin** ⭐ **MAIS RECENTE - PRO ESP32**
 - **📅 Data de Compilação:** 13/03/2024

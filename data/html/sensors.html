@@ -28,6 +28,8 @@ body{font-family:Arial,sans-serif;background:#f5f7fa;min-height:100vh}
 .btn-success:hover{background:#218838}
 .btn-warning{background:#ffc107;color:#212529}
 .btn-warning:hover{background:#e0a800}
+.btn-danger{background:#dc3545;color:white}
+.btn-danger:hover{background:#c82333}
 .status-indicator{width:12px;height:12px;border-radius:50%;display:inline-block;margin-left:0.5rem}
 .online{background:#28a745}
 .offline{background:#dc3545}
@@ -95,10 +97,10 @@ body{font-family:Arial,sans-serif;background:#f5f7fa;min-height:100vh}
 
 .modal-content {
     background: white;
-    padding: 2rem;
+    padding: 1rem;
     border-radius: 10px;
     width: 90%;
-    max-width: 500px;
+    max-width: 350px;
 }
 
 .modal-header {
@@ -119,6 +121,91 @@ body{font-family:Arial,sans-serif;background:#f5f7fa;min-height:100vh}
     font-size: 1.5rem;
     cursor: pointer;
 }
+
+/* Estilos otimizados para o modal */
+.sensor-header {
+    margin-bottom: 0.75rem;
+}
+
+.sensor-name {
+    font-size: 1rem;
+    font-weight: bold;
+    margin-bottom: 0.25rem;
+}
+
+.sensor-address {
+    font-family: monospace;
+    font-size: 0.75rem;
+    color: #666;
+    background: #f5f5f5;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.section {
+    background: #f8f9fa;
+    padding: 0.75rem;
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+}
+
+.section-title {
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    color: #333;
+    font-size: 0.9rem;
+}
+
+.temp-info {
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+.form-group {
+    margin-bottom: 0.5rem;
+}
+
+.form-group label {
+    font-size: 0.85rem;
+    margin-bottom: 0.25rem;
+    display: block;
+}
+
+.form-group input {
+    width: 100%;
+    height: 32px;
+    padding: 0 0.5rem;
+    font-size: 0.9rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.btn {
+    height: 32px;
+    font-size: 0.85rem;
+    padding: 0 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-group {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.btn-group .btn {
+    flex: 1;
+    min-width: 80px;
+}
 </style>
 </head>
 <body>
@@ -131,10 +218,9 @@ body{font-family:Arial,sans-serif;background:#f5f7fa;min-height:100vh}
 <div class="sensor-card">
 <div class="sensor-header">
 <div class="sensor-title">
-🌡️ Temperatura
+🌡️ Sensores de Temperatura
 <span class="status-indicator online"></span>
 </div>
-<div class="sensor-value" id="currentTemp">24.5°C</div>
 </div>
 
 <div class="form-group">
@@ -316,7 +402,7 @@ Adicionar Sensor
 <div id="calibrationModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <div class="modal-title">Calibrar Sensor</div>
+            <div class="modal-title">Gerenciar Sensor</div>
             <button class="close-modal" onclick="hideCalibrationModal()">&times;</button>
         </div>
         
@@ -351,22 +437,46 @@ function showCalibrationModal(address) {
 
     const content = document.getElementById('calibrationContent');
     content.innerHTML = `
-        <p>Sensor: <strong>${sensor.name}</strong></p>
-        <p>Endereço: <code>${sensor.address}</code></p>
-        <p>Temperatura atual: <strong>${sensor.temperature.toFixed(2)}°C</strong></p>
-        <p>Offset atual: <strong>${sensor.offset.toFixed(2)}°C</strong></p>
-        
-        <div class="form-group">
-            <label>Temperatura real:</label>
-            <input type="number" step="0.1" id="realTemp" placeholder="25.0">
+        <div class="sensor-header">
+            <div class="sensor-name">${sensor.name}</div>
+            <div class="sensor-address">${sensor.address}</div>
         </div>
 
-        <button class="btn btn-warning" onclick="calibrateSensor('${address}')" style="width: 100%; margin-bottom: 0.5rem;">
-            Calibrar
-        </button>
-        <button class="btn btn-warning" onclick="resetCalibration('${address}')" style="width: 100%;">
-            Resetar Calibração
-        </button>
+        <div class="section">
+            <div class="section-title">Calibração e Configuração</div>
+            <div class="temp-info">
+                Temperatura atual: <strong>${sensor.temperature.toFixed(2)}°C</strong>
+                <br>Offset: <strong>${sensor.offset.toFixed(2)}°C</strong>
+            </div>
+            
+            <div class="form-group">
+                <label>Temperatura real:</label>
+                <input type="number" step="0.1" id="realTemp" placeholder="25.0">
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-warning" onclick="calibrateSensor('${address}')">
+                    Calibrar
+                </button>
+                <button class="btn btn-warning" onclick="resetCalibration('${address}')">
+                    Resetar
+                </button>
+            </div>
+
+            <div class="form-group" style="margin-top: 0.75rem;">
+                <label>Nome do Sensor:</label>
+                <input type="text" id="newSensorName" value="${sensor.name}">
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="renameSensor('${address}')">
+                    Salvar Nome
+                </button>
+                <button class="btn btn-danger" onclick="removeSensor('${address}')">
+                    Remover
+                </button>
+            </div>
+        </div>
     `;
 
     document.getElementById('calibrationModal').style.display = 'flex';
@@ -503,6 +613,33 @@ async function resetCalibration(address) {
     }
 }
 
+async function renameSensor(address) {
+    const name = document.getElementById('newSensorName').value;
+
+    if (!name) {
+        alert('Por favor, digite um nome para o sensor.');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/ds18b20/rename', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ address, name })
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            hideCalibrationModal();
+            loadSensors();
+        } else {
+            alert('Erro ao renomear sensor.');
+        }
+    } catch (error) {
+        console.error('Erro ao renomear sensor:', error);
+    }
+}
+
 function updateSensorList() {
     const list = document.getElementById('sensorList');
     list.innerHTML = '';
@@ -519,6 +656,9 @@ function updateSensorList() {
             <div class="sensor-actions">
                 <button class="btn btn-warning" onclick="showCalibrationModal('${sensor.address}')">
                     Calibrar
+                </button>
+                <button class="btn btn-primary" onclick="showCalibrationModal('${sensor.address}')">
+                    Renomear
                 </button>
                 <button class="btn btn-danger" onclick="removeSensor('${sensor.address}')">
                     Remover
