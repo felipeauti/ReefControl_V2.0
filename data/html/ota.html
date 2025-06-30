@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ReefControl - Updates OTA</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#f5f7fa;min-height:100vh}
+.header{background:#4a90e2;color:white;padding:1rem;display:flex;align-items:center;justify-content:space-between}
+.header h1{font-size:1.5rem}
+.back-btn{background:rgba(255,255,255,0.2);border:none;color:white;padding:0.5rem 1rem;border-radius:5px;cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:0.5rem}
+.container{padding:1rem;max-width:800px;margin:0 auto}
+.update-card{background:white;padding:2rem;border-radius:10px;box-shadow:0 4px 6px rgba(0,0,0,0.1);margin-bottom:2rem}
+.current-version{background:#e3f2fd;padding:1rem;border-radius:8px;margin-bottom:2rem;text-align:center}
+.upload-area{border:2px dashed #4a90e2;border-radius:10px;padding:2rem;text-align:center;margin-bottom:2rem;transition:background 0.2s}
+.upload-area:hover{background:#f8f9fa}
+.upload-area.dragover{background:#e3f2fd;border-color:#2196f3}
+.file-input{display:none}
+.upload-btn{background:#4a90e2;color:white;padding:0.75rem 1.5rem;border:none;border-radius:5px;cursor:pointer;font-size:1rem;margin:0.5rem}
+.upload-btn:hover{background:#357abd}
+.progress-container{margin-top:1rem;display:none}
+.progress-bar{width:100%;height:20px;background:#e9ecef;border-radius:10px;overflow:hidden}
+.progress-fill{height:100%;background:#4a90e2;transition:width 0.3s;width:0%}
+.status{padding:1rem;border-radius:8px;margin-top:1rem;display:none}
+.status-success{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
+.status-error{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb}
+.warning{background:#fff3cd;color:#856404;padding:1rem;border-radius:8px;margin-bottom:2rem;border:1px solid #ffeaa7}
+@media(max-width:768px){.container{padding:0.5rem}}
+</style>
+</head>
+<body>
+<div class="header">
+<h1>🚀 Updates OTA</h1>
+<a href="config.html" class="back-btn">← Voltar</a>
+</div>
+<div class="container">
+<div class="current-version" id="versionInfo">
+<h3>Versão Atual: <span id="currentVersion">Carregando...</span></h3>
+<p>Uptime: <span id="systemUptime">Carregando...</span></p>
+<p>Memória livre: <span id="freeHeap">Carregando...</span> KB</p>
+</div>
+<div class="warning">
+⚠️ <strong>Atenção:</strong> Durante a atualização, o sistema ficará temporariamente indisponível. Certifique-se de que o dispositivo está conectado à energia estável.
+</div>
+<div class="update-card">
+<h3>📁 Upload de Firmware</h3>
+<div class="upload-area" id="uploadArea">
+<p>🔄 Arraste o arquivo .bin aqui ou clique para selecionar</p>
+<input type="file" id="fileInput" class="file-input" accept=".bin">
+<button class="upload-btn" onclick="document.getElementById('fileInput').click()">Selecionar Arquivo</button>
+</div>
+<div class="progress-container" id="progressContainer">
+<p id="progressText">Iniciando upload...</p>
+<div class="progress-bar">
+<div class="progress-fill" id="progressFill"></div>
+</div>
+<p id="progressPercent">0%</p>
+</div>
+<div class="status" id="status"></div>
+<button class="upload-btn" id="updateBtn" onclick="startUpdate()" style="display:none;background:#28a745">Iniciar Atualização</button>
+</div>
+</div>
+<script>
+const uploadArea=document.getElementById('uploadArea');
+const fileInput=document.getElementById('fileInput');
+const updateBtn=document.getElementById('updateBtn');
+const progressContainer=document.getElementById('progressContainer');
+const status=document.getElementById('status');
+let selectedFile=null;
+
+uploadArea.addEventListener('dragover',e=>{
+e.preventDefault();
+uploadArea.classList.add('dragover');
+});
+
+uploadArea.addEventListener('dragleave',()=>{
+uploadArea.classList.remove('dragover');
+});
+
+uploadArea.addEventListener('drop',e=>{
+e.preventDefault();
+uploadArea.classList.remove('dragover');
+handleFile(e.dataTransfer.files[0]);
+});
+
+fileInput.addEventListener('change',e=>{
+handleFile(e.target.files[0]);
+});
+
+function handleFile(file){
+if(file&&file.name.endsWith('.bin')){
+selectedFile=file;
+uploadArea.innerHTML=`<p>✅ Arquivo selecionado: ${file.name}</p><p>Tamanho: ${(file.size/1024/1024).toFixed(2)} MB</p>`;
+updateBtn.style.display='inline-block';
+showStatus('Arquivo carregado com sucesso!','success');
+}else{
+showStatus('Selecione um arquivo .bin válido','error');
+}
+}
+
+function startUpdate(){
+if(!selectedFile)return;
+updateBtn.style.display='none';
+progressContainer.style.display='block';
+const formData=new FormData();
+formData.append('firmware',selectedFile);
+fetch('/update',{
+method:'POST',
+body:formData
+}).then(response=>{
+if(response.ok){
+showStatus('Atualização concluída com sucesso! Reiniciando...','success');
+setTimeout(()=>window.location.reload(),3000);
+}else{
+showStatus('Erro na atualização. Tente novamente.','error');
+}
+}).catch(()=>{
+showStatus('Erro de conexão durante a atualização','error');
+});
+simulateProgress();
+}
+
+function simulateProgress(){
+let progress=0;
+const interval=setInterval(()=>{
+progress+=2;
+document.getElementById('progressFill').style.width=progress+'%';
+document.getElementById('progressPercent').textContent=progress+'%';
+if(progress>=100){
+clearInterval(interval);
+document.getElementById('progressText').textContent='Aplicando atualização...';
+}
+},100);
+}
+
+function showStatus(message,type){
+status.textContent=message;
+status.className='status status-'+type;
+status.style.display='block';
+setTimeout(()=>status.style.display='none',5000);
+}
+
+// Carregar informações do sistema
+async function loadSystemInfo(){
+try{
+const response=await fetch('/api/status');
+const data=await response.json();
+document.getElementById('currentVersion').textContent=data.version || 'v2.0.0';
+document.getElementById('systemUptime').textContent=formatUptime(data.uptime);
+document.getElementById('freeHeap').textContent=(data.heap/1024).toFixed(1);
+// Adicionar info de build na versão
+const versionElement=document.getElementById('currentVersion');
+versionElement.title=`Build: ${data.build_date || 'N/A'} | Chip: ${data.chip_id || 'N/A'}`;
+}catch(error){
+console.error('Erro ao carregar informações:',error);
+document.getElementById('currentVersion').textContent='v2.0.0';
+document.getElementById('systemUptime').textContent='Erro ao carregar';
+document.getElementById('freeHeap').textContent='N/A';
+}
+}
+
+function formatUptime(ms){
+const seconds=Math.floor(ms/1000);
+const minutes=Math.floor(seconds/60);
+const hours=Math.floor(minutes/60);
+const days=Math.floor(hours/24);
+if(days>0)return `${days}d ${hours%24}h ${minutes%60}m`;
+if(hours>0)return `${hours}h ${minutes%60}m`;
+if(minutes>0)return `${minutes}m ${seconds%60}s`;
+return `${seconds}s`;
+}
+
+// Carregar informações quando a página carrega
+window.addEventListener('load',loadSystemInfo);
+
+if(!sessionStorage.getItem('loggedIn')){
+window.location.href='login.html';
+}
+</script>
+</body>
+</html> 

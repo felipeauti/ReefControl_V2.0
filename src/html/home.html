@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ReefControl - Dashboard</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#f5f7fa;min-height:100vh}
+.header{background:#4a90e2;color:white;padding:1rem;text-align:center;position:relative}
+.header h1{font-size:1.5rem}
+.logout{position:absolute;right:1rem;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.2);border:none;color:white;padding:0.5rem 1rem;border-radius:5px;cursor:pointer}
+.container{padding:1rem;max-width:1200px;margin:0 auto}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem;margin-bottom:2rem}
+.stat-card{background:white;padding:1rem;border-radius:10px;text-align:center;box-shadow:0 4px 6px rgba(0,0,0,0.1)}
+.stat-value{font-size:1.5rem;font-weight:bold;color:#4a90e2}
+.stat-label{color:#666;font-size:0.9rem;margin-top:0.5rem}
+.nav-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem}
+.nav-card{background:white;padding:1.5rem;border-radius:10px;text-align:center;text-decoration:none;color:#333;box-shadow:0 4px 6px rgba(0,0,0,0.1);transition:transform 0.2s,box-shadow 0.2s}
+.nav-card:hover{transform:translateY(-2px);box-shadow:0 6px 12px rgba(0,0,0,0.15)}
+.nav-icon{font-size:2rem;margin-bottom:0.5rem}
+.nav-title{font-weight:bold;margin-bottom:0.25rem}
+.nav-desc{font-size:0.8rem;color:#666}
+.status-ok{color:#27ae60}
+.status-warning{color:#f39c12}
+.status-error{color:#e74c3c}
+@media(max-width:768px){.container{padding:0.5rem}.stats{grid-template-columns:repeat(2,1fr)}.nav-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="header">
+<h1>🐠 ReefControl Dashboard</h1>
+<button class="logout" onclick="logout()">Sair</button>
+</div>
+<div class="container">
+<div class="stats">
+<div class="stat-card">
+<div class="stat-value status-ok" id="temp">--°C</div>
+<div class="stat-label">Temperatura</div>
+</div>
+<div class="stat-card">
+<div class="stat-value status-ok" id="ph">--</div>
+<div class="stat-label">pH</div>
+</div>
+<div class="stat-card">
+<div class="stat-value status-warning" id="tds">--</div>
+<div class="stat-label">TDS (ppm)</div>
+</div>
+<div class="stat-card">
+<div class="stat-value status-ok" id="level">--%</div>
+<div class="stat-label">Nível Água</div>
+</div>
+</div>
+<div class="nav-grid">
+<a href="config.html" class="nav-card">
+<div class="nav-icon">⚙️</div>
+<div class="nav-title">Configurações</div>
+<div class="nav-desc">Sistema, sensores, saídas</div>
+</a>
+<a href="logica.html" class="nav-card">
+<div class="nav-icon">🧠</div>
+<div class="nav-title">Automações</div>
+<div class="nav-desc">Lógicas e programações</div>
+</a>
+<a href="status.html" class="nav-card">
+<div class="nav-icon">📈</div>
+<div class="nav-title">Status</div>
+<div class="nav-desc">Monitoramento detalhado</div>
+</a>
+</div>
+</div>
+<script>
+function logout(){
+sessionStorage.removeItem('loggedIn');
+window.location.href='login.html';
+}
+function updateStats(){
+fetch('/api/sensors')
+.then(r => r.json())
+.then(data => {
+if(data.sensors && data.sensors[0] && data.sensors[0][0]){
+const sensor = data.sensors[0][0];
+document.getElementById('temp').textContent = sensor.temperature.toFixed(1) + '°C';
+}
+document.getElementById('ph').textContent=data.ph;
+document.getElementById('tds').textContent=data.tds;
+document.getElementById('level').textContent=data.level+'%';
+}).catch(()=>console.log('Erro ao carregar dados dos sensores'));
+}
+if(!sessionStorage.getItem('loggedIn')){
+window.location.href='login.html';
+}
+updateStats();
+setInterval(updateStats,5000);
+</script>
+</body>
+</html> 

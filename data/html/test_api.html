@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ReefControl - Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f2f5;
+        }
+        .dashboard {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .temperature {
+            font-size: 48px;
+            text-align: center;
+            color: #2196F3;
+            margin: 20px 0;
+        }
+        .sensor-name {
+            font-size: 24px;
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .last-update {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="sensor-name">Sala1</div>
+        <div class="temperature" id="temperature">--.-°C</div>
+        <div class="last-update" id="lastUpdate">Última atualização: --:--:--</div>
+    </div>
+
+    <script>
+        function updateTemperature() {
+            fetch('/api/sensors')
+                .then(response => response.json())
+                .then(data => {
+                    // Pega o primeiro sensor (Sala1)
+                    const sensor = data.sensors[0];
+                    if (sensor && sensor.name === "Sala1") {
+                        document.getElementById('temperature').textContent = 
+                            sensor.temperature.toFixed(1) + '°C';
+                        
+                        const now = new Date();
+                        document.getElementById('lastUpdate').textContent = 
+                            'Última atualização: ' + now.toLocaleTimeString();
+                    }
+                })
+                .catch(error => console.error('Erro:', error));
+        }
+
+        // Atualiza a cada 5 segundos
+        updateTemperature();
+        setInterval(updateTemperature, 5000);
+    </script>
+</body>
+</html> 

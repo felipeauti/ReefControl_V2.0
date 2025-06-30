@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ReefControl - Servidor NTP</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#f5f7fa;min-height:100vh}
+.header{background:#4a90e2;color:white;padding:1rem;display:flex;align-items:center;justify-content:space-between}
+.header h1{font-size:1.5rem}
+.back-btn{background:rgba(255,255,255,0.2);border:none;color:white;padding:0.5rem 1rem;border-radius:5px;cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:0.5rem}
+.container{padding:1rem;max-width:800px;margin:0 auto}
+.config-section{background:white;padding:2rem;border-radius:10px;box-shadow:0 4px 6px rgba(0,0,0,0.1);margin-bottom:2rem}
+.section-title{font-weight:bold;font-size:1.2rem;margin-bottom:1.5rem;color:#333;border-bottom:2px solid #4a90e2;padding-bottom:0.5rem}
+.form-group{margin-bottom:1.5rem}
+.form-group label{display:block;margin-bottom:0.5rem;font-weight:bold;color:#555}
+.form-group input,.form-group select{width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:5px;font-size:1rem}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.btn{padding:0.75rem 1.5rem;border:none;border-radius:5px;cursor:pointer;font-size:1rem;transition:background 0.2s;margin:0.5rem 0.5rem 0.5rem 0}
+.btn-primary{background:#4a90e2;color:white}
+.btn-primary:hover{background:#357abd}
+.btn-success{background:#28a745;color:white}
+.btn-success:hover{background:#218838}
+.btn-warning{background:#ffc107;color:#212529}
+.btn-warning:hover{background:#e0a800}
+.status-info{background:#d1ecf1;padding:1rem;border-radius:8px;margin-bottom:1rem;color:#0c5460;border:1px solid #bee5eb}
+.status-info.loading{background:#fff3cd;color:#856404;border:1px solid #ffeaa7}
+.status-info.error{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb}
+.status-info.success{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
+.current-time{background:#e8f5e8;padding:2rem;border-radius:10px;text-align:center;margin-bottom:2rem;border:1px solid #c3e6cb}
+.current-time.loading{background:#f8f9fa;color:#6c757d;border:1px solid #dee2e6}
+.time-display{font-size:2rem;font-weight:bold;color:#155724;margin-bottom:0.5rem}
+.time-display.loading{color:#6c757d}
+.date-display{font-size:1.2rem;color:#155724}
+.date-display.loading{color:#6c757d}
+.server-list{background:#f8f9fa;padding:1rem;border-radius:8px;margin-top:1rem}
+.debug{background:#f8f9fa;border:1px solid #dee2e6;padding:1rem;margin:1rem 0;border-radius:5px;font-family:monospace;font-size:0.8rem;max-height:300px;overflow-y:auto}
+.debug-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;font-family:Arial,sans-serif}
+.debug-title{font-weight:bold;color:#495057}
+.debug-controls{display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap}
+.debug-btn{padding:0.25rem 0.5rem;border:none;border-radius:3px;cursor:pointer;font-size:0.8rem}
+.debug-btn.toggle{background:#6c757d;color:white}
+.debug-btn.clear{background:#dc3545;color:white}
+.debug-btn.disable{background:#28a745;color:white}
+.loading-spinner{display:inline-block;width:16px;height:16px;border:2px solid #f3f3f3;border-top:2px solid #4a90e2;border-radius:50%;animation:spin 1s linear infinite;margin-right:8px}
+@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+@media(max-width:768px){.container{padding:0.5rem}.form-row{grid-template-columns:1fr}.time-display{font-size:1.5rem}}
+</style>
+</head>
+<body>
+<div class="header">
+<h1>🕐 Configuração NTP</h1>
+<a href="config.html" class="back-btn">← Voltar</a>
+</div>
+<div class="container">
+
+<!-- Display de Data/Hora Atual -->
+<div class="current-time loading">
+<div class="time-display loading" id="currentTime"><span class="loading-spinner"></span>Carregando...</div>
+<div class="date-display loading" id="currentDate">Aguardando dados do ESP32...</div>
+</div>
+
+<!-- Configuração de Servidores NTP -->
+<div class="config-section">
+<div class="section-title">🌐 Servidores NTP</div>
+<div class="status-info loading" id="statusInfo">
+<span class="loading-spinner"></span><strong>Status:</strong> Carregando dados do ESP32...
+</div>
+
+<div class="form-group">
+<label>Servidor NTP Primário:</label>
+<input type="text" id="server1" placeholder="Carregando..." disabled>
+</div>
+<div class="form-group">
+<label>Servidor NTP Secundário:</label>
+<input type="text" id="server2" placeholder="Carregando..." disabled>
+</div>
+<div class="form-group">
+<label>Servidor NTP Terciário:</label>
+<input type="text" id="server3" placeholder="Carregando..." disabled>
+</div>
+
+<div class="server-list">
+<h4>Servidores NTP Recomendados:</h4>
+<ul style="margin-top:0.5rem;padding-left:1.5rem">
+<li><strong>Brasil:</strong> a.ntp.br, b.ntp.br, c.ntp.br</li>
+<li><strong>Global:</strong> pool.ntp.org, time.google.com</li>
+<li><strong>Cloudflare:</strong> time.cloudflare.com</li>
+<li><strong>Microsoft:</strong> time.windows.com</li>
+</ul>
+</div>
+
+<button class="btn btn-primary" id="saveServers" disabled>Salvar Servidores</button>
+<button class="btn btn-warning" id="testConnectivity" disabled>Testar Conectividade</button>
+</div>
+
+<!-- Configuração de Fuso Horário -->
+<div class="config-section">
+<div class="section-title">🌍 Fuso Horário</div>
+<div class="form-group">
+<label>Fuso Horário UTC:</label>
+<select id="timezone" disabled>
+<option value="">Carregando...</option>
+<option value="0">UTC+0 (Universal - Greenwich)</option>
+<option value="-3">UTC-3 (Brasil - Brasília/São Paulo)</option>
+<option value="-4">UTC-4 (Brasil - Amazonas/Manaus)</option>
+<option value="-5">UTC-5 (Brasil - Acre/Rio Branco)</option>
+<option value="-2">UTC-2 (Brasil - Fernando de Noronha)</option>
+</select>
+</div>
+<button class="btn btn-primary" id="saveTimezone" disabled>Salvar Fuso Horário</button>
+</div>
+
+<!-- Configurações de Sincronização -->
+<div class="config-section">
+<div class="section-title">⚙️ Configurações de Sincronização</div>
+<div class="form-row">
+<div class="form-group">
+<label>Intervalo de Sincronização (min):</label>
+<input type="number" id="syncInterval" placeholder="Carregando..." min="1" max="1440" disabled>
+</div>
+<div class="form-group">
+<label>Atualização da Interface (seg):</label>
+<input type="number" id="interfaceUpdate" value="10" min="5" max="300" title="Intervalo de atualização da interface web">
+</div>
+</div>
+<button class="btn btn-primary" id="saveAdvanced" disabled>Salvar Configurações</button>
+<button class="btn btn-success" id="syncNow" disabled>Sincronizar Agora</button>
+</div>
+
+<!-- Debug Console NTP -->
+<div id="debug" class="debug" style="display:block; margin-top: 30px;">
+<div class="debug-header">
+<span class="debug-title">🕐 DEBUG NTP CONSOLE</span>
+<div class="debug-controls">
+<button class="debug-btn toggle" onclick="toggleDebugVisibility()">Minimizar</button>
+<button class="debug-btn clear" onclick="clearDebug()">Limpar</button>
+<button class="debug-btn disable" onclick="toggleDebugMode()">Desabilitar</button>
+</div>
+</div>
+<div id="debugContent"></div>
+</div>
+
+</div>
+
+<script>
+// Verificar login
+if(!sessionStorage.getItem('loggedIn')){
+  window.location.href='login.html';
+}
+
+let ntpConfig = {};
+let ntpStatus = {};
+let debugMode = true;
+let debugVisible = true;
+let isLoading = true;
+let updateInterval = null;
+let currentUpdateTime = 10;
+
+// Função de debug para NTP
+function debugLog(message) {
+  if (debugMode) {
+    console.log('🕐 NTP DEBUG:', message);
+    const debugDiv = document.getElementById('debugContent');
+    const timestamp = new Date().toLocaleTimeString();
+    debugDiv.innerHTML += `<span style="color:#6c757d">${timestamp}:</span> ${message}<br>`;
+    
+    if (debugVisible) {
+      document.getElementById('debug').style.display = 'block';
+    }
+    
+    debugDiv.scrollTop = debugDiv.scrollHeight;
+    
+    const lines = debugDiv.innerHTML.split('<br>');
+    if (lines.length > 100) {
+      debugDiv.innerHTML = lines.slice(-100).join('<br>');
+    }
+  }
+}
+
+function toggleDebugVisibility() {
+  const debugDiv = document.getElementById('debug');
+  const toggleBtn = document.querySelector('.debug-btn.toggle');
+  
+  if (debugVisible) {
+    debugDiv.style.display = 'none';
+    toggleBtn.textContent = 'Mostrar Debug';
+    debugVisible = false;
+    debugLog('Debug console minimizado');
+  } else {
+    debugDiv.style.display = 'block';
+    toggleBtn.textContent = 'Minimizar';
+    debugVisible = true;
+    debugLog('Debug console restaurado');
+  }
+}
+
+function clearDebug() {
+  document.getElementById('debugContent').innerHTML = '';
+  debugLog('Debug console limpo pelo usuário');
+}
+
+function toggleDebugMode() {
+  const disableBtn = document.querySelector('.debug-btn.disable');
+  
+  if (debugMode) {
+    debugMode = false;
+    disableBtn.textContent = 'Habilitar';
+    disableBtn.style.background = '#dc3545';
+    document.getElementById('debug').style.display = 'none';
+    console.log('🕐 NTP Debug mode DESABILITADO');
+  } else {
+    debugMode = true;
+    disableBtn.textContent = 'Desabilitar';
+    disableBtn.style.background = '#28a745';
+    debugLog('NTP Debug mode HABILITADO novamente');
+  }
+}
+
+// Habilitar interface após carregamento
+function enableInterface() {
+  isLoading = false;
+  
+  // Habilitar todos os inputs e botões
+  document.querySelectorAll('input, select, button').forEach(element => {
+    if (!element.classList.contains('debug-btn')) {
+      element.disabled = false;
+    }
+  });
+  
+  // Remover classes de loading
+  document.querySelector('.current-time').classList.remove('loading');
+  document.querySelector('#currentTime').classList.remove('loading');
+  document.querySelector('#currentDate').classList.remove('loading');
+  
+  debugLog('✅ Interface NTP habilitada - dados carregados do ESP32');
+}
+
+// Configurar intervalo de atualização
+function setUpdateInterval(seconds) {
+  // Limpar intervalo anterior
+  if (updateInterval) {
+    clearInterval(updateInterval);
+    debugLog(`🔄 Intervalo anterior cancelado`);
+  }
+  
+  currentUpdateTime = seconds;
+  
+  // Criar novo intervalo
+  updateInterval = setInterval(() => {
+    if (!isLoading) {
+      debugLog(`⏰ Atualização automática de status (intervalo ${currentUpdateTime}s)`);
+      updateTime();
+    }
+  }, seconds * 1000);
+  
+  debugLog(`✅ Novo intervalo configurado: ${seconds}s`);
+}
+
+// Listener para mudança do intervalo
+function onUpdateIntervalChange() {
+  const newInterval = parseInt(document.getElementById('interfaceUpdate').value);
+  if (newInterval >= 5 && newInterval <= 300) {
+    setUpdateInterval(newInterval);
+    debugLog(`🎯 Usuário alterou intervalo para ${newInterval}s`);
+  } else {
+    debugLog(`⚠️ Intervalo inválido: ${newInterval}s (deve ser 5-300s)`);
+  }
+}
+
+// Atualizar display de tempo do ESP32
+function updateTime() {
+  debugLog('🔄 Solicitando status NTP do ESP32...');
+  
+  fetch('/api/ntp/status')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      debugLog(`📡 Status recebido: sync=${data.synchronized}, timestamp=${data.timestamp}`);
+      
+      // Atualizar status
+      const statusDiv = document.getElementById('statusInfo');
+      if (data.synchronized) {
+        statusDiv.innerHTML = '✅ <strong>Status:</strong> Sincronizado com servidor NTP';
+        statusDiv.className = 'status-info success';
+      } else {
+        statusDiv.innerHTML = '❌ <strong>Status:</strong> Não sincronizado';
+        statusDiv.className = 'status-info error';
+      }
+      
+      // Atualizar display de tempo
+      if (data.currentTime && data.currentTime > 1000000000) {
+        // Criar data sem aplicar timezone local
+        const timestamp = data.currentTime * 1000; // Converter para milissegundos
+        const date = new Date(timestamp);
+        
+        // Formatar hora manualmente para evitar conversão de timezone
+        const timeStr = date.toLocaleTimeString('pt-BR', { timeZone: 'UTC' });
+        const dateStr = date.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+        
+        document.getElementById('currentTime').textContent = timeStr;
+        document.getElementById('currentDate').textContent = dateStr;
+        
+        debugLog(`🕐 Tempo atualizado: ${dateStr} ${timeStr}`);
+      } else {
+        document.getElementById('currentTime').textContent = 'Tempo não disponível';
+        document.getElementById('currentDate').textContent = 'Aguardando sincronização...';
+        debugLog('⚠️ Timestamp inválido recebido do ESP32');
+      }
+    })
+    .catch(error => {
+      debugLog(`❌ Erro ao buscar status: ${error.message}`);
+      document.getElementById('statusInfo').innerHTML = '❌ <strong>Status:</strong> Erro de comunicação';
+      document.getElementById('statusInfo').className = 'status-info error';
+    });
+}
+
+// Carregar configurações NTP
+async function loadNtpConfig() {
+  debugLog('📥 Carregando configurações NTP do ESP32...');
+  
+  try {
+    const response = await fetch('/api/ntp/config');
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    
+    const data = await response.json();
+    debugLog(`📋 Configurações recebidas: server1="${data.server1}", interval=${data.syncInterval}s`);
+    
+    // Preencher campos de servidores
+    document.getElementById('server1').value = data.server1 || 'pool.ntp.org';
+    document.getElementById('server2').value = data.server2 || 'time.google.com';
+    document.getElementById('server3').value = data.server3 || 'time.cloudflare.com';
+    
+    // Preencher configurações
+    document.getElementById('syncInterval').value = Math.floor((data.syncInterval || 3600) / 60);
+    document.getElementById('timezone').value = data.timezone || '0'; // UTC 0 padrão
+    
+    console.log('✅ Configurações NTP carregadas:', data);
+    debugLog('✅ Campos da interface preenchidos com dados do ESP32');
+  } catch (error) {
+    console.error('❌ Erro ao carregar configurações NTP:', error);
+    debugLog(`❌ Erro ao carregar configurações: ${error.message}`);
+    showMessage('Erro ao carregar configurações NTP: ' + error.message, 'error');
+    
+    // Valores padrão em caso de erro
+    document.getElementById('server1').value = 'pool.ntp.org';
+    document.getElementById('server2').value = 'time.google.com';
+    document.getElementById('server3').value = 'time.cloudflare.com';
+    document.getElementById('syncInterval').value = 60;
+    document.getElementById('timezone').value = '0';
+  }
+}
+
+// Salvar configurações NTP
+async function saveNtpConfig() {
+  debugLog('💾 Preparando salvamento das configurações NTP...');
+  
+  try {
+    const server1 = document.getElementById('server1').value;
+    const server2 = document.getElementById('server2').value;
+    const server3 = document.getElementById('server3').value;
+    const syncInterval = parseInt(document.getElementById('syncInterval').value) * 60;
+    const timezone = parseInt(document.getElementById('timezone').value);
+    
+    const config = {
+      enabled: true,
+      server1: server1,
+      server2: server2,
+      server3: server3,
+      timezone: timezone,
+      syncInterval: syncInterval
+    };
+    
+    debugLog(`📤 Enviando: Servers="${server1}|${server2}|${server3}" | UTC${timezone>=0?'+':''}${timezone} | Intervalo=${syncInterval/60}min`);
+    
+    const response = await fetch('/api/ntp/config', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(config)
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      showMessage('Configurações NTP salvas com sucesso!', 'success');
+      console.log('✅ Configurações NTP salvas');
+      debugLog('✅ Configurações NTP salvas no ESP32 com sucesso');
+    } else {
+      showMessage('Erro ao salvar configurações: ' + (result.error || 'Erro desconhecido'), 'error');
+      debugLog(`❌ Erro retornado pelo ESP32: ${result.error || 'Erro desconhecido'}`);
+    }
+  } catch (error) {
+    console.error('❌ Erro ao salvar configurações NTP:', error);
+    debugLog(`❌ Erro de comunicação ao salvar: ${error.message}`);
+    showMessage('Erro ao salvar configurações NTP: ' + error.message, 'error');
+  }
+}
+
+// Forçar sincronização NTP
+async function syncNow() {
+  debugLog('🔄 Iniciando sincronização NTP manual...');
+  
+  try {
+    showMessage('Iniciando sincronização NTP...', 'loading');
+    
+    const response = await fetch('/api/ntp/sync', {
+      method: 'POST'
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      showMessage('Sincronização NTP iniciada!', 'success');
+      debugLog('✅ Comando de sincronização manual enviado ao ESP32');
+      setTimeout(() => {
+        debugLog('⏱️ Atualizando status após sincronização manual...');
+        updateTime();
+      }, 2000);
+    } else {
+      showMessage('Erro na sincronização: ' + (result.error || 'Erro desconhecido'), 'error');
+      debugLog(`❌ Erro na sincronização manual: ${result.error || 'Erro desconhecido'}`);
+    }
+  } catch (error) {
+    console.error('❌ Erro na sincronização NTP:', error);
+    debugLog(`❌ Erro de comunicação na sincronização: ${error.message}`);
+    showMessage('Erro na sincronização NTP: ' + error.message, 'error');
+  }
+}
+
+// Função para mostrar mensagens
+function showMessage(message, type = 'info') {
+  const statusDiv = document.getElementById('statusInfo');
+  const originalContent = statusDiv.innerHTML;
+  const originalClass = statusDiv.className;
+  
+  const icon = type === 'success' ? '✅' : 
+               type === 'error' ? '❌' : 
+               type === 'loading' ? '<span class="loading-spinner"></span>' : 'ℹ️';
+  
+  statusDiv.innerHTML = `${icon} <strong>Status:</strong> ${message}`;
+  statusDiv.className = `status-info ${type}`;
+  
+  // Restaurar após 3 segundos (exceto para loading)
+  if (type !== 'loading') {
+    setTimeout(() => {
+      statusDiv.innerHTML = originalContent;
+      statusDiv.className = originalClass;
+    }, 3000);
+  }
+}
+
+// Testar conectividade
+async function testConnectivity() {
+  debugLog('🔧 Testando conectividade com servidores NTP...');
+  showMessage('Testando conectividade NTP...', 'loading');
+  
+  try {
+    // Simular teste forçando uma sincronização
+    const response = await fetch('/api/ntp/sync', {
+      method: 'POST'
+    });
+    
+    if (response.ok) {
+      showMessage('Teste de conectividade concluído - verifique logs do ESP32', 'success');
+      debugLog('✅ Teste de conectividade iniciado');
+    } else {
+      throw new Error(`HTTP ${response.status}`);
+    }
+  } catch (error) {
+    showMessage('Erro no teste de conectividade: ' + error.message, 'error');
+    debugLog(`❌ Erro no teste: ${error.message}`);
+  }
+}
+
+// Event listeners para botões
+document.addEventListener('DOMContentLoaded', () => {
+  debugLog('🚀 Página NTP simplificada carregada - Inicializando interface...');
+  
+  // Botão Salvar Servidores
+  document.getElementById('saveServers').onclick = saveNtpConfig;
+  
+  // Botão Sincronizar Agora
+  document.getElementById('syncNow').onclick = syncNow;
+  
+  // Botão Salvar Fuso
+  document.getElementById('saveTimezone').onclick = saveNtpConfig;
+  
+  // Botão Salvar Configurações Avançadas
+  document.getElementById('saveAdvanced').onclick = saveNtpConfig;
+  
+  // Botão Testar Conectividade
+  document.getElementById('testConnectivity').onclick = testConnectivity;
+  
+  // Listener para mudança do intervalo de atualização
+  document.getElementById('interfaceUpdate').onchange = onUpdateIntervalChange;
+  
+  // Carregar configurações iniciais
+  loadNtpConfig();
+  
+  debugLog('✅ Event listeners configurados - Interface NTP simplificada pronta');
+});
+
+// Inicializar
+debugLog('🕐 Sistema de debug NTP ativado - Interface simplificada carregando...');
+updateTime();
+
+// Configurar intervalo inicial de atualização
+setUpdateInterval(10); // 10 segundos inicial
+
+// Habilitar interface após 2 segundos
+setTimeout(() => {
+  enableInterface();
+}, 2000);
+</script>
+</body>
+</html> 

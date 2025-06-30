@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔄 Upload de Arquivos - ReefControl</title>
+<style>
+body{font-family:Arial,sans-serif;margin:0;padding:0;background:#f5f5f5}
+.header{background:#2c3e50;color:white;padding:1rem;text-align:center;box-shadow:0 2px 4px rgba(0,0,0,0.1)}
+.header h1{margin:0;font-size:1.5rem}
+.back-btn{color:#ecf0f1;text-decoration:none;position:absolute;left:1rem;top:50%;transform:translateY(-50%);font-size:1rem}
+.back-btn:hover{color:#3498db}
+.container{max-width:800px;margin:2rem auto;padding:0 1rem}
+.upload-card{background:white;padding:2rem;border-radius:10px;box-shadow:0 4px 6px rgba(0,0,0,0.1);margin-bottom:2rem}
+.upload-area{border:2px dashed #ddd;border-radius:10px;padding:2rem;text-align:center;margin:1rem 0;transition:border-color 0.3s}
+.upload-area.dragover{border-color:#4a90e2;background:#f8f9ff}
+.file-input{display:none}
+.upload-btn{background:#4a90e2;color:white;padding:1rem 2rem;border:none;border-radius:5px;cursor:pointer;font-size:1rem;margin:0.5rem}
+.upload-btn:hover{background:#357abd}
+.upload-btn:disabled{background:#ccc;cursor:not-allowed}
+.file-list{margin:1rem 0}
+.file-item{background:#f8f9fa;padding:1rem;border-radius:5px;margin:0.5rem 0;display:flex;justify-content:space-between;align-items:center}
+.progress{background:#e9ecef;border-radius:10px;height:20px;margin:0.5rem 0;overflow:hidden}
+.progress-bar{background:#28a745;height:100%;width:0%;transition:width 0.3s;text-align:center;line-height:20px;color:white;font-size:0.8rem}
+.status{padding:0.5rem;border-radius:5px;margin:0.5rem 0}
+.status.success{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
+.status.error{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb}
+.status.info{background:#d1ecf1;color:#0c5460;border:1px solid #bee5eb}
+.instructions{background:#fff3cd;color:#856404;padding:1rem;border-radius:5px;margin:1rem 0;border:1px solid #ffeaa7}
+.file-types{display:flex;gap:1rem;flex-wrap:wrap;margin:1rem 0}
+.file-type{background:#e9ecef;padding:0.5rem 1rem;border-radius:20px;font-size:0.9rem}
+</style>
+</head>
+<body>
+<div class="header">
+<a href="system.html" class="back-btn">← Voltar</a>
+<h1>🔄 Upload de Arquivos</h1>
+</div>
+
+<div class="container">
+<div class="upload-card">
+<h2>📁 Atualizar Sistema de Arquivos</h2>
+<div class="instructions">
+<strong>⚠️ Instruções Importantes:</strong><br>
+• Use apenas arquivos HTML, CSS, JS do sistema<br>
+• Arquivos serão salvos na pasta /html/<br>
+• Reinicie o sistema após upload completo<br>
+• Faça backup antes de atualizar
+</div>
+
+<div class="file-types">
+<div class="file-type">📄 HTML</div>
+<div class="file-type">🎨 CSS</div>
+<div class="file-type">⚡ JavaScript</div>
+<div class="file-type">🖼️ Imagens</div>
+</div>
+
+<div class="upload-area" id="uploadArea">
+<div style="font-size:3rem;margin-bottom:1rem">📤</div>
+<p>Arraste arquivos aqui ou clique para selecionar</p>
+<input type="file" id="fileInput" class="file-input" multiple accept=".html,.css,.js,.png,.jpg,.gif,.ico">
+<button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+Selecionar Arquivos
+</button>
+</div>
+
+<div id="fileList" class="file-list"></div>
+
+<div style="text-align:center;margin-top:2rem">
+<button id="uploadAllBtn" class="upload-btn" onclick="uploadAllFiles()" disabled>
+🚀 Upload Todos os Arquivos
+</button>
+<button class="upload-btn" onclick="clearFiles()" style="background:#dc3545">
+🗑️ Limpar Lista
+</button>
+</div>
+
+<div id="status"></div>
+</div>
+
+<div class="upload-card">
+<h3>📊 Status do Sistema</h3>
+<div id="systemInfo">
+<p>🔄 Carregando informações...</p>
+</div>
+</div>
+</div>
+
+<script>
+// Verificar login
+if(!sessionStorage.getItem('loggedIn')){
+  window.location.href='login.html';
+}
+
+let selectedFiles = [];
+
+// Configurar drag & drop
+const uploadArea = document.getElementById('uploadArea');
+const fileInput = document.getElementById('fileInput');
+
+uploadArea.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  uploadArea.classList.add('dragover');
+});
+
+uploadArea.addEventListener('dragleave', () => {
+  uploadArea.classList.remove('dragover');
+});
+
+uploadArea.addEventListener('drop', (e) => {
+  e.preventDefault();
+  uploadArea.classList.remove('dragover');
+  handleFiles(e.dataTransfer.files);
+});
+
+uploadArea.addEventListener('click', () => {
+  fileInput.click();
+});
+
+fileInput.addEventListener('change', (e) => {
+  handleFiles(e.target.files);
+});
+
+function handleFiles(files) {
+  for (let file of files) {
+    if (isValidFile(file)) {
+      selectedFiles.push(file);
+    } else {
+      showStatus(`❌ Arquivo ${file.name} não é suportado`, 'error');
+    }
+  }
+  updateFileList();
+}
+
+function isValidFile(file) {
+  const validTypes = ['.html', '.css', '.js', '.png', '.jpg', '.gif', '.ico', '.json'];
+  return validTypes.some(type => file.name.toLowerCase().endsWith(type));
+}
+
+function updateFileList() {
+  const fileList = document.getElementById('fileList');
+  const uploadBtn = document.getElementById('uploadAllBtn');
+  
+  if (selectedFiles.length === 0) {
+    fileList.innerHTML = '<p style="text-align:center;color:#666">Nenhum arquivo selecionado</p>';
+    uploadBtn.disabled = true;
+    return;
+  }
+  
+  fileList.innerHTML = selectedFiles.map((file, index) => `
+    <div class="file-item">
+      <div>
+        <strong>${file.name}</strong><br>
+        <small>${(file.size / 1024).toFixed(1)} KB</small>
+      </div>
+      <button onclick="removeFile(${index})" style="background:#dc3545;color:white;border:none;padding:0.5rem;border-radius:3px;cursor:pointer">
+        🗑️
+      </button>
+    </div>
+  `).join('');
+  
+  uploadBtn.disabled = false;
+}
+
+function removeFile(index) {
+  selectedFiles.splice(index, 1);
+  updateFileList();
+}
+
+function clearFiles() {
+  selectedFiles = [];
+  updateFileList();
+  document.getElementById('status').innerHTML = '';
+}
+
+async function uploadAllFiles() {
+  if (selectedFiles.length === 0) return;
+  
+  const uploadBtn = document.getElementById('uploadAllBtn');
+  uploadBtn.disabled = true;
+  uploadBtn.textContent = '🔄 Uploading...';
+  
+  showStatus('🚀 Iniciando upload dos arquivos...', 'info');
+  
+  for (let i = 0; i < selectedFiles.length; i++) {
+    const file = selectedFiles[i];
+    showStatus(`📤 Uploading ${file.name} (${i + 1}/${selectedFiles.length})...`, 'info');
+    
+    try {
+      await uploadSingleFile(file);
+      showStatus(`✅ ${file.name} enviado com sucesso!`, 'success');
+    } catch (error) {
+      showStatus(`❌ Erro ao enviar ${file.name}: ${error.message}`, 'error');
+    }
+  }
+  
+  showStatus('🎉 Upload completo! Reinicie o sistema para aplicar as mudanças.', 'success');
+  uploadBtn.disabled = false;
+  uploadBtn.textContent = '🚀 Upload Todos os Arquivos';
+}
+
+async function uploadSingleFile(file) {
+  const formData = new FormData();
+  formData.append('file', file);
+  
+  const response = await fetch('/api/upload', {
+    method: 'POST',
+    body: formData
+  });
+  
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+  }
+  
+  return await response.text();
+}
+
+function showStatus(message, type = 'info') {
+  const statusDiv = document.getElementById('status');
+  const statusElement = document.createElement('div');
+  statusElement.className = `status ${type}`;
+  statusElement.innerHTML = message;
+  statusDiv.appendChild(statusElement);
+  
+  // Auto-scroll para o final
+  statusElement.scrollIntoView({ behavior: 'smooth' });
+}
+
+// Carregar informações do sistema
+async function loadSystemInfo() {
+  try {
+    const response = await fetch('/api/system/info');
+    if (response.ok) {
+      const info = await response.json();
+      document.getElementById('systemInfo').innerHTML = `
+        <p><strong>📱 Versão:</strong> ${info.version || 'N/A'}</p>
+        <p><strong>💾 Flash Livre:</strong> ${info.freeSpace || 'N/A'} bytes</p>
+        <p><strong>🕒 Uptime:</strong> ${info.uptime || 'N/A'}</p>
+        <p><strong>📶 WiFi:</strong> ${info.wifi || 'N/A'}</p>
+      `;
+    } else {
+      document.getElementById('systemInfo').innerHTML = '<p>❌ Erro ao carregar informações do sistema</p>';
+    }
+  } catch (error) {
+    document.getElementById('systemInfo').innerHTML = '<p>❌ Sistema offline</p>';
+  }
+}
+
+// Inicializar
+window.addEventListener('load', () => {
+  loadSystemInfo();
+  updateFileList();
+});
+</script>
+</body>
+</html> 

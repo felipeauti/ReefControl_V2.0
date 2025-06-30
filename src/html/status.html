@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ReefControl - Status</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#f5f7fa;min-height:100vh}
+.header{background:#4a90e2;color:white;padding:1rem;display:flex;align-items:center;justify-content:space-between}
+.header h1{font-size:1.5rem}
+.back-btn{background:rgba(255,255,255,0.2);border:none;color:white;padding:0.5rem 1rem;border-radius:5px;cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:0.5rem}
+.container{padding:1rem;max-width:1200px;margin:0 auto}
+.status-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1rem;margin-bottom:2rem}
+.status-section{background:white;padding:1.5rem;border-radius:10px;box-shadow:0 4px 6px rgba(0,0,0,0.1)}
+.section-title{font-weight:bold;margin-bottom:1rem;color:#333;border-bottom:2px solid #4a90e2;padding-bottom:0.5rem}
+.status-item{display:flex;justify-content:space-between;align-items:center;padding:0.75rem 0;border-bottom:1px solid #eee}
+.status-item:last-child{border-bottom:none}
+.status-label{color:#666;font-weight:500}
+.status-value{font-weight:bold;padding:0.25rem 0.75rem;border-radius:15px}
+.status-ok{background:#d4edda;color:#155724}
+.status-warning{background:#fff3cd;color:#856404}
+.status-error{background:#f8d7da;color:#721c24}
+.status-info{background:#d1ecf1;color:#0c5460}
+.refresh-btn{position:fixed;bottom:2rem;right:2rem;width:60px;height:60px;border-radius:50%;background:#4a90e2;color:white;border:none;font-size:1.2rem;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.3);transition:background 0.2s}
+.refresh-btn:hover{background:#357abd}
+.system-info{background:#e9ecef;padding:1rem;border-radius:8px;margin-top:1rem;font-family:monospace;font-size:0.9rem}
+@media(max-width:768px){.container{padding:0.5rem}.status-grid{grid-template-columns:1fr}.status-item{flex-direction:column;align-items:flex-start;gap:0.5rem}}
+</style>
+</head>
+<body>
+<div class="header">
+<h1>📈 Status do Sistema</h1>
+<a href="home.html" class="back-btn">← Voltar</a>
+</div>
+<div class="container">
+<div class="status-grid">
+<div class="status-section">
+<div class="section-title">🌡️ Sensores</div>
+<div class="status-item">
+<span class="status-label">Temperatura</span>
+<span class="status-value status-ok" id="temp">24.5°C</span>
+</div>
+<div class="status-item">
+<span class="status-label">pH</span>
+<span class="status-value status-ok" id="ph">7.8</span>
+</div>
+<div class="status-item">
+<span class="status-label">TDS</span>
+<span class="status-value status-warning" id="tds">380 ppm</span>
+</div>
+<div class="status-item">
+<span class="status-label">Nível da Água</span>
+<span class="status-value status-ok" id="level">85%</span>
+</div>
+</div>
+<div class="status-section">
+<div class="section-title">🔌 Equipamentos</div>
+<div class="status-item">
+<span class="status-label">🔌 Saída 1</span>
+<span class="status-value status-ok" id="output1">LIGADA</span>
+</div>
+<div class="status-item">
+<span class="status-label">🔥 Saída 2</span>
+<span class="status-value status-info" id="output2">DESLIGADO</span>
+</div>
+<div class="status-item">
+<span class="status-label">❄️ Saída 3</span>
+<span class="status-value status-ok" id="output3">LIGADA</span>
+</div>
+<div class="status-item">
+<span class="status-label">🌪️ Saída 4</span>
+<span class="status-value status-info" id="output4">DESLIGADA</span>
+</div>
+</div>
+<div class="status-section">
+<div class="section-title">📡 Conectividade</div>
+<div class="status-item">
+<span class="status-label">Wi-Fi</span>
+<span class="status-value status-ok" id="wifi">CONECTADO</span>
+</div>
+<div class="status-item">
+<span class="status-label">MQTT</span>
+<span class="status-value status-warning" id="mqtt">DESCONECTADO</span>
+</div>
+<div class="status-item">
+<span class="status-label">NTP</span>
+<span class="status-value status-ok" id="ntp">SINCRONIZADO</span>
+</div>
+<div class="status-item">
+<span class="status-label">IP Local</span>
+<span class="status-value status-info" id="ip">192.168.1.100</span>
+</div>
+</div>
+<div class="status-section">
+<div class="section-title">💾 Sistema</div>
+<div class="status-item">
+<span class="status-label">Uptime</span>
+<span class="status-value status-info" id="uptime">12h 34m</span>
+</div>
+<div class="status-item">
+<span class="status-label">Memória Livre</span>
+<span class="status-value status-ok" id="memory">45%</span>
+</div>
+<div class="status-item">
+<span class="status-label">Temperatura CPU</span>
+<span class="status-value status-ok" id="cpu_temp">42°C</span>
+</div>
+<div class="status-item">
+<span class="status-label">Versão Firmware</span>
+<span class="status-value status-info" id="version">v1.0.0</span>
+</div>
+</div>
+</div>
+<div class="system-info">
+<strong>Última atualização:</strong> <span id="last_update">--:--:--</span><br>
+<strong>Logs recentes:</strong><br>
+<div id="logs">Carregando logs...</div>
+</div>
+</div>
+<button class="refresh-btn" onclick="refreshStatus()">🔄</button>
+<script>
+function refreshStatus(){
+const now=new Date();
+document.getElementById('last_update').textContent=now.toLocaleTimeString();
+fetch('/api/status').then(r=>r.json()).then(data=>{
+document.getElementById('temp').textContent=data.temp+'°C';
+document.getElementById('ph').textContent=data.ph;
+document.getElementById('tds').textContent=data.tds+' ppm';
+document.getElementById('level').textContent=data.level+'%';
+document.getElementById('uptime').textContent=data.uptime;
+document.getElementById('memory').textContent=data.memory+'%';
+document.getElementById('cpu_temp').textContent=data.cpu_temp+'°C';
+}).catch(()=>{
+document.getElementById('logs').innerHTML='Erro ao conectar com o dispositivo<br>Verifique a conexão de rede';
+});
+}
+if(!sessionStorage.getItem('loggedIn')){
+window.location.href='login.html';
+}
+refreshStatus();
+setInterval(refreshStatus,10000);
+</script>
+</body>
+</html> 
