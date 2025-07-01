@@ -186,11 +186,7 @@ let configData = {
   output1: { pin: 5, name: 'Bomba', autoMode: false },
   output2: { pin: 4, name: 'Termostato', autoMode: false },
   output3: { pin: 14, name: 'Chiller', autoMode: false },
-  output4: { pin: 12, name: 'Skimmer', autoMode: false },
-  output5: { pin: 13, name: 'Saída 5', autoMode: false },
-  output6: { pin: 15, name: 'Saída 6', autoMode: false },
-  output7: { pin: 16, name: 'Saída 7', autoMode: false },
-  output8: { pin: 17, name: 'Saída 8', autoMode: false }
+  output4: { pin: 12, name: 'Skimmer', autoMode: false }
 };
 
 // Controle de mudanças para logs inteligentes
@@ -305,11 +301,7 @@ async function forceRefresh() {
       output1: { pin: 5, name: 'Bomba', autoMode: false },
       output2: { pin: 4, name: 'Termostato', autoMode: false },
       output3: { pin: 14, name: 'Chiller', autoMode: false },
-      output4: { pin: 12, name: 'Skimmer', autoMode: false },
-      output5: { pin: 13, name: 'Saída 5', autoMode: false },
-      output6: { pin: 15, name: 'Saída 6', autoMode: false },
-      output7: { pin: 16, name: 'Saída 7', autoMode: false },
-      output8: { pin: 17, name: 'Saída 8', autoMode: false }
+      output4: { pin: 12, name: 'Skimmer', autoMode: false }
     };
     
     // Recarregar tudo
@@ -363,14 +355,6 @@ async function loadOutputs() {
             output3: { pin: savedConfig.outputs[2].pin, name: savedConfig.outputs[2].name, autoMode: savedConfig.outputs[2].autoMode || false },
             output4: { pin: savedConfig.outputs[3].pin, name: savedConfig.outputs[3].name, autoMode: savedConfig.outputs[3].autoMode || false }
           };
-
-          // Adicionar saídas extras se disponíveis (ESP32 Pro)
-          if (savedConfig.outputs.length >= 8) {
-            configData.output5 = { pin: savedConfig.outputs[4].pin, name: savedConfig.outputs[4].name, autoMode: savedConfig.outputs[4].autoMode || false };
-            configData.output6 = { pin: savedConfig.outputs[5].pin, name: savedConfig.outputs[5].name, autoMode: savedConfig.outputs[5].autoMode || false };
-            configData.output7 = { pin: savedConfig.outputs[6].pin, name: savedConfig.outputs[6].name, autoMode: savedConfig.outputs[6].autoMode || false };
-            configData.output8 = { pin: savedConfig.outputs[7].pin, name: savedConfig.outputs[7].name, autoMode: savedConfig.outputs[7].autoMode || false };
-          }
         } else {
           throw new Error('Configurações inválidas');
         }
@@ -384,11 +368,7 @@ async function loadOutputs() {
         output1: { pin: 5, name: 'Bomba', autoMode: false },
         output2: { pin: 4, name: 'Termostato', autoMode: false },
         output3: { pin: 14, name: 'Chiller', autoMode: false },
-        output4: { pin: 12, name: 'Skimmer', autoMode: false },
-        output5: { pin: 13, name: 'Saída 5', autoMode: false },
-        output6: { pin: 15, name: 'Saída 6', autoMode: false },
-        output7: { pin: 16, name: 'Saída 7', autoMode: false },
-        output8: { pin: 17, name: 'Saída 8', autoMode: false }
+        output4: { pin: 12, name: 'Skimmer', autoMode: false }
       };
     }
     
@@ -415,11 +395,7 @@ function renderOutputs() {
     { key: 'output1', title: 'Saída 1', icon: '🔌' },
     { key: 'output2', title: 'Saída 2', icon: '🔌' },
     { key: 'output3', title: 'Saída 3', icon: '🔌' },
-    { key: 'output4', title: 'Saída 4', icon: '🔌' },
-    { key: 'output5', title: 'Saída 5', icon: '🔌' },
-    { key: 'output6', title: 'Saída 6', icon: '🔌' },
-    { key: 'output7', title: 'Saída 7', icon: '🔌' },
-    { key: 'output8', title: 'Saída 8', icon: '🔌' }
+    { key: 'output4', title: 'Saída 4', icon: '🔌' }
   ];
   
   // Salvar valores dos campos que estão sendo editados
@@ -445,6 +421,7 @@ function renderOutputs() {
     
     const isOn = data.state;
     const currentPin = configData[output.key].pin;
+    // Usar valor preservado se estiver digitando, senão usar o valor dos dados
     const currentName = currentValues[`name_${output.key}`] || configData[output.key].name;
     const isAutoMode = configData[output.key].autoMode || false;
     
@@ -469,10 +446,6 @@ function renderOutputs() {
             <option value="12" ${currentPin === 12 ? 'selected' : ''}>GPIO 12 (D6)</option>
             <option value="13" ${currentPin === 13 ? 'selected' : ''}>GPIO 13 (D7)</option>
             <option value="15" ${currentPin === 15 ? 'selected' : ''}>GPIO 15 (D8)</option>
-            <option value="16" ${currentPin === 16 ? 'selected' : ''}>GPIO 16 (D9)</option>
-            <option value="17" ${currentPin === 17 ? 'selected' : ''}>GPIO 17 (D10)</option>
-            <option value="18" ${currentPin === 18 ? 'selected' : ''}>GPIO 18 (D11)</option>
-            <option value="19" ${currentPin === 19 ? 'selected' : ''}>GPIO 19 (D12)</option>
           </select>
           <div id="gpio_warning_${output.key}" class="gpio-warning" style="display:none;"></div>
         </div>
@@ -622,6 +595,22 @@ function toggleMode(relay, isAuto) {
   }
 }
 
+// Alternar modo manual/automático
+function toggleMode(relay, isAuto) {
+  configData[relay].autoMode = isAuto;
+  
+  debugLog(`🔄 ${configData[relay].name} alterado para modo ${isAuto ? 'AUTOMÁTICO' : 'MANUAL'}`);
+  
+  // Salvar automaticamente a mudança
+  saveConfig(relay);
+  
+  if (isAuto) {
+    debugLog(`🤖 Modo AUTOMÁTICO ativado - controles manuais desabilitados`);
+  } else {
+    debugLog(`👤 Modo MANUAL ativado - controles manuais habilitados`);
+  }
+}
+
 // Novo controle de saída (substitui toggleOutput)
 async function setOutput(relay, state) {
   debugLog(`${state ? 'Ligando' : 'Desligando'} ${relay}...`);
@@ -677,11 +666,7 @@ async function saveConfig(relay) {
         { index: 0, name: configData.output1.name, pin: configData.output1.pin, autoMode: configData.output1.autoMode },
         { index: 1, name: configData.output2.name, pin: configData.output2.pin, autoMode: configData.output2.autoMode },
         { index: 2, name: configData.output3.name, pin: configData.output3.pin, autoMode: configData.output3.autoMode },
-        { index: 3, name: configData.output4.name, pin: configData.output4.pin, autoMode: configData.output4.autoMode },
-        { index: 4, name: configData.output5.name, pin: configData.output5.pin, autoMode: configData.output5.autoMode },
-        { index: 5, name: configData.output6.name, pin: configData.output6.pin, autoMode: configData.output6.autoMode },
-        { index: 6, name: configData.output7.name, pin: configData.output7.pin, autoMode: configData.output7.autoMode },
-        { index: 7, name: configData.output8.name, pin: configData.output8.pin, autoMode: configData.output8.autoMode }
+        { index: 3, name: configData.output4.name, pin: configData.output4.pin, autoMode: configData.output4.autoMode }
       ]
     };
     
@@ -780,11 +765,7 @@ async function saveAllConfigs() {
         { index: 0, name: configData.output1.name, pin: configData.output1.pin, autoMode: configData.output1.autoMode },
         { index: 1, name: configData.output2.name, pin: configData.output2.pin, autoMode: configData.output2.autoMode },
         { index: 2, name: configData.output3.name, pin: configData.output3.pin, autoMode: configData.output3.autoMode },
-        { index: 3, name: configData.output4.name, pin: configData.output4.pin, autoMode: configData.output4.autoMode },
-        { index: 4, name: configData.output5.name, pin: configData.output5.pin, autoMode: configData.output5.autoMode },
-        { index: 5, name: configData.output6.name, pin: configData.output6.pin, autoMode: configData.output6.autoMode },
-        { index: 6, name: configData.output7.name, pin: configData.output7.pin, autoMode: configData.output7.autoMode },
-        { index: 7, name: configData.output8.name, pin: configData.output8.pin, autoMode: configData.output8.autoMode }
+        { index: 3, name: configData.output4.name, pin: configData.output4.pin, autoMode: configData.output4.autoMode }
       ]
     };
     
@@ -832,8 +813,8 @@ setInterval(() => {
 
 // Carregar dados iniciais
 debugLog('🚀 ReefControl - Sistema de saídas iniciado');
-debugLog('Versão: Pro v3.2.2 - Suporte a 8 saídas no ESP32 Pro');
-debugLog('✅ Interface adaptativa com suporte a 4 ou 8 saídas');
+debugLog('Versão: Pro v2.2.10 - SWITCH MAN/AUTO PERFEITAMENTE CENTRALIZADO');
+debugLog('✅ Bolinha 18x18px matematicamente centralizada (top: 5px), visual impecável');
 loadOutputs();
 </script>
 </body>

@@ -160,33 +160,50 @@ bool WebServerManager::begin(RelayController* relayController, ConfigManager* co
       _server.send(500, "application/json", "{\"error\":\"RelayController não inicializado\"}");
       return;
     }
-
-    String json = "{\"outputs\":[";
     
-    // Itera sobre todas as saídas disponíveis
-    for (int i = 0; i < _relayController->getNumOutputs(); i++) {
-      if (i > 0) json += ",";
-      json += "{";
-      json += "\"index\":" + String(i) + ",";
-      json += "\"state\":" + String(_relayController->getOutputState(i) ? "true" : "false") + ",";
+    String json = "{";
+    
+    // Se temos ConfigManager, usar configurações persistidas
+    if (_configManager) {
+      json += "\"output1\":{";
+      json += "\"state\":" + String(_relayController->getPump1State() ? "true" : "false") + ",";
+      json += "\"pin\":" + String(_configManager->relay.outputs[0].pin) + ",";
+      json += "\"name\":\"" + String(_configManager->relay.outputs[0].name) + "\"},";
       
-      // Se temos ConfigManager, usar configurações persistidas
-      if (_configManager) {
-        json += "\"pin\":" + String(_configManager->relay.outputs[i].pin) + ",";
-        json += "\"name\":\"" + String(_configManager->relay.outputs[i].name) + "\",";
-        json += "\"enabled\":" + String(_configManager->relay.outputs[i].enabled ? "true" : "false") + ",";
-        json += "\"autoMode\":" + String(_configManager->relay.outputs[i].autoMode ? "true" : "false");
-      } else {
-        // Fallback para valores padrão
-        json += "\"pin\":" + String(i + 4) + ","; // Pinos padrão começando do 4
-        json += "\"name\":\"Saída " + String(i + 1) + "\",";
-        json += "\"enabled\":true,";
-        json += "\"autoMode\":false";
-      }
-      json += "}";
+      json += "\"output2\":{";
+      json += "\"state\":" + String(_relayController->getHeaterState() ? "true" : "false") + ",";
+      json += "\"pin\":" + String(_configManager->relay.outputs[1].pin) + ",";
+      json += "\"name\":\"" + String(_configManager->relay.outputs[1].name) + "\"},";
+      
+      json += "\"output3\":{";
+      json += "\"state\":" + String(_relayController->getLightState() ? "true" : "false") + ",";
+      json += "\"pin\":" + String(_configManager->relay.outputs[2].pin) + ",";
+      json += "\"name\":\"" + String(_configManager->relay.outputs[2].name) + "\"},";
+      
+      json += "\"output4\":{";
+      json += "\"state\":" + String(_relayController->getPump2State() ? "true" : "false") + ",";
+      json += "\"pin\":" + String(_configManager->relay.outputs[3].pin) + ",";
+      json += "\"name\":\"" + String(_configManager->relay.outputs[3].name) + "\"}";
+    } else {
+      // Fallback para valores padrão
+      json += "\"output1\":{";
+      json += "\"state\":" + String(_relayController->getPump1State() ? "true" : "false") + ",";
+      json += "\"pin\":5,\"name\":\"Bomba\"},";
+      
+      json += "\"output2\":{";
+      json += "\"state\":" + String(_relayController->getHeaterState() ? "true" : "false") + ",";
+      json += "\"pin\":4,\"name\":\"Termostato\"},";
+      
+      json += "\"output3\":{";
+      json += "\"state\":" + String(_relayController->getLightState() ? "true" : "false") + ",";
+      json += "\"pin\":14,\"name\":\"Chiller\"},";
+      
+      json += "\"output4\":{";
+      json += "\"state\":" + String(_relayController->getPump2State() ? "true" : "false") + ",";
+      json += "\"pin\":12,\"name\":\"Skimmer\"}";
     }
     
-    json += "]}";
+    json += "}";
     _server.send(200, "application/json", json);
   });
 
@@ -200,33 +217,29 @@ bool WebServerManager::begin(RelayController* relayController, ConfigManager* co
     String body = _server.arg("plain");
     Serial.println("📦 Comando recebido: " + body);
     
-    // Parse do JSON (formato: {"output":0,"state":true})
-    DynamicJsonDocument doc(256);
-    DeserializationError error = deserializeJson(doc, body);
+    // Parse simples do JSON (formato: {"relay":"output1","state":true})
+    if (body.indexOf("output1") > 0) {
+      bool state = body.indexOf("true") > 0;
+      _relayController->setPump1(state);
+      Serial.println("🔌 Saída 1: " + String(state ? "LIGADA" : "DESLIGADA"));
+    }
+    else if (body.indexOf("output2") > 0) {
+      bool state = body.indexOf("true") > 0;
+      _relayController->setHeater(state);
+      Serial.println("🔥 Saída 2: " + String(state ? "LIGADA" : "DESLIGADA"));
+    }
+    else if (body.indexOf("output3") > 0) {
+      bool state = body.indexOf("true") > 0;
+      _relayController->setLight(state);
+      Serial.println("💡 Saída 3: " + String(state ? "LIGADA" : "DESLIGADA"));
+    }
+    else if (body.indexOf("output4") > 0) {
+      bool state = body.indexOf("true") > 0;
+      _relayController->setPump2(state);
+      Serial.println("🔌 Saída 4: " + String(state ? "LIGADA" : "DESLIGADA"));
+    }
     
-    if (error) {
-      Serial.println("❌ Erro ao parsear JSON: " + String(error.c_str()));
-      _server.send(400, "application/json", "{\"error\":\"JSON inválido\"}");
-      return;
-    }
-
-    int outputIndex = doc["output"].as<int>();
-    bool state = doc["state"].as<bool>();
-
-    // Validar índice
-    if (outputIndex < 0 || outputIndex >= _relayController->getNumOutputs()) {
-      _server.send(400, "application/json", "{\"error\":\"Índice de saída inválido\"}");
-      return;
-    }
-
-    // Aplicar comando
-    if (_relayController->setOutput(outputIndex, state)) {
-      String outputName = _configManager ? String(_configManager->relay.outputs[outputIndex].name) : "Saída " + String(outputIndex + 1);
-      Serial.printf("✅ %s: %s\n", outputName.c_str(), state ? "LIGADA" : "DESLIGADA");
-      _server.send(200, "application/json", "{\"success\":true}");
-    } else {
-      _server.send(500, "application/json", "{\"error\":\"Falha ao controlar saída\"}");
-    }
+    _server.send(200, "application/json", "{\"success\":true}");
   });
 
   // API para salvar configurações de saídas - POST
@@ -240,11 +253,6 @@ bool WebServerManager::begin(RelayController* relayController, ConfigManager* co
     Serial.println("🔧 Configuração recebida: " + body);
     
     if (_configManager->setOutputsFromJson(body)) {
-      // Atualizar configuração do RelayController
-      if (_relayController) {
-        _relayController->updateConfig();
-      }
-      
       Serial.println("✅ Configurações de saídas salvas com sucesso!");
       _server.send(200, "application/json", "{\"success\":true,\"message\":\"Configurações salvas com sucesso!\"}");
     } else {
@@ -539,9 +547,7 @@ bool WebServerManager::begin(RelayController* relayController, ConfigManager* co
     json += "\"freeSpace\":" + String(freeSpace) + ",";
     json += "\"totalSpace\":" + String(totalBytes) + ",";
     json += "\"usedSpace\":" + String(usedBytes) + ",";
-    json += "\"wifi\":\"" + WiFi.SSID() + " (" + WiFi.RSSI() + "dBm)\",";
-    json += "\"numOutputs\":" + String(_relayController ? _relayController->getNumOutputs() : 0) + ",";
-    json += "\"hardware\":\"" + String(isProVersion() ? "Pro" : "Compact") + "\"";
+    json += "\"wifi\":\"" + WiFi.SSID() + " (" + WiFi.RSSI() + "dBm)\"";
     json += "}";
     _server.send(200, "application/json", json);
   });

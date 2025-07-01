@@ -141,7 +141,7 @@ void setup() {
   yield();  // Proteger contra watchdog
   sensors.begin();
   yield();
-  relays.begin(&config);
+  relays.begin();
   yield();
   
   // 4. Display removido para otimização

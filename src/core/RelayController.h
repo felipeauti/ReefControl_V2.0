@@ -1,43 +1,61 @@
+/**
+ * RelayController.h
+ * Controlador de Relés com suporte a ESP8266 (4 saídas) e ESP32 (8 saídas)
+ * Integrado com ConfigManager para configuração dinâmica
+ */
+
 #ifndef RELAY_CONTROLLER_H
 #define RELAY_CONTROLLER_H
 
 #include <Arduino.h>
 #include "ConfigManager.h"
-
-// Pinos dos relés - compatibilidade ESP8266/ESP32
-#ifdef ESP32
-  #define RELAY1_PIN 5   // GPIO5 - Bomba Principal
-  #define RELAY2_PIN 18  // GPIO18 - Aquecedor
-  #define RELAY3_PIN 19  // GPIO19 - Iluminação
-  #define RELAY4_PIN 21  // GPIO21 - Bomba Reposição
-#else
-  #define RELAY1_PIN D1  // GPIO5 - Bomba Principal
-  #define RELAY2_PIN D2  // GPIO4 - Aquecedor  
-  #define RELAY3_PIN D5  // GPIO14 - Iluminação
-  #define RELAY4_PIN D6  // GPIO12 - Bomba Reposição
-#endif
+#include "capabilities/Capabilities.h"
 
 class RelayController {
 private:
-  ConfigManager* _config;
-  bool _pump1State = false;
-  bool _heaterState = false;
-  bool _lightState = false;
-  bool _pump2State = false;
+    ConfigManager* _config = nullptr;
+    bool* _outputStates = nullptr;  // Array dinâmico para estados
+    int _numOutputs = 0;            // Número de saídas (4 ou 8 dependendo do hardware)
+    unsigned long* _lastToggle = nullptr;  // Array para controle de intervalos
+
+    void initOutputs();             // Inicializa os pinos conforme configuração
+    void cleanupOutputs();          // Limpa recursos alocados
+    bool isValidOutput(int index) const;  // Valida índice da saída
 
 public:
-  bool begin(ConfigManager* config = nullptr);
-  void autoControl(float temperature, float ph);
-  
-  bool getPump1State() const { return _pump1State; }
-  bool getHeaterState() const { return _heaterState; }
-  bool getLightState() const { return _lightState; }
-  bool getPump2State() const { return _pump2State; }
-  
-  void setPump1(bool state);
-  void setHeater(bool state);
-  void setLight(bool state);
-  void setPump2(bool state);
+    RelayController();
+    ~RelayController();
+    
+    // Inicialização e configuração
+    bool begin(ConfigManager* config);
+    void updateConfig();  // Atualiza configurações em runtime
+    
+    // Controle de saídas
+    bool setOutput(int index, bool state);
+    bool getOutputState(int index) const;
+    int getNumOutputs() const { return _numOutputs; }
+    
+    // Controle automático
+    void autoControl(float temperature, float ph = 0);
+    
+    // Compatibilidade com código legado (deprecated)
+    [[deprecated("Use setOutput() instead")]]
+    void setPump1(bool state) { setOutput(0, state); }
+    [[deprecated("Use setOutput() instead")]]
+    void setHeater(bool state) { setOutput(1, state); }
+    [[deprecated("Use setOutput() instead")]]
+    void setLight(bool state) { setOutput(2, state); }
+    [[deprecated("Use setOutput() instead")]]
+    void setPump2(bool state) { setOutput(3, state); }
+    
+    [[deprecated("Use getOutputState() instead")]]
+    bool getPump1State() const { return getOutputState(0); }
+    [[deprecated("Use getOutputState() instead")]]
+    bool getHeaterState() const { return getOutputState(1); }
+    [[deprecated("Use getOutputState() instead")]]
+    bool getLightState() const { return getOutputState(2); }
+    [[deprecated("Use getOutputState() instead")]]
+    bool getPump2State() const { return getOutputState(3); }
 };
 
-#endif 
+#endif // RELAY_CONTROLLER_H

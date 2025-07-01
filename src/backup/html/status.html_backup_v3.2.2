@@ -72,22 +72,6 @@ body{font-family:Arial,sans-serif;background:#f5f7fa;min-height:100vh}
 <span class="status-label">🌪️ Saída 4</span>
 <span class="status-value status-info" id="output4">DESLIGADA</span>
 </div>
-<div class="status-item">
-<span class="status-label">🔌 Saída 5</span>
-<span class="status-value status-info" id="output5">DESLIGADA</span>
-</div>
-<div class="status-item">
-<span class="status-label">🔌 Saída 6</span>
-<span class="status-value status-info" id="output6">DESLIGADA</span>
-</div>
-<div class="status-item">
-<span class="status-label">🔌 Saída 7</span>
-<span class="status-value status-info" id="output7">DESLIGADA</span>
-</div>
-<div class="status-item">
-<span class="status-label">🔌 Saída 8</span>
-<span class="status-value status-info" id="output8">DESLIGADA</span>
-</div>
 </div>
 <div class="status-section">
 <div class="section-title">📡 Conectividade</div>
@@ -124,7 +108,7 @@ body{font-family:Arial,sans-serif;background:#f5f7fa;min-height:100vh}
 </div>
 <div class="status-item">
 <span class="status-label">Versão Firmware</span>
-<span class="status-value status-info" id="version">v3.2.2</span>
+<span class="status-value status-info" id="version">v1.0.0</span>
 </div>
 </div>
 </div>
@@ -147,16 +131,6 @@ document.getElementById('level').textContent=data.level+'%';
 document.getElementById('uptime').textContent=data.uptime;
 document.getElementById('memory').textContent=data.memory+'%';
 document.getElementById('cpu_temp').textContent=data.cpu_temp+'°C';
-
-// Atualizar status das saídas
-for(let i = 1; i <= 8; i++) {
-  const outputElement = document.getElementById('output'+i);
-  if(outputElement && data.outputs && data.outputs[i-1]) {
-    outputElement.textContent = data.outputs[i-1].state ? 'LIGADA' : 'DESLIGADA';
-    outputElement.className = 'status-value ' + (data.outputs[i-1].state ? 'status-ok' : 'status-info');
-  }
-}
-
 }).catch(()=>{
 document.getElementById('logs').innerHTML='Erro ao conectar com o dispositivo<br>Verifique a conexão de rede';
 });
