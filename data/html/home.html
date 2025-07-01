@@ -117,19 +117,19 @@ function updateTempSensors() {
     fetch('/api/sensors')
         .then(response => response.json())
         .then(data => {
-            const container = document.getElementById('tempSensors');
-            container.innerHTML = '';
-            
+    const container = document.getElementById('tempSensors');
+    container.innerHTML = '';
+    
             if (data.sensors && data.sensors.length > 0) {
                 data.sensors.forEach(sensor => {
-                    const card = document.createElement('div');
-                    card.className = 'temp-card';
-                    card.innerHTML = `
+        const card = document.createElement('div');
+        card.className = 'temp-card';
+        card.innerHTML = `
                         <div class="temp-value status-ok">${sensor.temperature.toFixed(1)}°C</div>
-                        <div class="temp-name">${sensor.name}</div>
-                    `;
-                    container.appendChild(card);
-                });
+            <div class="temp-name">${sensor.name}</div>
+        `;
+        container.appendChild(card);
+    });
             }
         })
         .catch(error => console.error('Erro ao atualizar sensores:', error));
@@ -139,22 +139,22 @@ function updateStats() {
     // Atualiza temperatura do sensor
     fetch('/api/sensors')
         .then(response => response.json())
-        .then(data => {
+    .then(data => {
             if (data.sensors && data.sensors.length > 0) {
                 const sensor = data.sensors[0];
                 document.getElementById('temperature').textContent = sensor.temperature.toFixed(1) + '°C';
             }
-        })
+    })
         .catch(error => console.error('Erro ao atualizar sensores:', error));
-
+    
     // Atualiza outros sensores
     fetch('/api/status')
         .then(response => response.json())
-        .then(data => {
+    .then(data => {
             document.getElementById('ph').textContent = data.ph || '--';
             document.getElementById('tds').textContent = (data.tds || '--') + ' ppm';
             document.getElementById('level').textContent = (data.level || '--') + '%';
-        })
+    })
         .catch(error => console.error('Erro ao atualizar status:', error));
 }
 

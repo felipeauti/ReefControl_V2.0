@@ -29,6 +29,8 @@ lib_deps =
     ; Tempo e Agendamento
     arduino-libraries/NTPClient@^3.2.1
     
+    ; Display removido para otimização
+    
     ; Utilitários
     bblanchon/ArduinoJson@^6.21.5
 
@@ -38,33 +40,21 @@ upload_speed = 921600
 
 ; Configurações de build - COMPACT VERSION
 build_flags = 
-    ; Otimizações de Memória
     -DPIO_FRAMEWORK_ARDUINO_LWIP2_LOW_MEMORY
     -DVTABLES_IN_FLASH
     -DMMU_IRAM_SIZE=0x8000
     -DMMU_ICACHE_SIZE=0x8000
-    -DJSON_BUFFER_SIZE=512
-    
-    ; Configurações da Versão
     -DCOMPACT_VERSION
     -DMAX_OUTPUTS=4
     -DMAX_SENSORS=2
     -DVERSION_STRING="\"ReefControl Compact v3.2.2-beta\""
-    
-    ; Configurações de Hardware
     -DUSE_DS18B20
     -DTEMP_SENSOR_PIN=4
-    -DONEWIRE_INIT_DELAY=1000
-    
-    ; Configurações de Debug
-    -DDEBUG_ONEWIRE
-    -DDEBUG_SENSORS
-    -DDEBUG_FILESYSTEM
 
 ; Configurações do sistema de arquivos LittleFS
 board_build.filesystem = littlefs
-board_build.ldscript = eagle.flash.4m2m.ld
-board_build.filesystem_size = 2M
+board_build.ldscript = eagle.flash.4m3m.ld
+board_build.filesystem_size = 3M
 
 ; =============================================================================
 ; REEFCONTROL PRO - ESP32 (ESP32 DevKit)
@@ -87,6 +77,8 @@ lib_deps =
     ; Tempo e Agendamento
     arduino-libraries/NTPClient@^3.2.1
     
+    ; Display removido para otimização
+    
     ; Utilitários
     bblanchon/ArduinoJson@^6.21.5
 
@@ -96,25 +88,20 @@ upload_speed = 921600
 
 ; Configurações de build - PRO VERSION
 build_flags = 
-    ; Configurações da Versão
     -DPRO_VERSION
     -DMAX_OUTPUTS=8
     -DMAX_SENSORS=8
     -DVERSION_STRING="\"ReefControl Pro v3.2.2-beta\""
-    
-    ; Configurações de Hardware
     -DUSE_DS18B20
     -DTEMP_SENSOR_PIN=4
-    -DONEWIRE_INIT_DELAY=1000
-    
-    ; Configurações de Debug
-    -DDEBUG_ONEWIRE
-    -DDEBUG_SENSORS
-    -DDEBUG_FILESYSTEM
-    
-    ; Otimizações de Memória
-    -DJSON_BUFFER_SIZE=1024
+    ; Otimizações de build
+    -Os
+    -DCORE_DEBUG_LEVEL=0
+    -DNDEBUG
+    -ffunction-sections
+    -fdata-sections
+    -Wl,--gc-sections
 
 ; Configurações do sistema de arquivos SPIFFS para ESP32
 board_build.filesystem = spiffs
-board_build.partitions = huge_app.csv
+board_build.partitions = huge_app.csv 

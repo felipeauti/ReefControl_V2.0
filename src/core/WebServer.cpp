@@ -37,6 +37,7 @@ bool WebServerManager::begin(RelayController* relayController, ConfigManager* co
   _server.on("/logica", [this]() { serveFile("/html/logica.html"); });
   _server.on("/status", [this]() { serveFile("/html/status.html"); });
   _server.on("/file_upload", [this]() { serveFile("/html/file_upload.html"); });
+  _server.on("/dashboard_temp", [this]() { serveFile("/html/dashboard_temp.html"); });
   
   // Páginas HTML principais (com .html para compatibilidade)
   _server.on("/login.html", [this]() { serveFile("/html/login.html"); });
@@ -52,6 +53,7 @@ bool WebServerManager::begin(RelayController* relayController, ConfigManager* co
   _server.on("/logica.html", [this]() { serveFile("/html/logica.html"); });
   _server.on("/status.html", [this]() { serveFile("/html/status.html"); });
   _server.on("/file_upload.html", [this]() { serveFile("/html/file_upload.html"); });
+  _server.on("/dashboard_temp.html", [this]() { serveFile("/html/dashboard_temp.html"); });
   
   // API para dados dos sensores
   _server.on("/api/sensors", [this]() {
