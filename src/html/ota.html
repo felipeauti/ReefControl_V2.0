@@ -146,15 +146,15 @@ async function loadSystemInfo(){
 try{
 const response=await fetch('/api/status');
 const data=await response.json();
-document.getElementById('currentVersion').textContent=data.version || 'v2.0.0';
+document.getElementById('currentVersion').textContent=data.version || 'N/A';
 document.getElementById('systemUptime').textContent=formatUptime(data.uptime);
 document.getElementById('freeHeap').textContent=(data.heap/1024).toFixed(1);
 // Adicionar info de build na versão
 const versionElement=document.getElementById('currentVersion');
-versionElement.title=`Build: ${data.build_date || 'N/A'} | Chip: ${data.chip_id || 'N/A'}`;
+versionElement.title=`${data.full_version || 'N/A'} | Build: ${data.build_date || 'N/A'} | Chip: ${data.chip_id || 'N/A'} | Hardware: ${data.hardware || 'N/A'}`;
 }catch(error){
 console.error('Erro ao carregar informações:',error);
-document.getElementById('currentVersion').textContent='v2.0.0';
+document.getElementById('currentVersion').textContent='Erro';
 document.getElementById('systemUptime').textContent='Erro ao carregar';
 document.getElementById('freeHeap').textContent='N/A';
 }

@@ -4,6 +4,7 @@
  */
 
 #include "ConfigManager.h"
+#include "Constants.h"
 
 // Compatibilidade ESP8266/ESP32
 #ifdef ESP32
@@ -159,11 +160,7 @@ void ConfigManager::setDefaults() {
   relay.outputs[3].interval = 60;
   relay.outputs[3].duration = 30;
   
-  // Relés padrões (compatibilidade)
-  relay.pump1Enabled = true;
-  relay.heaterEnabled = true;
-  relay.lightEnabled = true;
-  relay.pump2Enabled = true;
+  // Configurações de saídas já inicializadas no array outputs
   
   // Display padrões
   display.enabled = true;
@@ -172,7 +169,7 @@ void ConfigManager::setDefaults() {
   
   // Sistema padrões
   strcpy(system.deviceName, "ReefControl");
-  strcpy(system.version, "2.0.0");
+  strcpy(system.version, REEFCONTROL_VERSION_STRING);
   system.debugMode = true;
 }
 
@@ -283,23 +280,7 @@ String ConfigManager::toJson() {
     output["duration"] = relay.outputs[i].duration;
   }
   
-  // Compatibilidade com código antigo
-  relayObj["pump1Enabled"] = relay.pump1Enabled;
-  relayObj["pump1AutoMode"] = relay.pump1AutoMode;
-  relayObj["pump1OnTime"] = relay.pump1OnTime;
-  relayObj["pump1OffTime"] = relay.pump1OffTime;
-  relayObj["heaterEnabled"] = relay.heaterEnabled;
-  relayObj["heaterAutoMode"] = relay.heaterAutoMode;
-  relayObj["heaterOnTemp"] = relay.heaterOnTemp;
-  relayObj["heaterOffTemp"] = relay.heaterOffTemp;
-  relayObj["lightEnabled"] = relay.lightEnabled;
-  relayObj["lightAutoMode"] = relay.lightAutoMode;
-  relayObj["lightOnTime"] = relay.lightOnTime;
-  relayObj["lightOffTime"] = relay.lightOffTime;
-  relayObj["pump2Enabled"] = relay.pump2Enabled;
-  relayObj["pump2AutoMode"] = relay.pump2AutoMode;
-  relayObj["pump2Interval"] = relay.pump2Interval;
-  relayObj["pump2Duration"] = relay.pump2Duration;
+  // Sistema moderno usa apenas o array outputs
   
   // Display
   JsonObject displayObj = doc.createNestedObject("display");
@@ -408,23 +389,7 @@ bool ConfigManager::fromJson(const String& json) {
       }
     }
     
-    // Compatibilidade com código antigo
-    relay.pump1Enabled = relayObj["pump1Enabled"] | relay.pump1Enabled;
-    relay.pump1AutoMode = relayObj["pump1AutoMode"] | relay.pump1AutoMode;
-    relay.pump1OnTime = relayObj["pump1OnTime"] | relay.pump1OnTime;
-    relay.pump1OffTime = relayObj["pump1OffTime"] | relay.pump1OffTime;
-    relay.heaterEnabled = relayObj["heaterEnabled"] | relay.heaterEnabled;
-    relay.heaterAutoMode = relayObj["heaterAutoMode"] | relay.heaterAutoMode;
-    relay.heaterOnTemp = relayObj["heaterOnTemp"] | relay.heaterOnTemp;
-    relay.heaterOffTemp = relayObj["heaterOffTemp"] | relay.heaterOffTemp;
-    relay.lightEnabled = relayObj["lightEnabled"] | relay.lightEnabled;
-    relay.lightAutoMode = relayObj["lightAutoMode"] | relay.lightAutoMode;
-    relay.lightOnTime = relayObj["lightOnTime"] | relay.lightOnTime;
-    relay.lightOffTime = relayObj["lightOffTime"] | relay.lightOffTime;
-    relay.pump2Enabled = relayObj["pump2Enabled"] | relay.pump2Enabled;
-    relay.pump2AutoMode = relayObj["pump2AutoMode"] | relay.pump2AutoMode;
-    relay.pump2Interval = relayObj["pump2Interval"] | relay.pump2Interval;
-    relay.pump2Duration = relayObj["pump2Duration"] | relay.pump2Duration;
+    // Sistema moderno carrega apenas via array outputs
   }
   
   return validateConfig();

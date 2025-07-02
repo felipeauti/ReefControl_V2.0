@@ -95,34 +95,13 @@ struct OutputConfig {
 };
 
 struct RelayConfig {
-  // Configurações individuais das saídas
+  // Configurações das saídas - Sistema moderno
   OutputConfig outputs[4] = {
     {"Bomba", 5, true, true, 8, 22, 0.0, 0.0, 0, 0},
     {"Termostato", 4, true, true, 0, 0, 24.0, 26.0, 0, 0},
     {"Chiller", 14, true, true, 8, 20, 0.0, 0.0, 0, 0},
     {"Skimmer", 12, true, false, 0, 0, 0.0, 0.0, 60, 30}
   };
-  
-  // Compatibilidade com código antigo
-  bool pump1Enabled = true;
-  bool pump1AutoMode = true;
-  int pump1OnTime = 8;
-  int pump1OffTime = 22;
-  
-  bool heaterEnabled = true;
-  bool heaterAutoMode = true;
-  float heaterOnTemp = 24.0;
-  float heaterOffTemp = 26.0;
-  
-  bool lightEnabled = true;
-  bool lightAutoMode = true;
-  int lightOnTime = 8;
-  int lightOffTime = 20;
-  
-  bool pump2Enabled = true;
-  bool pump2AutoMode = false;
-  int pump2Interval = 60;
-  int pump2Duration = 30;
 };
 
 struct DisplayConfig {
@@ -140,7 +119,7 @@ struct DisplayConfig {
 
 struct SystemConfig {
   char deviceName[32] = "ReefControl";
-  char version[16] = "2.0.12";
+      char version[32] = "3.2.3-beta";
   bool debugMode = true;
   bool ledIndicator = true;
   int watchdogTimeout = 30; // segundos

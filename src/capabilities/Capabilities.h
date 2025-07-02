@@ -68,7 +68,7 @@ struct SystemCapabilities {
 #else
     // Fallback para versões legacy (v2.0.12 e anteriores)
     constexpr SystemCapabilities CAPS = {
-        .version = "ReefControl v2.0.12",
+        .version = "ReefControl Legacy v2.0.12",
         .hardware = "ESP8266",
         .maxOutputs = 4,
         .maxSensors = 2,

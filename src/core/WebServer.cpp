@@ -2,6 +2,7 @@
 #include "RelayController.h"
 #include "ConfigManager.h"
 #include "SensorManager.h"
+#include "Constants.h"
 #include "../time/NtpClient.h"
 #include "../capabilities/Capabilities.h"
 
@@ -116,8 +117,11 @@ bool WebServerManager::begin(RelayController* relayController, ConfigManager* co
   // API para status do sistema
   _server.on("/api/status", [this]() {
     String json = "{";
-        json += "\"version\":\"v2.0.12\",";  
-    json += "\"build_date\":\"" + String(__DATE__) + " " + String(__TIME__) + "\",";
+        json += "\"version\":\"" + String(getReefControlVersion()) + "\",";  
+        json += "\"full_version\":\"" + String(getReefControlFullVersion()) + "\",";
+        json += "\"hardware\":\"" + String(getReefControlHardware()) + "\",";
+        json += "\"api_version\":\"" + String(getReefControlApiVersion()) + "\",";
+    json += "\"build_date\":\"" + String(REEFCONTROL_BUILD_DATE) + " " + String(REEFCONTROL_BUILD_TIME) + "\",";
     json += "\"wifi\":true,";
     json += "\"mqtt\":false,";
     json += "\"uptime\":" + String(millis()) + ",";
@@ -534,14 +538,16 @@ bool WebServerManager::begin(RelayController* relayController, ConfigManager* co
     #endif
     
     String json = "{";
-    json += "\"version\":\"" + String(getVersionString()) + "\",";
+    json += "\"version\":\"" + String(getReefControlVersion()) + "\",";
+    json += "\"full_version\":\"" + String(getReefControlFullVersion()) + "\",";
+    json += "\"api_version\":\"" + String(getReefControlApiVersion()) + "\",";
     json += "\"uptime\":\"" + String(millis() / 1000) + "s\",";
     json += "\"freeSpace\":" + String(freeSpace) + ",";
     json += "\"totalSpace\":" + String(totalBytes) + ",";
     json += "\"usedSpace\":" + String(usedBytes) + ",";
     json += "\"wifi\":\"" + WiFi.SSID() + " (" + WiFi.RSSI() + "dBm)\",";
     json += "\"numOutputs\":" + String(_relayController ? _relayController->getNumOutputs() : 0) + ",";
-    json += "\"hardware\":\"" + String(isProVersion() ? "Pro" : "Compact") + "\"";
+    json += "\"hardware\":\"" + String(getReefControlHardware()) + "\"";
     json += "}";
     _server.send(200, "application/json", json);
   });

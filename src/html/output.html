@@ -732,6 +732,20 @@ function validateAllGPIOs() {
   return duplicates;
 }
 
+// Carregar informações de versão
+async function loadVersionInfo() {
+  try {
+    const response = await fetch('/api/status');
+    if (response.ok) {
+      const data = await response.json();
+      debugLog(`📱 Versão: ${data.full_version || data.version || 'N/A'}`);
+      debugLog(`💻 Hardware: ${data.hardware || 'N/A'}`);
+    }
+  } catch (error) {
+    debugLog('⚠️ Não foi possível carregar informações de versão');
+  }
+}
+
 // Controlar saída
 async function toggleOutput(relay, state) {
   debugLog(`Controlando ${relay}: ${state ? 'ON' : 'OFF'}`);
@@ -830,11 +844,12 @@ setInterval(() => {
   }
 }, 5000);
 
-// Carregar dados iniciais
-debugLog('🚀 ReefControl - Sistema de saídas iniciado');
-debugLog('Versão: Pro v3.2.2 - Suporte a 8 saídas no ESP32 Pro');
-debugLog('✅ Interface adaptativa com suporte a 4 ou 8 saídas');
-loadOutputs();
+  // Carregar dados iniciais
+  debugLog('🚀 ReefControl - Sistema de saídas iniciado');
+  // Versão será carregada dinamicamente da API
+  loadVersionInfo();
+  debugLog('✅ Interface adaptativa com suporte a 4 ou 8 saídas');
+  loadOutputs();
 </script>
 </body>
 </html> 

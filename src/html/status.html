@@ -124,7 +124,7 @@ body{font-family:Arial,sans-serif;background:#f5f7fa;min-height:100vh}
 </div>
 <div class="status-item">
 <span class="status-label">Versão Firmware</span>
-<span class="status-value status-info" id="version">v3.2.2</span>
+<span class="status-value status-info" id="version">Carregando...</span>
 </div>
 </div>
 </div>
@@ -148,6 +148,10 @@ document.getElementById('uptime').textContent=data.uptime;
 document.getElementById('memory').textContent=data.memory+'%';
 document.getElementById('cpu_temp').textContent=data.cpu_temp+'°C';
 
+// Atualizar versão do firmware
+document.getElementById('version').textContent = data.version || 'N/A';
+document.getElementById('version').title = `${data.full_version || 'N/A'} | Build: ${data.build_date || 'N/A'}`;
+
 // Atualizar status das saídas
 for(let i = 1; i <= 8; i++) {
   const outputElement = document.getElementById('output'+i);
@@ -159,6 +163,7 @@ for(let i = 1; i <= 8; i++) {
 
 }).catch(()=>{
 document.getElementById('logs').innerHTML='Erro ao conectar com o dispositivo<br>Verifique a conexão de rede';
+document.getElementById('version').textContent = 'Erro';
 });
 }
 if(!sessionStorage.getItem('loggedIn')){

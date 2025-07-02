@@ -30,32 +30,13 @@ public:
     bool begin(ConfigManager* config);
     void updateConfig();  // Atualiza configurações em runtime
     
-    // Controle de saídas
+    // Controle de saídas - API moderna
     bool setOutput(int index, bool state);
     bool getOutputState(int index) const;
     int getNumOutputs() const { return _numOutputs; }
     
     // Controle automático
     void autoControl(float temperature, float ph = 0);
-    
-    // Compatibilidade com código legado (deprecated)
-    [[deprecated("Use setOutput() instead")]]
-    void setPump1(bool state) { setOutput(0, state); }
-    [[deprecated("Use setOutput() instead")]]
-    void setHeater(bool state) { setOutput(1, state); }
-    [[deprecated("Use setOutput() instead")]]
-    void setLight(bool state) { setOutput(2, state); }
-    [[deprecated("Use setOutput() instead")]]
-    void setPump2(bool state) { setOutput(3, state); }
-    
-    [[deprecated("Use getOutputState() instead")]]
-    bool getPump1State() const { return getOutputState(0); }
-    [[deprecated("Use getOutputState() instead")]]
-    bool getHeaterState() const { return getOutputState(1); }
-    [[deprecated("Use getOutputState() instead")]]
-    bool getLightState() const { return getOutputState(2); }
-    [[deprecated("Use getOutputState() instead")]]
-    bool getPump2State() const { return getOutputState(3); }
 };
 
 #endif // RELAY_CONTROLLER_H
