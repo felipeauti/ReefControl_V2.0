@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 MICRO-FASE 1B - Teste Chart.js</title>
+    
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 1rem;
+            background: #f5f7fa;
+        }
+        .test-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .test-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #4a90e2;
+        }
+        .test-section {
+            margin: 1.5rem 0;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .status {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 3px;
+            font-weight: bold;
+            margin-left: 0.5rem;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .status.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        button {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0.25rem;
+        }
+        button:hover {
+            background: #357abd;
+        }
+        .chart-container {
+            margin: 1rem 0;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+            margin: 1rem 0;
+        }
+        .test-result {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 5px;
+        }
+        .test-result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .test-result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .console-output {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 1rem;
+            margin-top: 1rem;
+            font-family: monospace;
+            font-size: 0.9rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="test-header">
+            <h1>🧪 MICRO-FASE 1B</h1>
+            <h2>Teste de Chart.js</h2>
+            <p>Verificando se Chart.js funciona corretamente no ESP32</p>
+        </div>
+
+        <div class="test-section">
+            <h3>📋 Critérios de Aprovação</h3>
+            <ul>
+                <li>Chart.js carrega da CDN <span id="status-cdn" class="status pending">⏳ Testando...</span></li>
+                <li>Gráfico é renderizado corretamente <span id="status-render" class="status pending">⏳ Testando...</span></li>
+                <li>Sem erros no console <span id="status-errors" class="status pending">⏳ Testando...</span></li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h3>🎮 Controles de Teste</h3>
+            <button onclick="testChart()">📈 Testar Gráfico</button>
+            <button onclick="clearChart()">🗑️ Limpar</button>
+            <button onclick="location.reload()">🔄 Recarregar</button>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Resultado do Teste</h3>
+            <div id="testResult" class="test-result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📈 Gráfico de Teste</h3>
+            <div class="chart-container">
+                <h4>Temperatura - Últimas 6 Leituras</h4>
+                <div class="chart-wrapper">
+                    <canvas id="testChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🖥️ Console Output</h3>
+            <div id="consoleOutput" class="console-output"></div>
+        </div>
+    </div>
+
+    <script>
+        let testChartInstance = null;
+        let errorCount = 0;
+
+        // Capturar logs do console
+        const consoleOutput = document.getElementById('consoleOutput');
+        const originalLog = console.log;
+        const originalError = console.error;
+
+        function addToConsole(message, type = 'log') {
+            const timestamp = new Date().toLocaleTimeString();
+            const div = document.createElement('div');
+            div.style.color = type === 'error' ? 'red' : 'black';
+            div.textContent = `[${timestamp}] ${message}`;
+            consoleOutput.appendChild(div);
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addToConsole(args.join(' '), 'log');
+        };
+
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addToConsole(args.join(' '), 'error');
+            errorCount++;
+        };
+
+        function updateStatus(elementId, status, text) {
+            const element = document.getElementById(elementId);
+            element.className = `status ${status}`;
+            element.textContent = text;
+        }
+
+        function showTestResult(success, message) {
+            const resultDiv = document.getElementById('testResult');
+            resultDiv.className = `test-result ${success ? 'success' : 'error'}`;
+            resultDiv.textContent = message;
+            resultDiv.style.display = 'block';
+        }
+
+        function testChart() {
+            try {
+                const ctx = document.getElementById('testChart').getContext('2d');
+                
+                if (testChartInstance) {
+                    testChartInstance.destroy();
+                }
+                
+                testChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['10:00', '10:05', '10:10', '10:15', '10:20', '10:25'],
+                        datasets: [{
+                            label: 'Temperatura (°C)',
+                            data: [25.2, 25.8, 26.1, 25.9, 26.3, 26.0],
+                            borderColor: '#e74c3c',
+                            backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Monitoramento de Temperatura'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: false,
+                                min: 24,
+                                max: 28
+                            }
+                        }
+                    }
+                });
+                
+                console.log("✅ Gráfico criado com sucesso!");
+                updateStatus('status-render', 'success', '✅ OK');
+                return true;
+            } catch (error) {
+                console.error("❌ Erro ao criar gráfico:", error);
+                updateStatus('status-render', 'error', '❌ Erro');
+                return false;
+            }
+        }
+
+        function clearChart() {
+            if (testChartInstance) {
+                testChartInstance.destroy();
+                testChartInstance = null;
+                console.log("🗑️ Gráfico removido");
+            }
+        }
+
+        // Verificações automáticas
+        window.addEventListener('load', function() {
+            console.log('🚀 Página carregada, verificando Chart.js...');
+            
+            setTimeout(() => {
+                if (typeof Chart !== 'undefined') {
+                    updateStatus('status-cdn', 'success', '✅ OK');
+                    console.log("✅ Chart.js carregado com sucesso!");
+                    console.log("📊 Versão:", Chart.version);
+                    
+                    // Testar criação automática
+                    testChart();
+                    
+                    setTimeout(() => {
+                        if (errorCount === 0) {
+                            updateStatus('status-errors', 'success', '✅ OK');
+                            showTestResult(true, 'Chart.js funcionando perfeitamente!');
+                        } else {
+                            updateStatus('status-errors', 'error', `❌ ${errorCount} erro(s)`);
+                            showTestResult(false, `Chart.js com problemas: ${errorCount} erro(s)`);
+                        }
+                    }, 1000);
+                    
+                } else {
+                    updateStatus('status-cdn', 'error', '❌ Erro');
+                    updateStatus('status-render', 'error', '❌ Erro');
+                    updateStatus('status-errors', 'error', '❌ Erro');
+                    console.error("❌ Chart.js não carregado!");
+                    showTestResult(false, 'Chart.js não foi carregado da CDN');
+                }
+            }, 1000);
+        });
+
+        console.log('📋 MICRO-FASE 1B - Teste Chart.js iniciado');
+    </script>
+</body>
+</html> 

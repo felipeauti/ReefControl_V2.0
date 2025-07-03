@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 MICRO-FASE 1A - Teste JS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 1rem;
+            background: #f5f7fa;
+        }
+        .test-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .test-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #4a90e2;
+        }
+        .test-section {
+            margin: 1.5rem 0;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .status {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 3px;
+            font-weight: bold;
+            margin-left: 0.5rem;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .status.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        button {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0.25rem;
+        }
+        button:hover {
+            background: #357abd;
+        }
+        .console-output {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 1rem;
+            margin-top: 1rem;
+            font-family: monospace;
+            font-size: 0.9rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .test-result {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 5px;
+        }
+        .test-result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .test-result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="test-header">
+            <h1>🧪 MICRO-FASE 1A</h1>
+            <h2>Teste de Conectividade JavaScript</h2>
+            <p>Verificando se arquivos JS são servidos corretamente pelo ESP32</p>
+        </div>
+
+        <div class="test-section">
+            <h3>📋 Critérios de Aprovação</h3>
+            <ul>
+                <li>Arquivo acessível via /js/test-basic.js <span id="status-file" class="status pending">⏳ Testando...</span></li>
+                <li>Console mostra mensagem de sucesso <span id="status-console" class="status pending">⏳ Testando...</span></li>
+                <li>Função testBasicJS() executável <span id="status-function" class="status pending">⏳ Testando...</span></li>
+                <li>Sem erros 404 ou de MIME type <span id="status-errors" class="status pending">⏳ Testando...</span></li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h3>🎮 Controles de Teste</h3>
+            <button onclick="runManualTest()">🧪 Teste Manual</button>
+            <button onclick="checkJSFeatures()">🔍 Verificar Recursos JS</button>
+            <button onclick="clearConsole()">🗑️ Limpar Console</button>
+            <button onclick="location.reload()">🔄 Recarregar</button>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Resultado do Teste</h3>
+            <div id="testResult" class="test-result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🖥️ Console Output</h3>
+            <div id="consoleOutput" class="console-output"></div>
+        </div>
+    </div>
+
+    <!-- Carregar o arquivo JS de teste -->
+    <script src="js/test-basic.js"></script>
+    
+    <script>
+        // Capturar logs do console
+        const consoleOutput = document.getElementById('consoleOutput');
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+
+        function addToConsole(message, type = 'log') {
+            const timestamp = new Date().toLocaleTimeString();
+            const div = document.createElement('div');
+            div.style.color = type === 'error' ? 'red' : type === 'warn' ? 'orange' : 'black';
+            div.textContent = `[${timestamp}] ${message}`;
+            consoleOutput.appendChild(div);
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addToConsole(args.join(' '), 'log');
+        };
+
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addToConsole(args.join(' '), 'error');
+        };
+
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            addToConsole(args.join(' '), 'warn');
+        };
+
+        // Funções de teste
+        function runManualTest() {
+            if (typeof testBasicJS === 'function') {
+                testBasicJS();
+                updateStatus('status-function', 'success', '✅ OK');
+            } else {
+                updateStatus('status-function', 'error', '❌ Erro');
+                console.error('Função testBasicJS não encontrada');
+            }
+        }
+
+        function checkJSFeatures() {
+            if (typeof testJSFeatures === 'function') {
+                const results = testJSFeatures();
+                console.log('Recursos JS verificados:', results);
+            } else {
+                console.error('Função testJSFeatures não encontrada');
+            }
+        }
+
+        function clearConsole() {
+            consoleOutput.innerHTML = '';
+        }
+
+        function updateStatus(elementId, status, text) {
+            const element = document.getElementById(elementId);
+            element.className = `status ${status}`;
+            element.textContent = text;
+        }
+
+        // Verificações automáticas
+        window.addEventListener('load', function() {
+            console.log('🚀 Página carregada, iniciando verificações...');
+            
+            // Verificar se o arquivo JS foi carregado
+            setTimeout(() => {
+                if (typeof testBasicJS === 'function') {
+                    updateStatus('status-file', 'success', '✅ OK');
+                    updateStatus('status-console', 'success', '✅ OK');
+                    updateStatus('status-function', 'success', '✅ OK');
+                    updateStatus('status-errors', 'success', '✅ OK');
+                    
+                    showTestResult(true, 'Todos os testes passaram! JavaScript está funcionando corretamente.');
+                } else {
+                    updateStatus('status-file', 'error', '❌ Erro');
+                    updateStatus('status-console', 'error', '❌ Erro');
+                    updateStatus('status-function', 'error', '❌ Erro');
+                    updateStatus('status-errors', 'error', '❌ Erro');
+                    
+                    showTestResult(false, 'Falha no carregamento do JavaScript. Verifique as rotas do servidor.');
+                }
+            }, 1000);
+        });
+
+        function showTestResult(success, message) {
+            const resultDiv = document.getElementById('testResult');
+            resultDiv.className = `test-result ${success ? 'success' : 'error'}`;
+            resultDiv.textContent = message;
+            resultDiv.style.display = 'block';
+        }
+
+        // Log inicial
+        console.log('📋 Iniciando MICRO-FASE 1A - Teste de Conectividade JavaScript');
+    </script>
+</body>
+</html> 

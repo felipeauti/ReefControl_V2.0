@@ -1,0 +1,307 @@
+<!-- Sensor Widget Component -->
+export class SensorWidget extends HTMLElement {
+    constructor() {
+        super();
+        this.attachShadow({ mode: 'open' });
+        
+        // Criar o template
+        const template = document.createElement('template');
+        template.innerHTML = `
+            <style>
+                :host {
+                    display: block;
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+                }
+
+                .sensor-widget {
+                    background: #fff;
+                    border-radius: 12px;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                    padding: 16px;
+                    margin: 8px;
+                    transition: all 0.3s ease;
+                }
+
+                .sensor-widget:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+                }
+
+                .widget-header {
+                    display: flex;
+                    align-items: center;
+                    margin-bottom: 12px;
+                }
+
+                .widget-icon {
+                    width: 32px;
+                    height: 32px;
+                    margin-right: 12px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 8px;
+                    background: var(--accent-color, #3498db);
+                    color: white;
+                }
+
+                .widget-title {
+                    font-size: 1.1em;
+                    font-weight: 600;
+                    color: var(--text-color, #2c3e50);
+                    flex-grow: 1;
+                }
+
+                .widget-status {
+                    width: 10px;
+                    height: 10px;
+                    border-radius: 50%;
+                    margin-left: 8px;
+                }
+
+                .widget-status.online {
+                    background: #2ecc71;
+                }
+
+                .widget-status.offline {
+                    background: #e74c3c;
+                }
+
+                .widget-status.warning {
+                    background: #f1c40f;
+                }
+
+                .widget-body {
+                    text-align: center;
+                    margin: 16px 0;
+                }
+
+                .widget-value {
+                    font-size: 2em;
+                    font-weight: 700;
+                    color: var(--primary-color, #2c3e50);
+                }
+
+                .unit {
+                    font-size: 0.5em;
+                    color: var(--secondary-color, #34495e);
+                    margin-left: 4px;
+                }
+
+                .widget-chart {
+                    height: 100px;
+                    margin: 16px 0;
+                }
+
+                .widget-footer {
+                    display: flex;
+                    justify-content: space-between;
+                    font-size: 0.9em;
+                    color: var(--secondary-color, #34495e);
+                }
+
+                .widget-stats {
+                    display: flex;
+                    gap: 12px;
+                }
+
+                .stat {
+                    display: flex;
+                    align-items: center;
+                }
+
+                .stat span {
+                    font-weight: 600;
+                    margin-left: 4px;
+                }
+            </style>
+            <div class="sensor-widget">
+                <div class="widget-header">
+                    <div class="widget-icon">
+                        <slot name="icon">🌡️</slot>
+                    </div>
+                    <div class="widget-title">
+                        <slot name="title">Sensor</slot>
+                    </div>
+                    <div class="widget-status"></div>
+                </div>
+                <div class="widget-body">
+                    <div class="widget-value">
+                        <span class="current-value">--</span>
+                        <span class="unit"></span>
+                    </div>
+                    <div class="widget-chart">
+                        <canvas></canvas>
+                    </div>
+                </div>
+                <div class="widget-footer">
+                    <div class="widget-stats">
+                        <div class="stat min">Min: <span>--</span></div>
+                        <div class="stat max">Max: <span>--</span></div>
+                    </div>
+                    <div class="widget-update">Atualizado: <span>--</span></div>
+                </div>
+            </div>
+        `;
+        
+        this.shadowRoot.appendChild(template.content.cloneNode(true));
+        
+        this._value = 0;
+        this._unit = '';
+        this._status = 'offline';
+        this._min = Infinity;
+        this._max = -Infinity;
+        this._chartData = [];
+        this._chart = null;
+    }
+
+    static get observedAttributes() {
+        return ['value', 'unit', 'status', 'type'];
+    }
+
+    connectedCallback() {
+        this._setupChart();
+        this._startUpdates();
+    }
+
+    disconnectedCallback() {
+        if (this._updateInterval) {
+            clearInterval(this._updateInterval);
+        }
+    }
+
+    attributeChangedCallback(name, oldValue, newValue) {
+        if (oldValue === newValue) return;
+
+        switch (name) {
+            case 'value':
+                this._updateValue(parseFloat(newValue));
+                break;
+            case 'unit':
+                this._updateUnit(newValue);
+                break;
+            case 'status':
+                this._updateStatus(newValue);
+                break;
+            case 'type':
+                this._updateType(newValue);
+                break;
+        }
+    }
+
+    _setupChart() {
+        const ctx = this.shadowRoot.querySelector('.widget-chart canvas').getContext('2d');
+        this._chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    data: [],
+                    borderColor: '#3498db',
+                    borderWidth: 2,
+                    fill: false,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { display: false },
+                    y: { display: false }
+                },
+                plugins: {
+                    legend: { display: false }
+                },
+                elements: {
+                    point: { radius: 0 }
+                }
+            }
+        });
+    }
+
+    _updateValue(value) {
+        this._value = value;
+        this._min = Math.min(this._min, value);
+        this._max = Math.max(this._max, value);
+
+        this.shadowRoot.querySelector('.current-value').textContent = value.toFixed(1);
+        this.shadowRoot.querySelector('.stat.min span').textContent = this._min.toFixed(1);
+        this.shadowRoot.querySelector('.stat.max span').textContent = this._max.toFixed(1);
+
+        this._updateChart(value);
+        this._updateTimestamp();
+    }
+
+    _updateUnit(unit) {
+        this._unit = unit;
+        this.shadowRoot.querySelector('.unit').textContent = unit;
+    }
+
+    _updateStatus(status) {
+        this._status = status;
+        const statusEl = this.shadowRoot.querySelector('.widget-status');
+        statusEl.className = 'widget-status ' + status;
+    }
+
+    _updateType(type) {
+        const iconMap = {
+            'temp': '🌡️',
+            'ph': '⚗️',
+            'tds': '💧',
+            'level': '📏'
+        };
+        
+        const icon = this.shadowRoot.querySelector('.widget-icon');
+        icon.textContent = iconMap[type] || '📊';
+    }
+
+    _updateChart(value) {
+        const now = new Date();
+        this._chartData.push({
+            time: now,
+            value: value
+        });
+
+        // Manter apenas últimas 20 leituras
+        if (this._chartData.length > 20) {
+            this._chartData.shift();
+        }
+
+        this._chart.data.labels = this._chartData.map(d => d.time.toLocaleTimeString());
+        this._chart.data.datasets[0].data = this._chartData.map(d => d.value);
+        this._chart.update('none');
+    }
+
+    _updateTimestamp() {
+        const now = new Date();
+        this.shadowRoot.querySelector('.widget-update span').textContent = 
+            now.toLocaleTimeString();
+    }
+
+    _startUpdates() {
+        // Atualizar a cada 5 segundos
+        this._updateInterval = setInterval(() => {
+            this._fetchSensorData();
+        }, 5000);
+    }
+
+    async _fetchSensorData() {
+        try {
+            const response = await fetch('/api/sensors');
+            const data = await response.json();
+            
+            const type = this.getAttribute('type');
+            if (data[type] !== undefined) {
+                this.setAttribute('value', data[type]);
+                this.setAttribute('status', 'online');
+            }
+        } catch (error) {
+            console.error('Erro ao atualizar sensor:', error);
+            this.setAttribute('status', 'offline');
+        }
+    }
+}
+
+// Registrar o componente
+customElements.define('sensor-widget', SensorWidget); 

@@ -26,6 +26,11 @@ bool WebServerManager::begin(RelayController* relayController, ConfigManager* co
   // Páginas HTML principais (sem .html)
   _server.on("/login", [this]() { serveFile("/html/login.html"); });
   _server.on("/home", [this]() { serveFile("/html/home.html"); });
+  _server.on("/dashboard", [this]() { serveFile("/html/dashboard.html"); });
+  _server.on("/test-widget", [this]() { serveFile("/html/test-widget.html"); });
+  _server.on("/test-js", [this]() { serveFile("/html/test-js.html"); });
+  _server.on("/test-chart", [this]() { serveFile("/html/test-chart.html"); });
+  _server.on("/test-chart-widget", [this]() { serveFile("/html/test-chart-widget.html"); });
   _server.on("/config", [this]() { serveFile("/html/config.html"); });
   _server.on("/sensors", [this]() { serveFile("/html/sensors.html"); });
   _server.on("/output", [this]() { serveFile("/html/output.html"); });
@@ -41,6 +46,11 @@ bool WebServerManager::begin(RelayController* relayController, ConfigManager* co
   // Páginas HTML principais (com .html para compatibilidade)
   _server.on("/login.html", [this]() { serveFile("/html/login.html"); });
   _server.on("/home.html", [this]() { serveFile("/html/home.html"); });
+  _server.on("/dashboard.html", [this]() { serveFile("/html/dashboard.html"); });
+  _server.on("/test-widget.html", [this]() { serveFile("/html/test-widget.html"); });
+  _server.on("/test-js.html", [this]() { serveFile("/html/test-js.html"); });
+  _server.on("/test-chart.html", [this]() { serveFile("/html/test-chart.html"); });
+  _server.on("/test-chart-widget.html", [this]() { serveFile("/html/test-chart-widget.html"); });
   _server.on("/config.html", [this]() { serveFile("/html/config.html"); });
   _server.on("/sensors.html", [this]() { serveFile("/html/sensors.html"); });
   _server.on("/output.html", [this]() { serveFile("/html/output.html"); });
@@ -53,6 +63,23 @@ bool WebServerManager::begin(RelayController* relayController, ConfigManager* co
   _server.on("/status.html", [this]() { serveFile("/html/status.html"); });
   _server.on("/file_upload.html", [this]() { serveFile("/html/file_upload.html"); });
   
+  // Servir componentes
+  _server.on("/components/sensor-widget.html", [this]() { 
+    _server.sendHeader("Content-Type", "text/html");
+    serveFile("/html/components/sensor-widget.html"); 
+  });
+
+  // Servir arquivos JavaScript
+  _server.on("/js/test-basic.js", [this]() { 
+    _server.sendHeader("Content-Type", "application/javascript");
+    serveFile("/html/js/test-basic.js"); 
+  });
+
+  _server.on("/js/widget-helper.js", [this]() { 
+    _server.sendHeader("Content-Type", "application/javascript");
+    serveFile("/html/js/widget-helper.js"); 
+  });
+
   // API para dados dos sensores
   _server.on("/api/sensors", [this]() {
     if (!_sensorManager) {
@@ -688,6 +715,12 @@ bool WebServerManager::begin(RelayController* relayController, ConfigManager* co
     }
   });
   
+  // Servir arquivos JavaScript
+  _server.on("/js/widget-helper.js", [this]() { 
+    _server.sendHeader("Content-Type", "application/javascript");
+    serveFile("/html/js/widget-helper.js"); 
+  });
+
   _server.begin();
   Serial.println("🌐 Servidor web completo iniciado na porta 80");
   Serial.println("🚀 OTA Update habilitado em /update");

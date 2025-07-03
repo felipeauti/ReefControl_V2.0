@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReefControl - Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.bundle.min.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #34495e;
+            --accent-color: #3498db;
+            --background-color: #f8f9fa;
+            --text-color: #2c3e50;
+            --success-color: #2ecc71;
+            --warning-color: #f1c40f;
+            --danger-color: #e74c3c;
+        }
+        
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .dashboard-title {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .dashboard-controls {
+            display: flex;
+            gap: 12px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .system-status {
+            background: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.9em;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-dot.online {
+            background: var(--success-color);
+        }
+
+        .status-dot.warning {
+            background: var(--warning-color);
+        }
+
+        .status-dot.offline {
+            background: var(--danger-color);
+        }
+
+        .header {
+            background: #4a90e2;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+        }
+
+        .logout {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .container {
+            padding: 1rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Widget Cards */
+        .widget-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .widget-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        .widget-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .widget-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .widget-title h3 {
+            font-size: 1.1rem;
+            color: #333;
+            margin: 0;
+        }
+
+        .widget-icon {
+            font-size: 1.5rem;
+        }
+
+        .widget-status {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #e74c3c;
+        }
+
+        .widget-status.online {
+            background: #2ecc71;
+        }
+
+        .widget-status.offline {
+            background: #e74c3c;
+        }
+
+        .widget-status.warning {
+            background: #f1c40f;
+        }
+
+        .widget-body {
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        .widget-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4a90e2;
+            margin-bottom: 1rem;
+        }
+
+        .widget-value .unit {
+            font-size: 0.6em;
+            color: #666;
+            margin-left: 0.2em;
+        }
+
+        .widget-chart {
+            height: 150px;
+            margin: 1rem 0;
+            position: relative;
+        }
+
+        .widget-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            color: #666;
+            border-top: 1px solid #eee;
+            padding-top: 0.5rem;
+        }
+
+        .widget-stats {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .widget-update {
+            font-size: 0.8rem;
+        }
+
+        /* Status Colors */
+        .status-online {
+            border-left: 4px solid #2ecc71;
+        }
+
+        .status-offline {
+            border-left: 4px solid #e74c3c;
+        }
+
+        .status-warning {
+            border-left: 4px solid #f1c40f;
+        }
+
+        /* Control Panel */
+        .control-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .control-panel h3 {
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .control-btn:hover {
+            background: #357abd;
+        }
+
+        .control-btn.simulate {
+            background: #f39c12;
+        }
+
+        .control-btn.simulate:hover {
+            background: #d68910;
+        }
+
+        /* Navigation */
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+        }
+
+        .nav-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-align: center;
+            text-decoration: none;
+            color: #333;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .nav-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        .nav-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .nav-title {
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+        }
+
+        .nav-desc {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0.5rem;
+            }
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            .nav-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .control-buttons {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🐠 ReefControl Dashboard</h1>
+        <button class="logout" onclick="logout()">Sair</button>
+    </div>
+    <div class="container">
+
+        <!-- Dashboard Widgets -->
+        <div id="dashboardGrid" class="dashboard-grid">
+            <!-- Widgets serão inseridos aqui pelo JavaScript -->
+        </div>
+
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <h3>🎛️ Controles</h3>
+            <div class="control-buttons">
+                <button class="control-btn simulate" onclick="simulateDashboardData()">
+                    🎲 Simular Dados
+                </button>
+                <button class="control-btn" onclick="location.reload()">
+                    🔄 Atualizar
+                </button>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="nav-grid">
+            <a href="home.html" class="nav-card">
+                <div class="nav-icon">🏠</div>
+                <div class="nav-title">Home</div>
+                <div class="nav-desc">Visão geral</div>
+            </a>
+            <a href="config.html" class="nav-card">
+                <div class="nav-icon">⚙️</div>
+                <div class="nav-title">Configurações</div>
+                <div class="nav-desc">Sistema, sensores, saídas</div>
+            </a>
+            <a href="logica.html" class="nav-card">
+                <div class="nav-icon">🧠</div>
+                <div class="nav-title">Automações</div>
+                <div class="nav-desc">Lógicas e programações</div>
+            </a>
+            <a href="status.html" class="nav-card">
+                <div class="nav-icon">📈</div>
+                <div class="nav-title">Status</div>
+                <div class="nav-desc">Monitoramento detalhado</div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/widget-helper.js"></script>
+    <script>
+        function logout() {
+            sessionStorage.removeItem('loggedIn');
+            window.location.href = 'login.html';
+        }
+
+        // Verificar autenticação
+        if (!sessionStorage.getItem('loggedIn')) {
+            window.location.href = 'login.html';
+        }
+
+        // Inicializar dashboard quando a página carregar
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('Inicializando dashboard...');
+            
+            // Verificar se Chart.js está carregado
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js não carregado');
+                return;
+            }
+            
+            // Verificar se widget-helper está carregado
+            if (typeof initializeDashboard === 'undefined') {
+                console.error('widget-helper.js não carregado');
+                return;
+            }
+            
+            // Inicializar o dashboard
+            try {
+                initializeDashboard('dashboardGrid');
+                console.log('Dashboard inicializado com sucesso');
+            } catch (error) {
+                console.error('Erro ao inicializar dashboard:', error);
+            }
+        });
+    </script>
+</body>
+</html> 
